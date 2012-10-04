@@ -26,20 +26,21 @@ public class LegendProperty {
     // BACKGROUND
     public static final int BACKGROUND_IS_DISPLAYING = 6;
     public static final int BACKGROUND_COLOR = 7;
-    public static final int BACKGROUND_BORDER_COLOR = 8;
-    public static final int BACKGROUND_BORDER_LINE_THICK = 9;
+    public static final int BORDER_IS_DISPLAYING = 8;
+    public static final int BORDER_COLOR = 9;
+    public static final int BORDER_LINE_THICK = 10;
     //TITLE
-    public static final int TITLE_IS_DISPLAYING = 10;
-    public static final int TITLE = 11;
-    public static final int TITLE_FONT = 12;
-    public static final int TITLE_FONT_COLOR = 13;
-    public static final int TITLE_ALIGNMENT = 14;
+    public static final int TITLE_IS_DISPLAYING = 11;
+    public static final int TITLE = 12;
+    public static final int TITLE_FONT = 13;
+    public static final int TITLE_FONT_COLOR = 14;
+    public static final int TITLE_ALIGNMENT = 15;
     //DESCRIPTION
-    public static final int DESCRIPTION_IS_DISPLAYING = 15;
-    public static final int DESCRIPTION = 16;
-    public static final int DESCRIPTION_FONT = 17;
-    public static final int DESCRIPTION_FONT_COLOR = 18;
-    public static final int DESCRIPTION_ALIGNMENT = 19;
+    public static final int DESCRIPTION_IS_DISPLAYING = 16;
+    public static final int DESCRIPTION = 17;
+    public static final int DESCRIPTION_FONT = 18;
+    public static final int DESCRIPTION_FONT_COLOR = 19;
+    public static final int DESCRIPTION_ALIGNMENT = 20;
     
 
     
@@ -56,8 +57,10 @@ public class LegendProperty {
         // BACKGROUND
         ".background.isDisplaying",             // 6
         ".background.color",                    // 7
-        ".background.border.color",             // 8
-        ".background.border.lineThick",         // 9
+        // BORDER
+        ".border.isDisplaying",              //20
+        ".border.color",             // 8
+        ".border.lineThick",         // 9
         //TITLE
         ".title.isDisplaying",                  // 10
         ".title",                               // 11 
@@ -83,8 +86,9 @@ public class LegendProperty {
         HEIGHT,
         BACKGROUND_IS_DISPLAYING,
         BACKGROUND_COLOR,
-        BACKGROUND_BORDER_COLOR,
-        BACKGROUND_BORDER_LINE_THICK,
+        BORDER_IS_DISPLAYING,
+        BORDER_COLOR,
+        BORDER_LINE_THICK,
         TITLE_IS_DISPLAYING,
         TITLE,
         TITLE_FONT,

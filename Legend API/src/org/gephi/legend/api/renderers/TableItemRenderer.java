@@ -235,7 +235,7 @@ public class TableItemRenderer extends LegendItemRenderer {
         int x1 = x;
         int y2 = (int) (height * valueNormalized);
         int y1 = (y + height) - y2;
-        int x2 = width - 1;
+        int x2 = width;
         graphics.setColor(color);
         graphics.fillRect(x1, y1, x2, y2);
     }

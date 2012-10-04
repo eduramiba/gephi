@@ -120,8 +120,8 @@ public class TestProcessingTarget {
 
 
             // creating item
-            Item item = addTableItem(itemIndex, graph, attributeModel);
-//            Item item = addTextItem(itemIndex, graph, attributeModel);
+//            Item item = addTableItem(itemIndex, graph, attributeModel);
+            Item item = addTextItem(itemIndex, graph, attributeModel);
 
 
             // add item
@@ -134,7 +134,7 @@ public class TestProcessingTarget {
             previewController.render(target);
 
 
-            OutputStream fos = new FileOutputStream(new File("/Users/edubecks/Desktop/Untitled.png"));
+            OutputStream fos = new FileOutputStream(new File("/Volumes/datos/temp/Untitled.png"));
             Writer writer = new OutputStreamWriter(fos, "UTF-8");
 
 

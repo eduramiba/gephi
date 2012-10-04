@@ -39,7 +39,7 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
 
     /**
      *
-     * Function that actually renders the legend using the Graphics2D Object 
+     * Function that actually renders the legend using the Graphics2D Object
      *
      * @param graphics2D Graphics2D instance used to render legend
      * @param origin transformation that contains the origin and level zoom of
@@ -98,8 +98,9 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
             // BACKGROUND
             backgroundIsDisplaying = previewProperties.getBooleanValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BACKGROUND_IS_DISPLAYING));
             backgroundColor = previewProperties.getColorValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BACKGROUND_COLOR));
-            backgroundBorderColor = previewProperties.getColorValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BACKGROUND_BORDER_COLOR));
-            backgroundBorderLineThick = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BACKGROUND_BORDER_LINE_THICK));
+            borderIsDisplaying = previewProperties.getBooleanValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BORDER_IS_DISPLAYING));
+            borderColor = previewProperties.getColorValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BORDER_COLOR));
+            borderLineThick = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.BORDER_LINE_THICK));
 
             // TITLE
             isDisplayingTitle = previewProperties.getBooleanValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, currentItemIndex, LegendProperty.TITLE_IS_DISPLAYING));
@@ -223,6 +224,9 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
         //BACKGROUND
         renderBackground(graphics2D, origin, width, height);
 
+        // BORDER
+        renderBorder(graphics2D, origin, width, height, borderLineThick, borderColor);
+
         // TITLE
         AffineTransform titleOrigin = new AffineTransform(origin);
         float titleHeight = 0;
@@ -242,7 +246,7 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
         legendOrigin.translate(0, titleHeight + MARGIN_BETWEEN_ELEMENTS);
         int legendWidth = width;
         int legendHeight = (Integer) (height - Math.round(titleHeight) - Math.round(descriptionHeight) - 2 * MARGIN_BETWEEN_ELEMENTS);
-        
+
 
         // DESCRIPTION
         AffineTransform descriptionOrigin = new AffineTransform(origin);
@@ -254,13 +258,13 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
 
         // rendering legend
         renderToGraphics(graphics2D, legendOrigin, legendWidth, legendHeight);
-        
+
         // is selected
         if (currentIsSelected) {
             drawScaleAnchors(graphics2D, origin, width, height);
         }
-        
-        
+
+
     }
 
     private void drawScaleAnchors(Graphics2D graphics2D, AffineTransform origin, Integer width, Integer height) {
@@ -298,11 +302,37 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
             graphics2D.setTransform(origin);
             graphics2D.setColor(backgroundColor);
             graphics2D.fillRect(0, 0, width, height);
-            graphics2D.setColor(backgroundBorderColor);
-            for (int i = 1; i <= backgroundBorderLineThick; i++) {
-                graphics2D.drawRect(-i, -i, width + 2 * i, height + 2 * i);
-            }
+//            graphics2D.setColor(backgroundBorderColor);
+//            for (int i = 1; i <= backgroundBorderLineThick; i++) {
+//                graphics2D.drawRect(-i, -i, width + 2 * i, height + 2 * i);
+//            }
         }
+    }
+
+    private void renderBorder(Graphics2D graphics2D,
+                              AffineTransform origin,
+                              Integer width,
+                              Integer height,
+                              Integer borderThick,
+                              Color borderColor) {
+
+        if (borderIsDisplaying) {
+
+            graphics2D.setTransform(origin);
+            graphics2D.setColor(borderColor);
+
+            // border is external
+
+            // top
+            graphics2D.fillRect(-borderThick, -borderThick, width + 2 * borderThick, borderThick);
+            // bottom
+            graphics2D.fillRect(-borderThick, height, width + 2 * borderThick, borderThick);
+            // left
+            graphics2D.fillRect(-borderThick, -borderThick, borderThick, height + 2 * borderThick);
+            // right
+            graphics2D.fillRect(width, -borderThick, borderThick, height + 2 * borderThick);
+        }
+
     }
 
     private float renderTitle(Graphics2D graphics2D, AffineTransform origin, Integer width, Integer height) {
@@ -401,9 +431,11 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
     }
 
     /**
-     * Function that display some text just like the regular 
-     * <code>drawString</code> function from <code>Graphics2D</code>. It has an 
-     * additional parameter Alignment to define the alignment of the text.
+     * Function that display some text just like the regular
+     * <code>drawString</code> function from
+     * <code>Graphics2D</code>. It has an additional parameter Alignment to
+     * define the alignment of the text.
+     *
      * @param graphics2D
      * @param text
      * @param font
@@ -453,8 +485,9 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
     // BACKGROUND
     private boolean backgroundIsDisplaying;
     private Color backgroundColor;
-    private Color backgroundBorderColor;
-    private int backgroundBorderLineThick;
+    private Boolean borderIsDisplaying;
+    private Color borderColor;
+    private int borderLineThick;
     // DIMENSIONS
     protected Integer currentWidth;
     protected Integer currentHeight;
