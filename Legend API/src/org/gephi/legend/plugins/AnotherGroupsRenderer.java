@@ -11,11 +11,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import org.gephi.legend.api.renderers.GroupsItemRenderer;
+import org.gephi.legend.api.renderers.LegendItemRenderer;
+import org.gephi.legend.items.GroupsItem;
 import org.gephi.legend.items.LegendItem;
+import org.gephi.preview.api.Item;
+import org.gephi.preview.api.PreviewProperties;
 import org.gephi.preview.spi.Renderer;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.general.DefaultPieDataset;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -29,6 +30,12 @@ public class AnotherGroupsRenderer extends GroupsItemRenderer {
     @Override
     public String getDisplayName() {
         return NbBundle.getMessage(AnotherGroupsRenderer.class, "AnotherGroupsRenderer.displayName");
+    }
+    
+    @Override
+    public boolean isRendererForitem(Item item, PreviewProperties properties) {
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.equals(AnotherGroupsRenderer.class));
     }
 
     @Override

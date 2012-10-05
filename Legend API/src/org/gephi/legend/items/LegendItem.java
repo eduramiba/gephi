@@ -14,6 +14,9 @@ import org.openide.util.NbBundle;
  */
 public interface LegendItem {
 
+    // RENDERER
+    public static final String RENDERER = "renderer";
+    
     // DATA
     public static final String LEGEND_ITEM = "legend item";
     public static final String DATA = "data";

@@ -12,11 +12,15 @@ import java.util.List;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.gephi.legend.api.renderers.GroupsItemRenderer;
 import org.gephi.legend.api.renderers.ImageItemRenderer;
+import org.gephi.legend.api.renderers.LegendItemRenderer;
+import org.gephi.legend.items.GroupsItem;
+import org.gephi.legend.items.LegendItem;
+import org.gephi.preview.api.Item;
+import org.gephi.preview.api.PreviewProperties;
 import org.gephi.preview.spi.Renderer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PiePlot;
-import org.jfree.chart.plot.Plot;
 import org.jfree.data.general.DefaultPieDataset;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
@@ -31,6 +35,12 @@ public class GroupsPieChartRenderer extends GroupsItemRenderer {
     @Override
     public String getDisplayName() {
         return NbBundle.getMessage(GroupsPieChartRenderer.class, "GroupsPieChartRenderer.displayName");
+    }
+    
+    @Override
+    public boolean isRendererForitem(Item item, PreviewProperties properties) {
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.equals(GroupsPieChartRenderer.class));
     }
 
     @Override

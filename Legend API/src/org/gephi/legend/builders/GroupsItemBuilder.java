@@ -15,6 +15,7 @@ import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.graph.api.Graph;
 import org.gephi.legend.api.CustomGroupsItemBuilder;
 import org.gephi.legend.api.CustomLegendItemBuilder;
+import org.gephi.legend.api.renderers.GroupsItemRenderer;
 import org.gephi.legend.items.GroupsItem;
 import org.gephi.legend.items.LegendItem;
 import org.gephi.legend.manager.LegendManager;
@@ -232,6 +233,9 @@ public class GroupsItemBuilder extends LegendItemBuilder {
         item.setData(GroupsItem.COLORS, colors);
         item.setData(GroupsItem.LABELS_IDS, labelsStringBuilder);
         item.setData(GroupsItem.VALUES, values);
+        
+        // setting default renderer
+        item.setData(LegendItem.RENDERER, GroupsItemRenderer.class);
         return item;
 
     }

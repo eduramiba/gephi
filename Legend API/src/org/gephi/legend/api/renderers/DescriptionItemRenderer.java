@@ -24,12 +24,16 @@ import org.gephi.preview.spi.ItemBuilder;
 import org.gephi.preview.spi.Renderer;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
+import org.openide.util.lookup.ServiceProviders;
 
 /**
  *
  * @author edubecks
  */
-@ServiceProvider(service = Renderer.class, position = 504)
+@ServiceProviders(value = {
+    @ServiceProvider(service = Renderer.class, position = 504),
+    @ServiceProvider(service = DescriptionItemRenderer.class, position = 504)
+})
 public class DescriptionItemRenderer extends LegendItemRenderer {
 
     @Override
@@ -86,7 +90,7 @@ public class DescriptionItemRenderer extends LegendItemRenderer {
 
             // reading keys
             Integer numberOfItems = item.getData(LegendItem.NUMBER_OF_DYNAMIC_PROPERTIES);
-            
+
 
             keys = new ArrayList<String>();
             values = new ArrayList<String>();
@@ -110,7 +114,8 @@ public class DescriptionItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        return item instanceof DescriptionItem;
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof DescriptionItem && renderer.equals(DescriptionItemRenderer.class));
     }
 
     @Override

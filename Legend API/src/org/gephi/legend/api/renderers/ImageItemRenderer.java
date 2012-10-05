@@ -92,7 +92,8 @@ public class ImageItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        return item instanceof ImageItem;
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof ImageItem && renderer.equals(ImageItemRenderer.class));
     }
 
     @Override

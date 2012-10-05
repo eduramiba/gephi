@@ -472,6 +472,13 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
         return previewMouseListener instanceof LegendMouseListener;
     }
 
+    @Override
+    public String toString() {
+        return getDisplayName();
+    }
+    
+    
+
     private Integer currentItemIndex;
     private float defaultMargin = 100f;
     private float graphOriginX = Float.MAX_VALUE;

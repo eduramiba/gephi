@@ -69,7 +69,9 @@ public abstract class LegendItemBuilder implements ItemBuilder {
      * @param attributeModel
      * @return
      */
-    protected abstract Item buildCustomItem(CustomLegendItemBuilder builder, Graph graph, AttributeModel attributeModel);
+    protected abstract Item buildCustomItem(CustomLegendItemBuilder builder, 
+                                            Graph graph, 
+                                            AttributeModel attributeModel);
 
     /**
      * Used to determine if the
@@ -113,7 +115,10 @@ public abstract class LegendItemBuilder implements ItemBuilder {
      * @param builder
      * @return
      */
-    public Item createCustomItem(Integer newItemIndex, Graph graph, AttributeModel attributeModel, CustomLegendItemBuilder builder) {
+    public Item createCustomItem(Integer newItemIndex, 
+                                 Graph graph, 
+                                 AttributeModel attributeModel, 
+                                 CustomLegendItemBuilder builder) {
         Item item = buildCustomItem(builder, graph, attributeModel);
         createDefaultProperties(newItemIndex, item);
         return item;

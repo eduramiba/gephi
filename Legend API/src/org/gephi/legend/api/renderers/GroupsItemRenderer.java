@@ -267,7 +267,8 @@ public class GroupsItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        return item instanceof GroupsItem;
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.equals(GroupsItemRenderer.class));
     }
 
     @Override

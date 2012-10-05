@@ -6,7 +6,12 @@ package org.gephi.legend.plugins;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import org.gephi.legend.api.renderers.LegendItemRenderer;
 import org.gephi.legend.api.renderers.TableItemRenderer;
+import org.gephi.legend.items.GroupsItem;
+import org.gephi.legend.items.LegendItem;
+import org.gephi.preview.api.Item;
+import org.gephi.preview.api.PreviewProperties;
 import org.gephi.preview.spi.Renderer;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
@@ -21,6 +26,12 @@ public class AnotherTableRenderer extends TableItemRenderer {
     @Override
     public String getDisplayName() {
         return NbBundle.getMessage(AnotherTableRenderer.class, "AnotherTableRenderer.displayName");
+    }
+    
+    @Override
+    public boolean isRendererForitem(Item item, PreviewProperties properties) {
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.equals(AnotherTableRenderer.class));
     }
 
     @Override

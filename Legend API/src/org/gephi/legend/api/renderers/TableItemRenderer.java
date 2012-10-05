@@ -34,7 +34,8 @@ public class TableItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        return item instanceof TableItem;
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof TableItem && renderer.equals(TableItemRenderer.class));
     }
 
     @Override

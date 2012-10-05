@@ -43,7 +43,8 @@ public class TextItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        return item instanceof TextItem;
+        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof TextItem && renderer.equals(TextItemRenderer.class));
     }
 
     @Override

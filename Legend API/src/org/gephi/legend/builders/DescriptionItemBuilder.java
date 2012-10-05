@@ -16,6 +16,7 @@ import org.gephi.graph.api.Graph;
 import org.gephi.legend.api.CustomDescriptionItemBuilder;
 import org.gephi.legend.api.CustomLegendItemBuilder;
 import org.gephi.legend.api.DescriptionItemElementValue;
+import org.gephi.legend.api.renderers.DescriptionItemRenderer;
 import org.gephi.legend.builders.description.elements.CustomValue;
 import org.gephi.legend.items.DescriptionItem;
 import org.gephi.legend.items.DescriptionItemElement;
@@ -56,6 +57,9 @@ public class DescriptionItemBuilder extends LegendItemBuilder {
     protected Item buildCustomItem(CustomLegendItemBuilder builder, Graph graph, AttributeModel attributeModel) {
         Item item = createNewLegendItem(graph);
         item.setData(LegendItem.LEGEND_ITEM, item);
+        
+        // setting default renderer
+        item.setData(LegendItem.RENDERER, DescriptionItemRenderer.class);
         return item;
     }
 

@@ -14,6 +14,7 @@ import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.graph.api.Graph;
 import org.gephi.legend.api.CustomImageItemBuilder;
 import org.gephi.legend.api.CustomLegendItemBuilder;
+import org.gephi.legend.api.renderers.ImageItemRenderer;
 import org.gephi.legend.items.ImageItem;
 import org.gephi.legend.items.LegendItem;
 import org.gephi.legend.manager.LegendManager;
@@ -62,6 +63,9 @@ public class ImageItemBuilder extends LegendItemBuilder {
     @Override
     protected Item buildCustomItem(CustomLegendItemBuilder builder, Graph graph, AttributeModel attributeModel) {
         Item item = createNewLegendItem(graph);
+        
+        // setting default renderer
+        item.setData(LegendItem.RENDERER, ImageItemRenderer.class);
         return item;
     }
 
