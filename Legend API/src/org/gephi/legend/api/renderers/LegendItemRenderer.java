@@ -15,6 +15,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
+import java.util.Collection;
 import org.apache.batik.svggen.DefaultExtensionHandler;
 import org.apache.batik.svggen.ImageHandlerBase64Encoder;
 import org.apache.batik.svggen.SVGGeneratorContext;
@@ -57,8 +58,8 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
      * @param properties PreviewProperties of the current PreviewModel
      */
     protected abstract void readOwnPropertiesAndValues(Item item, PreviewProperties properties);
-
-    private final void readLocationProperties(Item item, PreviewProperties previewProperties) {
+    
+    private void readLocationProperties(Item item, PreviewProperties previewProperties) {
         if (item != null) {
             currentItemIndex = item.getData(LegendItem.ITEM_INDEX);
 
@@ -85,7 +86,7 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
         }
     }
 
-    private final void readLegendPropertiesAndValues(Item item, PreviewProperties previewProperties) {
+    private void readLegendPropertiesAndValues(Item item, PreviewProperties previewProperties) {
 
         if (item != null) {
             currentIsSelected = item.getData(LegendItem.IS_SELECTED);

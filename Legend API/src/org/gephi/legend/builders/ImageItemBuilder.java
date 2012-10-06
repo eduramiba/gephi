@@ -85,6 +85,17 @@ public class ImageItemBuilder extends LegendItemBuilder {
                         PreviewProperty.CATEGORY_LEGEND_PROPERTY).setValue(value);
                 break;
             }
+                
+            case ImageProperty.LOCK_ASPECT_RATIO: {
+                previewProperty = PreviewProperty.createProperty(
+                        this,
+                        propertyString,
+                        Boolean.class,
+                        NbBundle.getMessage(LegendManager.class, "ImageItem.property.lockAspectRatio.displayName"),
+                        NbBundle.getMessage(LegendManager.class, "ImageItem.property.lockAspectRatio.description"),
+                        PreviewProperty.CATEGORY_LEGEND_PROPERTY).setValue(value);
+                break;
+            }
         }
 
         return previewProperty;
@@ -176,7 +187,9 @@ public class ImageItemBuilder extends LegendItemBuilder {
     }
 
     private File defaultImageFile = new File("/Volumes/edubecks/edubecks/Dropbox/imagenes/inception.jpg");
+    private Boolean defaultLockAspectRatio = Boolean.FALSE;
     private final Object[] defaultValues = {
-        defaultImageFile
+        defaultImageFile,
+        defaultLockAspectRatio
     };
 }

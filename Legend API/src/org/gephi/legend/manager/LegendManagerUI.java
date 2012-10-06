@@ -329,25 +329,16 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
     private void refreshRenderers(Item activeLegendItem) {
 
         renderersComboBox.removeAllItems();
-        Collection<? extends LegendItemRenderer> renderers = null;
-        if (activeLegendItem instanceof DescriptionItem) {
-            renderers = Lookup.getDefault().lookupAll(DescriptionItemRenderer.class);
-        }
-        else if (activeLegendItem instanceof TextItem) {
-            renderers = Lookup.getDefault().lookupAll(TextItemRenderer.class);
-        }
-        else if (activeLegendItem instanceof GroupsItem) {
-            renderers = Lookup.getDefault().lookupAll(GroupsItemRenderer.class);
-        }
-        else if (activeLegendItem instanceof GroupsItem) {
-            renderers = Lookup.getDefault().lookupAll(ImageItemRenderer.class);
-        }
-        else if (activeLegendItem instanceof GroupsItem) {
-            renderers = Lookup.getDefault().lookupAll(TableItemRenderer.class);
-        }
+
+        Collection<? extends LegendItemRenderer> renderers = Lookup.getDefault().lookupAll(LegendItemRenderer.class);
         for (LegendItemRenderer renderer : renderers) {
-            renderersComboBox.addItem(renderer);
+
+            if (renderer.isRendererForitem(activeLegendItem, null)) {
+                renderersComboBox.addItem(renderer);
+
+            }
         }
+
     }
 
     private void numberOfItemsTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_numberOfItemsTextFieldActionPerformed
