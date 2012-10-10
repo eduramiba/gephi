@@ -6,12 +6,14 @@ import static org.gephi.legend.items.LegendItem.LEGEND_MIN_WIDTH;
 import static org.gephi.legend.items.LegendItem.TRANSFORMATION_ANCHOR_SIZE;
 import org.gephi.legend.manager.LegendController;
 import org.gephi.legend.manager.LegendManager;
+import org.gephi.legend.manager.LegendManagerUI;
 import org.gephi.legend.properties.LegendProperty;
 import org.gephi.preview.api.Item;
 import org.gephi.preview.api.PreviewMouseEvent;
 import org.gephi.preview.api.PreviewProperties;
 import org.gephi.preview.spi.PreviewMouseListener;
 import org.gephi.project.api.Workspace;
+import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -21,25 +23,51 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = PreviewMouseListener.class)
 public class LegendMouseListener implements PreviewMouseListener {
 
-    private int isClickingInAnchor(int pointX, int pointY, Item item, PreviewProperties previewProperties) {
+    private int isClickingInAnchor(int pointX,
+                                   int pointY,
+                                   Item item,
+                                   PreviewProperties previewProperties) {
+
         Integer itemIndex = item.getData(LegendItem.ITEM_INDEX);
         float realOriginX = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
         float realOriginY = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
         int width = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
         int height = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
         float[][] anchorLocations = {
-            {-TRANSFORMATION_ANCHOR_SIZE / 2, -TRANSFORMATION_ANCHOR_SIZE / 2, TRANSFORMATION_ANCHOR_SIZE, TRANSFORMATION_ANCHOR_SIZE},
-            {width - TRANSFORMATION_ANCHOR_SIZE / 2, -TRANSFORMATION_ANCHOR_SIZE / 2, TRANSFORMATION_ANCHOR_SIZE, TRANSFORMATION_ANCHOR_SIZE},
-            {-TRANSFORMATION_ANCHOR_SIZE / 2, height - TRANSFORMATION_ANCHOR_SIZE / 2, TRANSFORMATION_ANCHOR_SIZE, TRANSFORMATION_ANCHOR_SIZE},
-            {width - TRANSFORMATION_ANCHOR_SIZE / 2, height - TRANSFORMATION_ANCHOR_SIZE / 2, TRANSFORMATION_ANCHOR_SIZE, TRANSFORMATION_ANCHOR_SIZE}
+            {
+                -TRANSFORMATION_ANCHOR_SIZE / 2,
+                -TRANSFORMATION_ANCHOR_SIZE / 2,
+                TRANSFORMATION_ANCHOR_SIZE,
+                TRANSFORMATION_ANCHOR_SIZE
+            },
+            {
+                width - TRANSFORMATION_ANCHOR_SIZE / 2,
+                -TRANSFORMATION_ANCHOR_SIZE / 2,
+                TRANSFORMATION_ANCHOR_SIZE,
+                TRANSFORMATION_ANCHOR_SIZE
+            },
+            {
+                -TRANSFORMATION_ANCHOR_SIZE / 2,
+                height - TRANSFORMATION_ANCHOR_SIZE / 2,
+                TRANSFORMATION_ANCHOR_SIZE,
+                TRANSFORMATION_ANCHOR_SIZE
+            },
+            {
+                width - TRANSFORMATION_ANCHOR_SIZE / 2,
+                height - TRANSFORMATION_ANCHOR_SIZE / 2,
+                TRANSFORMATION_ANCHOR_SIZE,
+                TRANSFORMATION_ANCHOR_SIZE
+            }
         };
 
         pointX -= realOriginX;
         pointY -= realOriginY;
 
         for (int i = 0; i < anchorLocations.length; i++) {
-            if ((pointX >= anchorLocations[i][0] && pointX < (anchorLocations[i][0] + anchorLocations[i][2]))
-                && (pointY >= anchorLocations[i][1] && pointY < (anchorLocations[i][1] + anchorLocations[i][3]))) {
+            if ((pointX >= anchorLocations[i][0]
+                 && pointX < (anchorLocations[i][0] + anchorLocations[i][2]))
+                && pointY >= anchorLocations[i][1]
+                && pointY < (anchorLocations[i][1] + anchorLocations[i][3])) {
                 return i;
             }
         }
@@ -72,6 +100,11 @@ public class LegendMouseListener implements PreviewMouseListener {
                 }
                 item.setData(LegendItem.IS_SELECTED, Boolean.TRUE);
                 event.setConsumed(true);
+                //updating manager
+                LegendManagerUI legendManagerUI = Lookup.getDefault().lookup(LegendManagerUI.class);
+                legendManagerUI.setActiveItem(item);
+                
+                
                 return;
             }
             else if (isSelected) {

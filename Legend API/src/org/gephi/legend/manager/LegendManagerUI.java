@@ -18,12 +18,7 @@ import javax.swing.JPanel;
 import org.gephi.data.attributes.api.AttributeModel;
 import org.gephi.graph.api.Graph;
 import org.gephi.legend.api.CustomLegendItemBuilder;
-import org.gephi.legend.api.renderers.DescriptionItemRenderer;
-import org.gephi.legend.api.renderers.GroupsItemRenderer;
-import org.gephi.legend.api.renderers.ImageItemRenderer;
 import org.gephi.legend.api.renderers.LegendItemRenderer;
-import org.gephi.legend.api.renderers.TableItemRenderer;
-import org.gephi.legend.api.renderers.TextItemRenderer;
 import org.gephi.legend.builders.*;
 import org.gephi.legend.items.*;
 import org.gephi.legend.items.propertyeditors.DescriptionItemElementPropertyEditor;
@@ -306,8 +301,18 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
 
     private void activeLegendsComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_activeLegendsComboBoxActionPerformed
         Item activeLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
+        setActiveItem(activeLegendItem);
+    }//GEN-LAST:event_activeLegendsComboBoxActionPerformed
+
+    public void setActiveItem(Item activeLegendItem) {
 
         if (activeLegendItem != null) {
+
+            Item currentActiveLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
+            if (currentActiveLegendItem.equals(activeLegendItem)) {
+                return;
+            }
+
             refreshPropertySheet(activeLegendItem);
             refreshRenderers(activeLegendItem);
 
@@ -318,13 +323,14 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
             if (hasDynamicProperties) {
                 numberOfItemsTextField.setText(activeLegendItem.getData(LegendItem.NUMBER_OF_DYNAMIC_PROPERTIES).toString());
             }
+
+            // refreshing combobox
+            activeLegendsComboBox.setSelectedItem(activeLegendItem);
         }
         else {
             refreshPropertySheet(null);
         }
-
-
-    }//GEN-LAST:event_activeLegendsComboBoxActionPerformed
+    }
 
     private void refreshRenderers(Item activeLegendItem) {
 
