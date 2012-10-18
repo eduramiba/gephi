@@ -176,7 +176,7 @@ public class ImageItemBuilder extends LegendItemBuilder {
         return property;
     }
 
-    private File defaultImageFile = new File("/Volumes/edubecks/edubecks/Dropbox/imagenes/inception.jpg");
+    private File defaultImageFile = new File("/Users/edubecks/Dropbox/imagenes/inception.jpg");
     private final Object[] defaultValues = {
         defaultImageFile,
     };

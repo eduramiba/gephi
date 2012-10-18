@@ -304,17 +304,31 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
         setActiveItem(activeLegendItem);
     }//GEN-LAST:event_activeLegendsComboBoxActionPerformed
 
+    public void selectActiveItemInCombobox(Item activeLegendItem){
+        activeLegendsComboBox.setSelectedItem(activeLegendItem);
+        
+    }
+    
     public void setActiveItem(Item activeLegendItem) {
 
-        if (activeLegendItem != null) {
+        if (activeLegendItem != null && 
+            activeLegendsComboBox.getSelectedItem() != null) {
 
-            Item currentActiveLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
-            if (currentActiveLegendItem.equals(activeLegendItem)) {
-                return;
-            }
+//            Item currentActiveLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
+//            if (currentActiveLegendItem.equals(activeLegendItem)) {
+//                return;
+//            }
+
+            Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
+            System.out.println("@Var: ___ currentRenderer: " + currentRenderer);
 
             refreshPropertySheet(activeLegendItem);
             refreshRenderers(activeLegendItem);
+            
+            // refreshing combobox
+//            activeLegendsComboBox.setSelectedItem(activeLegendItem);
+            renderersComboBox.setSelectedItem(currentRenderer);
+
 
             Boolean hasDynamicProperties = activeLegendItem.getData(LegendItem.HAS_DYNAMIC_PROPERTIES);
             numberOfItemsLabel.setVisible(hasDynamicProperties);
@@ -324,8 +338,6 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
                 numberOfItemsTextField.setText(activeLegendItem.getData(LegendItem.NUMBER_OF_DYNAMIC_PROPERTIES).toString());
             }
 
-            // refreshing combobox
-            activeLegendsComboBox.setSelectedItem(activeLegendItem);
         }
         else {
             refreshPropertySheet(null);
@@ -339,11 +351,15 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
         Collection<? extends LegendItemRenderer> renderers = Lookup.getDefault().lookupAll(LegendItemRenderer.class);
         for (LegendItemRenderer renderer : renderers) {
 
-            if (renderer.isRendererForitem(activeLegendItem, null)) {
+            if (renderer.isAnAvailableRenderer(activeLegendItem)) {
                 renderersComboBox.addItem(renderer);
 
             }
         }
+
+        Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
+        System.out.println("@Var: currentRenderer: " + currentRenderer);
+        renderersComboBox.setSelectedItem(currentRenderer);
 
     }
 
@@ -385,8 +401,9 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
     private void renderersComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_renderersComboBoxActionPerformed
         Item item = (Item) activeLegendsComboBox.getSelectedItem();
         Object renderer = renderersComboBox.getSelectedItem();
-        if (renderer != null) {
-            item.setData(LegendItem.RENDERER, renderer.getClass());
+        if (item!= null && renderer != null) {
+            item.setData(LegendItem.RENDERER, renderer);
+            System.out.println("@Var: combobox currentRenderer: " + renderer);
         }
     }//GEN-LAST:event_renderersComboBoxActionPerformed
 

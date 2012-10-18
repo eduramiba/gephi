@@ -11,6 +11,8 @@ package org.gephi.legend.api.renderers;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.Collection;
+import javax.swing.LookAndFeel;
 import org.gephi.legend.builders.TableItemBuilder;
 import org.gephi.legend.items.LegendItem;
 import org.gephi.legend.items.LegendItem.Alignment;
@@ -21,11 +23,17 @@ import org.gephi.legend.properties.TableProperty;
 import org.gephi.preview.api.*;
 import org.gephi.preview.spi.ItemBuilder;
 import org.gephi.preview.spi.Renderer;
+import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 @ServiceProvider(service = Renderer.class, position = 501)
 public class TableItemRenderer extends LegendItemRenderer {
+
+    @Override
+    public boolean isAnAvailableRenderer(Item item) {
+        return item instanceof TableItem;
+    }
 
     @Override
     public String getDisplayName() {
@@ -34,8 +42,8 @@ public class TableItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof TableItem && renderer.equals(TableItemRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof TableItem && renderer.getClass().equals(TableItemRenderer.class));
     }
 
     @Override

@@ -26,6 +26,13 @@ import org.openide.util.lookup.ServiceProvider;
 public class TextItemRenderer extends LegendItemRenderer {
 
     @Override
+    public boolean isAnAvailableRenderer(Item item) {
+        return item instanceof TextItem;
+    }
+    
+    
+
+    @Override
     public String getDisplayName() {
         return NbBundle.getMessage(TextItemRenderer.class, "TextItemRenderer.name");
     }
@@ -43,8 +50,8 @@ public class TextItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof TextItem && renderer.equals(TextItemRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof TextItem && renderer.getClass().equals(TextItemRenderer.class));
     }
 
     @Override

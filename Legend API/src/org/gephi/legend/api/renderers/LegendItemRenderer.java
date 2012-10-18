@@ -59,6 +59,8 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
      */
     protected abstract void readOwnPropertiesAndValues(Item item, PreviewProperties properties);
     
+    public abstract boolean isAnAvailableRenderer(Item item);
+    
     private void readLocationProperties(Item item, PreviewProperties previewProperties) {
         if (item != null) {
             currentItemIndex = item.getData(LegendItem.ITEM_INDEX);
@@ -467,6 +469,8 @@ public abstract class LegendItemRenderer implements Renderer, MouseResponsiveRen
     protected float computeVerticalTextSpaceUsed(Graphics2D graphics2D, String text, Font font, Integer width) {
         return legendDrawText(graphics2D, text, font, Color.BLACK, 0, 0, width, currentHeight, Alignment.LEFT, true);
     }
+    
+    
 
     @Override
     public boolean needsPreviewMouseListener(PreviewMouseListener previewMouseListener) {

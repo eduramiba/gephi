@@ -30,8 +30,13 @@ import org.w3c.dom.Element;
  *
  * @author edubecks
  */
-@ServiceProvider(service = Renderer.class, position = 503)
+@ServiceProvider(service = Renderer.class, position = 0)
 public class ImageItemRenderer extends LegendItemRenderer {
+    
+    @Override
+    public boolean isAnAvailableRenderer(Item item) {
+        return item instanceof ImageItem;
+    }
 
     @Override
     protected void renderToGraphics(Graphics2D graphics2D, AffineTransform origin, Integer width, Integer height) {
@@ -92,9 +97,11 @@ public class ImageItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof ImageItem && renderer.equals(ImageItemRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof ImageItem && renderer.getClass().equals(ImageItemRenderer.class));
     }
+    
+    
 
     @Override
     public boolean needsItemBuilder(ItemBuilder itemBuilder, PreviewProperties properties) {

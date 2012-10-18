@@ -98,14 +98,14 @@ public class LegendMouseListener implements PreviewMouseListener {
                 //Unselect all other items:
                 for (Item otherItem : legendManager.getLegendItems()) {
                     otherItem.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
+                    
+                    System.out.println("@Var: item. renderer : "+otherItem.getData(LegendItem.RENDERER).toString());
                 }
                 item.setData(LegendItem.IS_SELECTED, Boolean.TRUE);
-                event.setConsumed(true);
                 //updating manager
                 LegendManagerUI legendManagerUI = Lookup.getDefault().lookup(LegendManagerUI.class);
-                legendManagerUI.setActiveItem(item);
-
-
+                legendManagerUI.selectActiveItemInCombobox(item);
+                event.setConsumed(true);
                 return;
             }
             else if (isSelected) {

@@ -39,8 +39,8 @@ public class GroupsPieChartRenderer extends GroupsItemRenderer {
     
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof GroupsItem && renderer.equals(GroupsPieChartRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.getClass().equals(GroupsPieChartRenderer.class));
     }
 
     @Override

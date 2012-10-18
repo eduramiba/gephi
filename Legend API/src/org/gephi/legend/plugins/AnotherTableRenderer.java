@@ -30,8 +30,8 @@ public class AnotherTableRenderer extends TableItemRenderer {
     
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof GroupsItem && renderer.equals(AnotherTableRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.getClass().equals(AnotherTableRenderer.class));
     }
 
     @Override

@@ -28,6 +28,11 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = Renderer.class, position = 504)
 public class GroupsItemRenderer extends LegendItemRenderer {
+    
+    @Override
+    public boolean isAnAvailableRenderer(Item item) {
+        return item instanceof GroupsItem;
+    }
 
     @Override
     protected void renderToGraphics(Graphics2D graphics2D,
@@ -267,8 +272,8 @@ public class GroupsItemRenderer extends LegendItemRenderer {
 
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
-        Class<? extends LegendItemRenderer> renderer = item.getData(LegendItem.RENDERER);
-        return (item instanceof GroupsItem && renderer.equals(GroupsItemRenderer.class));
+        LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);
+        return (item instanceof GroupsItem && renderer.getClass().equals(GroupsItemRenderer.class));
     }
 
     @Override
