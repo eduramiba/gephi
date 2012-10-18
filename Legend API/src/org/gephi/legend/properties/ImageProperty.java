@@ -17,11 +17,9 @@ public class ImageProperty {
     public static final int LOCK_ASPECT_RATIO = 1;
     public static final String[] OWN_PROPERTIES = {
         ".imageUrl",
-        ".lockAspectRatio"
     };
     public static final int[] LIST_OF_PROPERTIES = {
         IMAGE_URL,
-        LOCK_ASPECT_RATIO
     };
     private static ImageProperty instance = new ImageProperty();
     private Map<String, Integer> propertyIndex;

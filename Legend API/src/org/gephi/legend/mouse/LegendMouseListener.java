@@ -1,5 +1,6 @@
 package org.gephi.legend.mouse;
 
+import java.awt.event.MouseEvent;
 import org.gephi.legend.items.LegendItem;
 import static org.gephi.legend.items.LegendItem.LEGEND_MIN_HEIGHT;
 import static org.gephi.legend.items.LegendItem.LEGEND_MIN_WIDTH;
@@ -103,8 +104,8 @@ public class LegendMouseListener implements PreviewMouseListener {
                 //updating manager
                 LegendManagerUI legendManagerUI = Lookup.getDefault().lookup(LegendManagerUI.class);
                 legendManagerUI.setActiveItem(item);
-                
-                
+
+
                 return;
             }
             else if (isSelected) {
@@ -257,7 +258,19 @@ public class LegendMouseListener implements PreviewMouseListener {
                                 break;
                             }
                         }
-
+                        
+                        // change for key event
+                        boolean isCtrlKeyPressed = true;
+                        if (isCtrlKeyPressed) {
+                            float scaleWidth = newWidth/width;
+                            float scaleHeight = newHeight/height;
+                            float scale = Math.min(scaleWidth, scaleHeight);
+                            newWidth = width*scale;
+                            newHeight = height*scale;
+                            
+                        }
+                        
+                        
                         if (newWidth >= LEGEND_MIN_WIDTH && newHeight >= LEGEND_MIN_HEIGHT) {
                             previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
                             previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);

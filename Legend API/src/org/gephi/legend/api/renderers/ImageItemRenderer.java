@@ -10,7 +10,6 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
 import org.apache.batik.svggen.*;
 import org.apache.commons.codec.binary.*;
@@ -51,11 +50,6 @@ public class ImageItemRenderer extends LegendItemRenderer {
                     double scaleHeight = height / ((double) before.getHeight());
                     double scaleWidth = width / ((double) before.getWidth());
 
-                    if (lockAspectRatio) {
-                        scaleHeight = Math.min(scaleHeight, scaleWidth);
-                        scaleWidth = Math.min(scaleHeight, scaleWidth);
-                    }
-
                     AffineTransform scaleTransform = new AffineTransform();
                     scaleTransform.scale(scaleWidth, scaleHeight);
                     AffineTransformOp scaleOperation = new AffineTransformOp(scaleTransform, AffineTransformOp.TYPE_BILINEAR);
@@ -89,7 +83,6 @@ public class ImageItemRenderer extends LegendItemRenderer {
         Integer itemIndex = item.getData(LegendItem.ITEM_INDEX);
 
         imageFile = properties.getValue(LegendManager.getProperty(ImageProperty.OWN_PROPERTIES, itemIndex, ImageProperty.IMAGE_URL));
-        lockAspectRatio = properties.getValue(LegendManager.getProperty(ImageProperty.OWN_PROPERTIES, itemIndex, ImageProperty.LOCK_ASPECT_RATIO));
     }
 
     @Override
@@ -147,7 +140,6 @@ public class ImageItemRenderer extends LegendItemRenderer {
 
     // OWN PROPERTIES
     private File imageFile;
-    private Boolean lockAspectRatio;
     // encoding
     public static final String DATA_PROTOCOL_PNG_PREFIX = "data:image/png;base64,";
 }
