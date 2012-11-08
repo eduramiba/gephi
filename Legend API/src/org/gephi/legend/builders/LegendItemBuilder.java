@@ -69,8 +69,8 @@ public abstract class LegendItemBuilder implements ItemBuilder {
      * @param attributeModel
      * @return
      */
-    protected abstract Item buildCustomItem(CustomLegendItemBuilder builder, 
-                                            Graph graph, 
+    protected abstract Item buildCustomItem(CustomLegendItemBuilder builder,
+                                            Graph graph,
                                             AttributeModel attributeModel);
 
     /**
@@ -115,9 +115,9 @@ public abstract class LegendItemBuilder implements ItemBuilder {
      * @param builder
      * @return
      */
-    public Item createCustomItem(Integer newItemIndex, 
-                                 Graph graph, 
-                                 AttributeModel attributeModel, 
+    public Item createCustomItem(Integer newItemIndex,
+                                 Graph graph,
+                                 AttributeModel attributeModel,
                                  CustomLegendItemBuilder builder) {
         Item item = buildCustomItem(builder, graph, attributeModel);
         createDefaultProperties(newItemIndex, item);
@@ -540,6 +540,12 @@ public abstract class LegendItemBuilder implements ItemBuilder {
         writer.writeCharacters(item.getType());
         writer.writeEndElement();
 
+        // renderer
+        writer.writeStartElement(XML_RENDERER);
+        System.out.println("" + item.getData(LegendItem.RENDERER).getClass().getName());
+        writer.writeCharacters(item.getData(LegendItem.RENDERER).getClass().getName());
+        writer.writeEndElement();
+
         // legend properties
         writer.writeStartElement(XML_LEGEND_PROPERTY);
         PreviewProperty[] legendProperties = item.getData(LegendItem.PROPERTIES);
@@ -700,6 +706,29 @@ public abstract class LegendItemBuilder implements ItemBuilder {
 
     }
 
+    private void readXMLToRenderer(XMLStreamReader reader, Item item) throws XMLStreamException {
+
+        // legend properties
+
+        System.out.println("@Var: START readXMLToRenderer");
+        
+        // reading element <renderer> CONTENT </renderer>
+//        reader.next();
+
+        if (reader.getLocalName().equals(XML_RENDERER)) {
+            String valueString = reader.getElementText();
+            item.setData(
+                    LegendItem.RENDERER,
+                    LegendController.getInstance().getRenderers().get(valueString));
+            
+        }
+        // end element
+//        reader.next();
+
+
+
+    }
+
     /**
      * Function that reads the legend properties, specific item properties,
      * dynamic properties and data and converts it to an Item using the
@@ -715,6 +744,11 @@ public abstract class LegendItemBuilder implements ItemBuilder {
 
         Item item = createNewLegendItem(null);
         item.setData(LegendItem.ITEM_INDEX, newItemIndex);
+
+        // opening renderer
+        reader.nextTag();
+        readXMLToRenderer(reader, item);
+
 
         // opening legend properties
         reader.nextTag();
@@ -760,7 +794,7 @@ public abstract class LegendItemBuilder implements ItemBuilder {
     /**
      * Converts the propertyValue of a known type to an String object
      *
-     * @param propertyValue Known
+     * @param propertyValue Known *
      * types: <code> LegendItem.Alignment</code>, <code> LegendItem.Shape</code>
      * and <code> LegendItem.Direction</code>
      * @return
@@ -805,6 +839,7 @@ public abstract class LegendItemBuilder implements ItemBuilder {
 
     protected static final String XML_PROPERTY = "property";
     private static final String XML_LEGEND_TYPE = "legendtype";
+    private static final String XML_RENDERER = "renderer";
     private static final String XML_DYNAMIC_PROPERTY = "dynamicproperty";
     private static final String XML_LEGEND_PROPERTY = "legendproperty";
     protected static final String XML_OWN_PROPERTY = "itemproperty";

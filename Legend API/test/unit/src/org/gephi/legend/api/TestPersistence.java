@@ -31,6 +31,8 @@ import org.gephi.legend.builders.TextItemBuilder;
 import org.gephi.legend.items.LegendItem;
 import org.gephi.legend.manager.LegendController;
 import org.gephi.legend.manager.LegendManager;
+import org.gephi.legend.api.renderers.GroupsItemRenderer;
+import org.gephi.legend.plugins.AnotherGroupsRenderer;
 import org.gephi.preview.api.Item;
 import org.gephi.preview.api.PreviewController;
 import org.gephi.preview.api.PreviewModel;
@@ -134,15 +136,18 @@ public class TestPersistence {
 
 
             // creating item
-            Item item = addDescriptionItem(itemIndex, graph, attributeModel, previewController);
+//            Item item = addDescriptionItem(itemIndex, graph, attributeModel, previewController);
 //            Item item = addTableItem(itemIndex, graph, attributeModel);
 //            Item item = addTextItem(itemIndex, graph, attributeModel);
 //            Item item = addImageItem(itemIndex, graph, attributeModel);
-//            Item item = addGroupsItem(itemIndex, graph, attributeModel);
+            Item item = addGroupsItem(itemIndex, graph, attributeModel);
+            item.setData(sample, target);
 
 
             // add item
-            legendManager.addItem(item);
+            LegendController legendController = LegendController.getInstance();
+            legendController.addItemToLegendManager(item);
+//            legendManager.addItem(item);
 
             PreviewProperty[] legendProperties = item.getData(LegendItem.PROPERTIES);
             for (PreviewProperty property : legendProperties) {
@@ -198,6 +203,8 @@ public class TestPersistence {
     public Item addGroupsItem(int newItemIndex, Graph graph, AttributeModel attributeModel) {
         GroupsItemBuilder builder = new GroupsItemBuilder();
         Item item = builder.createCustomItem(newItemIndex, graph, attributeModel, new org.gephi.legend.builders.group.Default());
+        String renderer = (new AnotherGroupsRenderer()).getClass().getName();
+        item.setData(LegendItem.RENDERER,renderer );
         return item;
     }
 

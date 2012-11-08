@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import org.gephi.legend.api.renderers.LegendItemRenderer;
 import org.gephi.legend.builders.LegendItemBuilder;
 import org.gephi.legend.items.LegendItem;
 import org.gephi.preview.api.Item;
@@ -68,6 +70,21 @@ public class LegendController {
 
         return legendItemBuilders;
     }
+
+    private void registerLegendRenderers() {
+        renderers = new HashMap<String, LegendItemRenderer>();
+
+        // retrieving available builders
+        Collection<? extends LegendItemRenderer> legendItemRenderers =
+                Lookup.getDefault().lookupAll(LegendItemRenderer.class);
+
+        // registering renderers
+        for (LegendItemRenderer legendItemRenderer : legendItemRenderers) {
+            renderers.put(legendItemRenderer.getClass().getName(), legendItemRenderer);
+        }
+    }
+
+
 
     public void addItemToLegendManager(Item item) {
         addItemToLegendManager(Lookup.getDefault().lookup(ProjectController.class).getCurrentWorkspace(), item);
@@ -133,6 +150,9 @@ public class LegendController {
                 writer.writeEndElement();
             }
             writer.writeEndElement();
+//            System.out.println("@Var: writer: "+writer.);
+
+
         } catch (XMLStreamException ex) {
             throw new RuntimeException(ex);
         }
@@ -190,6 +210,7 @@ public class LegendController {
     private static LegendController instance = new LegendController();
     // available builders
     private Map<String, LegendItemBuilder> builders;
+    private Map<String, LegendItemRenderer> renderers;
     private Collection<? extends LegendItemBuilder> availablebuilders;
 
     /*
@@ -204,9 +225,14 @@ public class LegendController {
         return availablebuilders;
     }
 
+    public Map<String, LegendItemRenderer> getRenderers() {
+        return renderers;
+    }
+
     private LegendController() {
         builders = new HashMap<String, LegendItemBuilder>();
         availablebuilders = registerLegendBuilders();
+        registerLegendRenderers();
     }
 
     /*

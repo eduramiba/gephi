@@ -320,13 +320,10 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
 //            }
 
             Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
-            System.out.println("@Var: ___ currentRenderer: " + currentRenderer);
 
             refreshPropertySheet(activeLegendItem);
             refreshRenderers(activeLegendItem);
             
-            // refreshing combobox
-//            activeLegendsComboBox.setSelectedItem(activeLegendItem);
             renderersComboBox.setSelectedItem(currentRenderer);
 
 
@@ -358,7 +355,6 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
         }
 
         Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
-        System.out.println("@Var: currentRenderer: " + currentRenderer);
         renderersComboBox.setSelectedItem(currentRenderer);
 
     }
@@ -383,7 +379,6 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI {
     private void legendItemBuildersComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_legendItemBuildersComboBoxActionPerformed
 
         // clean combobox
-        System.out.println("@Var: tooltipRenderer: " + tooltipRenderer);
         builderTypeComboBox.removeAllItems();
         ArrayList<String> tooltips = new ArrayList<String>();
 
