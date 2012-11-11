@@ -165,13 +165,14 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
         originTranslation = new AffineTransform(saveState);
         originTranslation.translate(currentRealOriginX, currentRealOriginY);
 
-        if (currentIsBeingTransformed) {
-            renderTransformed(graphics2D, originTranslation, currentWidth, currentHeight);
-            drawScaleAnchors(graphics2D, originTranslation, currentWidth, currentHeight);
-        }
-        else {
-            render(graphics2D, originTranslation, currentWidth, currentHeight);
-        }
+//        if (currentIsBeingTransformed) {//Transformed rendering disabled
+//            renderTransformed(graphics2D, originTranslation, currentWidth, currentHeight);
+//            drawScaleAnchors(graphics2D, originTranslation, currentWidth, currentHeight);
+//        } else {
+//            render(graphics2D, originTranslation, currentWidth, currentHeight);
+//        }
+        
+        render(graphics2D, originTranslation, currentWidth, currentHeight);
         graphics2D.setTransform(saveState);
     }
 
@@ -243,8 +244,6 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
         if (currentIsSelected) {
             drawScaleAnchors(graphics2D, origin, width, height);
         }
-
-
     }
 
     private void drawScaleAnchors(Graphics2D graphics2D, AffineTransform origin, Integer width, Integer height) {

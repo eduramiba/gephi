@@ -91,7 +91,7 @@ public class LegendMouseListener implements PreviewMouseListener {
         boolean someItemStateChanged = false;
         for (Item item : legendModel.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
-            if (isClickingInLegend(event.x, event.y, item, previewProperties)) {
+            if (isClickingInLegend(event.x, event.y, item, previewProperties) || isClickingInAnchor(event.x, event.y, item, previewProperties) >= 0) {
                 //Unselect all other items:
                 for (Item otherItem : legendModel.getLegendItems()) {
                     otherItem.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
@@ -112,15 +112,16 @@ public class LegendMouseListener implements PreviewMouseListener {
         if (someItemStateChanged) {
             event.setConsumed(true);
         }
-        // bug
-        event.setConsumed(true);
     }
 
     @Override
     public void mousePressed(PreviewMouseEvent event, PreviewProperties previewProperties, Workspace workspace) {
-        LegendModel legendManager = LegendController.getInstance().getLegendModel();
-        for (Item item : legendManager.getLegendItems()) {
+        mouseClicked(event, previewProperties, workspace);//Update selected legend as if the press was a click.
+        
+        LegendModel legendModel = LegendController.getInstance().getLegendModel();
+        for (Item item : legendModel.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
+            isSelected = isSelected || isClickingInLegend(event.x, event.y, item, previewProperties);
             if (!isSelected) {
                 continue;
             }
@@ -177,7 +178,6 @@ public class LegendMouseListener implements PreviewMouseListener {
                 event.setConsumed(true);
                 return;
             } else {
-
                 item.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
                 item.setData(LegendItem.IS_BEING_TRANSFORMED, Boolean.FALSE);
                 relativeX = 0;
@@ -259,11 +259,11 @@ public class LegendMouseListener implements PreviewMouseListener {
                         // change for key event
                         boolean isCtrlKeyPressed = event.keyEvent != null && event.keyEvent.isControlDown();
                         if (isCtrlKeyPressed) {
-                            float scaleWidth = newWidth/width;
-                            float scaleHeight = newHeight/height;
+                            float scaleWidth = newWidth / width;
+                            float scaleHeight = newHeight / height;
                             float scale = Math.min(scaleWidth, scaleHeight);
-                            newWidth = width*scale;
-                            newHeight = height*scale;
+                            newWidth = width * scale;
+                            newHeight = height * scale;
                         }
 
 
@@ -282,10 +282,9 @@ public class LegendMouseListener implements PreviewMouseListener {
                     previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
                 }
 
-                event.setConsumed(true);
-                return;
             }
         }
+        event.setConsumed(true);
     }
 
     @Override
@@ -299,9 +298,8 @@ public class LegendMouseListener implements PreviewMouseListener {
             }
 
             item.setData(LegendItem.IS_BEING_TRANSFORMED, Boolean.FALSE);
-            event.setConsumed(true);
-            return;
         }
+        event.setConsumed(true);
     }
     private float relativeX;
     private float relativeY;

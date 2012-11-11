@@ -23,6 +23,7 @@ import org.openide.util.NbBundle;
  */
 public class LegendNode extends AbstractNode implements PropertyChangeListener {
     private final PreviewProperties previewProperties;
+    private PropertySet[] propertySets;
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
@@ -37,29 +38,37 @@ public class LegendNode extends AbstractNode implements PropertyChangeListener {
         this.previewProperties = previewProperties;
         setDisplayName(NbBundle.getMessage(LegendNode.class, "LegendNode.displayName"));
     }
-
+    
     @Override
-    protected Sheet createSheet() {
-
-        Sheet sheet = Sheet.createDefault();
-        
-        
-        // regular properties
+    public PropertySet[] getPropertySets() {
+        propertySets = new PropertySet[]{prepareLegendOwnProperties(), prepareLegendProperties()};
+        return propertySets;
+    }
+    
+    private Sheet.Set prepareLegendProperties() {
         PreviewProperty[] properties = activeLegendItem.getData(LegendItem.PROPERTIES);
-        String label = properties[0].getValue();
-        Sheet.Set itemSet = Sheet.createPropertiesSet();
-        itemSet.setDisplayName(label);
-        itemSet.setName(label);
+        Sheet.Set set = Sheet.createPropertiesSet();
+        
+         // regular properties
         for (PreviewProperty property : properties) {
             Node.Property nodeProperty = new LegendPropertyWrapper(property, previewProperties);
-            itemSet.put(nodeProperty);
+            set.put(nodeProperty);
         }
+        
+        set.setName("legend");
+        set.setDisplayName(NbBundle.getMessage(LegendNode.class, "LegendNode.legend.properties"));
+        
+        return set;
+    }
+    
+    private Sheet.Set prepareLegendOwnProperties() {
+        Sheet.Set set = Sheet.createPropertiesSet();
         
         // own properties
         PreviewProperty[] ownProperties = activeLegendItem.getData(LegendItem.OWN_PROPERTIES);
         for (PreviewProperty property : ownProperties) {
             Node.Property nodeProperty = new LegendPropertyWrapper(property, previewProperties);
-            itemSet.put(nodeProperty);
+            set.put(nodeProperty);
         }
         
         
@@ -67,15 +76,15 @@ public class LegendNode extends AbstractNode implements PropertyChangeListener {
         PreviewProperty[] dynamicProperties = activeLegendItem.getData(LegendItem.DYNAMIC_PROPERTIES);
         for (PreviewProperty property : dynamicProperties) {
             Node.Property nodeProperty = new LegendPropertyWrapper(property, previewProperties);
-            itemSet.put(nodeProperty);
+            set.put(nodeProperty);
         }
         
+        set.setName("own");
+        set.setDisplayName(NbBundle.getMessage(LegendNode.class, "LegendNode.own.properties"));
         
-        sheet.put(itemSet);
-
-        return sheet;
+        return set;
     }
-
+    
     public static class LegendPropertyWrapper extends PropertySupport.ReadWrite {
 
         private final PreviewProperty property;

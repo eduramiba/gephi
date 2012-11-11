@@ -623,14 +623,14 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
     protected Float defaultWidth = 500f;
     protected Float defaultHeight = 300f;
     // TITLE
-    protected Boolean defaultTitleIsDisplaying = Boolean.TRUE;
+    protected Boolean defaultTitleIsDisplaying = Boolean.FALSE;
     protected String defaultTitle = "TITLE";
     protected Font defaultTitleFont = new Font("Arial", Font.BOLD, 30);
     protected Alignment defaultTitleAlignment = Alignment.CENTER;
     protected Color defaultTitleFontColor = Color.BLACK;
     // DESCRIPTION
     protected String defaultDescription = "description ... description ...description ...description ...description ...description ...description ...description ...description ...description ...description ...description ...";
-    protected Boolean defaultDescriptionIsDisplaying = true;
+    protected Boolean defaultDescriptionIsDisplaying = Boolean.FALSE;
     protected Color defaultDescriptionFontColor = Color.BLACK;
     protected Alignment defaultDescriptionAlignment = Alignment.LEFT;
     protected Font defaultDescriptionFont = new Font("Arial", Font.PLAIN, 10);

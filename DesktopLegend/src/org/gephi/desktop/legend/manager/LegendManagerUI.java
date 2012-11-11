@@ -5,8 +5,6 @@
 package org.gephi.desktop.legend.manager;
 
 import java.awt.*;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -18,10 +16,8 @@ import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import org.gephi.data.attributes.api.AttributeModel;
+import org.gephi.desktop.preview.api.PreviewUIController;
 import org.gephi.graph.api.Graph;
 import org.gephi.legend.api.LegendController;
 import org.gephi.legend.api.LegendModel;
@@ -45,12 +41,16 @@ import org.openide.util.lookup.ServiceProvider;
 public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, PropertyChangeListener {
 
     private final LegendController legendController;
+    private final PreviewUIController previewUIController;
+    
 
     /**
      * Creates new form LegendManagerUI
      */
     public LegendManagerUI() {
         legendController = LegendController.getInstance();
+        legendController.addListener(this);
+        previewUIController = Lookup.getDefault().lookup(PreviewUIController.class);
         initComponents();
         tooltipRenderer = new ComboboxToolTipRenderer();
         builderTypeComboBox.setRenderer(tooltipRenderer);
@@ -267,7 +267,8 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
                     JOptionPane.INFORMATION_MESSAGE,
                     null);
         }
-
+        
+        previewUIController.refreshPreview();
     }//GEN-LAST:event_addLegendButtonActionPerformed
 
     private void refreshPropertySheet() {
@@ -304,6 +305,8 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         Integer activeLegend = ((Item) activeLegendsComboBox.getSelectedItem()).getData(LegendItem.ITEM_INDEX);
         legendModel.removeItem(activeLegend);
         refreshActiveLegendsComboBox();
+        
+        previewUIController.refreshPreview();
     }//GEN-LAST:event_removeLegendButtonActionPerformed
 
     private void activeLegendsComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_activeLegendsComboBoxActionPerformed
@@ -377,10 +380,11 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
                 refreshPropertySheet();
             }
         }
+        
+        previewController.refreshPreview();
     }//GEN-LAST:event_numberOfItemsTextFieldActionPerformed
 
     private void legendItemBuildersComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_legendItemBuildersComboBoxActionPerformed
-
         // clean combobox
         builderTypeComboBox.removeAllItems();
         ArrayList<String> tooltips = new ArrayList<String>();
@@ -393,7 +397,6 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         }
 
         tooltipRenderer.setTooltips(tooltips);
-
     }//GEN-LAST:event_legendItemBuildersComboBoxActionPerformed
 
     private void renderersComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_renderersComboBoxActionPerformed
@@ -401,8 +404,8 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         Object renderer = renderersComboBox.getSelectedItem();
         if (item != null && renderer != null) {
             item.setData(LegendItem.RENDERER, renderer);
-            System.out.println("@Var: combobox currentRenderer: " + renderer);
         }
+        previewUIController.refreshPreview();
     }//GEN-LAST:event_renderersComboBoxActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel activeLegendLabel;
