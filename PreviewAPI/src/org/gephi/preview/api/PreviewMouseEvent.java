@@ -41,9 +41,12 @@
  */
 package org.gephi.preview.api;
 
+import java.awt.event.KeyEvent;
+
 /**
- * Mouse event for preview. Contains the event type and graph coordinates for the event.
- * If you attend a <code>PreviewMouseEvent</code>, it should be marked as consumed.
+ * <p>Mouse event for preview. Contains the event type and graph coordinates for the event.
+ * If you attend a <code>PreviewMouseEvent</code>, it should be marked as consumed.</p>
+ * <p>The public keyEvent field contains the keyboard state for the given mouse event. Can be null.</p>
  * @author Eduardo Ramos<eduramiba@gmail.com>
  */
 public class PreviewMouseEvent {
@@ -59,11 +62,17 @@ public class PreviewMouseEvent {
     public final int x;
     public final int y;
     private boolean consumed;
+    
+    /**
+     * Contains the keyboard state for the given mouse event. Can be null.
+     */
+    public final KeyEvent keyEvent;
 
-    public PreviewMouseEvent(int x, int y, Type type) {
+    public PreviewMouseEvent(int x, int y, Type type, KeyEvent keyEvent) {
         this.x = x;
         this.y = y;
         this.type = type;
+        this.keyEvent = keyEvent;
         consumed = false;
     }
 

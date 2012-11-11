@@ -1,20 +1,17 @@
 package org.gephi.legend.mouse;
 
-import java.awt.event.MouseEvent;
-import org.gephi.legend.items.LegendItem;
-import static org.gephi.legend.items.LegendItem.LEGEND_MIN_HEIGHT;
-import static org.gephi.legend.items.LegendItem.LEGEND_MIN_WIDTH;
-import static org.gephi.legend.items.LegendItem.TRANSFORMATION_ANCHOR_SIZE;
-import org.gephi.legend.manager.LegendController;
-import org.gephi.legend.manager.LegendManager;
-import org.gephi.legend.manager.LegendManagerUI;
-import org.gephi.legend.properties.LegendProperty;
+import org.gephi.legend.api.LegendController;
+import org.gephi.legend.api.LegendModel;
+import org.gephi.legend.api.LegendProperty;
+import org.gephi.legend.spi.LegendItem;
+import static org.gephi.legend.spi.LegendItem.LEGEND_MIN_HEIGHT;
+import static org.gephi.legend.spi.LegendItem.LEGEND_MIN_WIDTH;
+import static org.gephi.legend.spi.LegendItem.TRANSFORMATION_ANCHOR_SIZE;
 import org.gephi.preview.api.Item;
 import org.gephi.preview.api.PreviewMouseEvent;
 import org.gephi.preview.api.PreviewProperties;
 import org.gephi.preview.spi.PreviewMouseListener;
 import org.gephi.project.api.Workspace;
-import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -25,15 +22,15 @@ import org.openide.util.lookup.ServiceProvider;
 public class LegendMouseListener implements PreviewMouseListener {
 
     private int isClickingInAnchor(int pointX,
-                                   int pointY,
-                                   Item item,
-                                   PreviewProperties previewProperties) {
+            int pointY,
+            Item item,
+            PreviewProperties previewProperties) {
 
         Integer itemIndex = item.getData(LegendItem.ITEM_INDEX);
-        float realOriginX = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
-        float realOriginY = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
-        int width = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
-        int height = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
+        float realOriginX = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
+        float realOriginY = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
+        int width = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
+        int height = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
         float[][] anchorLocations = {
             {
                 -TRANSFORMATION_ANCHOR_SIZE / 2,
@@ -66,9 +63,9 @@ public class LegendMouseListener implements PreviewMouseListener {
 
         for (int i = 0; i < anchorLocations.length; i++) {
             if ((pointX >= anchorLocations[i][0]
-                 && pointX < (anchorLocations[i][0] + anchorLocations[i][2]))
-                && pointY >= anchorLocations[i][1]
-                && pointY < (anchorLocations[i][1] + anchorLocations[i][3])) {
+                    && pointX < (anchorLocations[i][0] + anchorLocations[i][2]))
+                    && pointY >= anchorLocations[i][1]
+                    && pointY < (anchorLocations[i][1] + anchorLocations[i][3])) {
                 return i;
             }
         }
@@ -77,12 +74,12 @@ public class LegendMouseListener implements PreviewMouseListener {
 
     private boolean isClickingInLegend(int pointX, int pointY, Item item, PreviewProperties previewProperties) {
         Integer itemIndex = item.getData(LegendItem.ITEM_INDEX);
-        float realOriginX = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
-        float realOriginY = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
-        int width = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
-        int height = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
+        float realOriginX = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
+        float realOriginY = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
+        int width = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
+        int height = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
         if ((pointX >= realOriginX && pointX < (realOriginX + width))
-            && (pointY >= realOriginY && pointY < (realOriginY + height))) {
+                && (pointY >= realOriginY && pointY < (realOriginY + height))) {
             return true;
         }
         return false;
@@ -90,25 +87,24 @@ public class LegendMouseListener implements PreviewMouseListener {
 
     @Override
     public void mouseClicked(PreviewMouseEvent event, PreviewProperties previewProperties, Workspace workspace) {
-        LegendManager legendManager = LegendController.getInstance().getLegendManager();
+        LegendModel legendModel = LegendController.getInstance().getLegendModel();
         boolean someItemStateChanged = false;
-        for (Item item : legendManager.getLegendItems()) {
+        for (Item item : legendModel.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
             if (isClickingInLegend(event.x, event.y, item, previewProperties)) {
                 //Unselect all other items:
-                for (Item otherItem : legendManager.getLegendItems()) {
+                for (Item otherItem : legendModel.getLegendItems()) {
                     otherItem.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
-                    
-                    System.out.println("@Var: item. renderer : "+otherItem.getData(LegendItem.RENDERER).toString());
+
+                    System.out.println("@Var: item. renderer : " + otherItem.getData(LegendItem.RENDERER).toString());
                 }
                 item.setData(LegendItem.IS_SELECTED, Boolean.TRUE);
-                //updating manager
-                LegendManagerUI legendManagerUI = Lookup.getDefault().lookup(LegendManagerUI.class);
-                legendManagerUI.selectActiveItemInCombobox(item);
+
+                //updating manager ui:
+                LegendController.getInstance().selectItem(item);
                 event.setConsumed(true);
                 return;
-            }
-            else if (isSelected) {
+            } else if (isSelected) {
                 someItemStateChanged = someItemStateChanged || isSelected;
                 item.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
             }
@@ -122,17 +118,17 @@ public class LegendMouseListener implements PreviewMouseListener {
 
     @Override
     public void mousePressed(PreviewMouseEvent event, PreviewProperties previewProperties, Workspace workspace) {
-        LegendManager legendManager = LegendController.getInstance().getLegendManager();
+        LegendModel legendManager = LegendController.getInstance().getLegendModel();
         for (Item item : legendManager.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
             if (!isSelected) {
                 continue;
             }
             Integer itemIndex = item.getData(LegendItem.ITEM_INDEX);
-            float realOriginX = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
-            float realOriginY = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
-            int width = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
-            int height = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
+            float realOriginX = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
+            float realOriginY = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
+            int width = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
+            int height = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
 
             clickedAnchor = isClickingInAnchor(event.x, event.y, item, previewProperties);
             boolean isClickingInAnchor = clickedAnchor >= 0;
@@ -171,8 +167,7 @@ public class LegendMouseListener implements PreviewMouseListener {
 
                 event.setConsumed(true);
                 return;
-            }
-            else if (isClickingInLegend(event.x, event.y, item, previewProperties)) {
+            } else if (isClickingInLegend(event.x, event.y, item, previewProperties)) {
                 relativeX = event.x - realOriginX;
                 relativeY = event.y - realOriginY;
 
@@ -181,12 +176,14 @@ public class LegendMouseListener implements PreviewMouseListener {
 
                 event.setConsumed(true);
                 return;
-            }
-            else {
+            } else {
+
                 item.setData(LegendItem.IS_SELECTED, Boolean.FALSE);
                 item.setData(LegendItem.IS_BEING_TRANSFORMED, Boolean.FALSE);
                 relativeX = 0;
                 relativeY = 0;
+                LegendController.getInstance().selectItem(null);
+
                 event.setConsumed(true);
                 return;
             }
@@ -195,8 +192,8 @@ public class LegendMouseListener implements PreviewMouseListener {
 
     @Override
     public void mouseDragged(PreviewMouseEvent event, PreviewProperties previewProperties, Workspace workspace) {
-        LegendManager legendManager = LegendController.getInstance().getLegendManager();
-        for (Item item : legendManager.getLegendItems()) {
+        LegendModel legendModel = LegendController.getInstance().getLegendModel();
+        for (Item item : legendModel.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
             if (!isSelected) {
                 continue;
@@ -212,10 +209,10 @@ public class LegendMouseListener implements PreviewMouseListener {
                 // SCALING
                 if (currentTransformation.equals(TRANSFORMATION_SCALE_OPERATION)) {
 
-                    float realOriginX = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
-                    float realOriginY = previewProperties.getFloatValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
-                    int width = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
-                    int height = previewProperties.getIntValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
+                    float realOriginX = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X));
+                    float realOriginY = previewProperties.getFloatValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y));
+                    int width = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH));
+                    int height = previewProperties.getIntValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT));
 
                     boolean isClickingInAnchor = clickedAnchor >= 0;
                     if (isClickingInAnchor) {
@@ -258,33 +255,31 @@ public class LegendMouseListener implements PreviewMouseListener {
                                 break;
                             }
                         }
-                        
+
                         // change for key event
-                        boolean isCtrlKeyPressed = true;
+                        boolean isCtrlKeyPressed = event.keyEvent != null && event.keyEvent.isControlDown();
                         if (isCtrlKeyPressed) {
                             float scaleWidth = newWidth/width;
                             float scaleHeight = newHeight/height;
                             float scale = Math.min(scaleWidth, scaleHeight);
                             newWidth = width*scale;
                             newHeight = height*scale;
-                            
                         }
-                        
-                        
+
+
                         if (newWidth >= LEGEND_MIN_WIDTH && newHeight >= LEGEND_MIN_HEIGHT) {
-                            previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
-                            previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
-                            previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH), newWidth);
-                            previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT), newHeight);
+                            previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
+                            previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
+                            previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH), newWidth);
+                            previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT), newHeight);
                         }
                     }
-                }
-                else if (currentTransformation.equals(TRANSFORMATION_TRANSLATE_OPERATION)) {
+                } else if (currentTransformation.equals(TRANSFORMATION_TRANSLATE_OPERATION)) {
                     float newOriginX = event.x - relativeX;
                     float newOriginY = event.y - relativeY;
 
-                    previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
-                    previewProperties.putValue(LegendManager.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
+                    previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
+                    previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
                 }
 
                 event.setConsumed(true);
@@ -295,9 +290,9 @@ public class LegendMouseListener implements PreviewMouseListener {
 
     @Override
     public void mouseReleased(PreviewMouseEvent event, PreviewProperties previewProperties, Workspace workspace) {
-        LegendManager legendManager = LegendController.getInstance().getLegendManager();
+        LegendModel legendModel = LegendController.getInstance().getLegendModel();
 
-        for (Item item : legendManager.getLegendItems()) {
+        for (Item item : legendModel.getLegendItems()) {
             Boolean isSelected = item.getData(LegendItem.IS_SELECTED);
             if (!isSelected) {
                 continue;
@@ -308,7 +303,6 @@ public class LegendMouseListener implements PreviewMouseListener {
             return;
         }
     }
-
     private float relativeX;
     private float relativeY;
     private float relativeAnchorX;

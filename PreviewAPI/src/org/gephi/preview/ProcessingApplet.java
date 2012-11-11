@@ -159,7 +159,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
     @Override
     public void mouseClicked() {
         PVector pos = getMouseModelPosition();
-        if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.CLICKED))) {
+        if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.CLICKED, keyEvent))) {
             previewController.refreshPreview();
             redraw();
         }
@@ -172,7 +172,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
             redraw();
         } else {
             PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.PRESSED))) {
+            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.PRESSED, keyEvent))) {
                 previewController.refreshPreview();
                 redraw();
             }
@@ -190,7 +190,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
             redraw();
         } else {
             PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.DRAGGED))) {
+            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.DRAGGED, keyEvent))) {
                 previewController.refreshPreview();
                 redraw();
             }
@@ -205,7 +205,7 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
             redraw();
         } else {
             PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.RELEASED))) {
+            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.RELEASED, keyEvent))) {
                 previewController.refreshPreview();
                 redraw();
             }
