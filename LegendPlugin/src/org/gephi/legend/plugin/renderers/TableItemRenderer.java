@@ -51,7 +51,7 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
         int cellSizeHeight = height / rowLabels.size();
 
         // diagonal shift
-        Integer diagonalShift = (int) (cellSizeWidth * Math.cos(verticalTextDirection.rotationAngle()));
+        Integer diagonalShift = (int) (cellSizeWidth * Math.cos(columnTextDirection.rotationAngle()));
 
 
         //font
@@ -74,11 +74,11 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
         }
 
 
-        switch (verticalTextDirection) {
+        switch (columnTextDirection) {
             case VERTICAL: {
 
                 arrangeTranslation.translate(0, height - verticalExtraMargin);
-                arrangeTranslation.rotate(verticalTextDirection.rotationAngle());
+                arrangeTranslation.rotate(columnTextDirection.rotationAngle());
                 graphics2D.setTransform(arrangeTranslation);
 
 
@@ -95,15 +95,15 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
             case DIAGONAL: {
 
                 //overriding centerdistance
-                centerDistance = (int) ((cellSizeWidth - fontHeight * Math.cos(verticalTextDirection.rotationAngle())) / 2);
+                centerDistance = (int) ((cellSizeWidth - fontHeight * Math.cos(columnTextDirection.rotationAngle())) / 2);
 
                 //vertical shift for Diagonal case
-                int verticalShift = -(int) (height * Math.sin(verticalTextDirection.rotationAngle()));
+                int verticalShift = -(int) (height * Math.sin(columnTextDirection.rotationAngle()));
                 // centering
                 arrangeTranslation.translate(centerDistance - fontHeight / 2, 0);
 
                 arrangeTranslation.translate(0, verticalShift + diagonalShift - verticalExtraMargin);
-                arrangeTranslation.rotate(verticalTextDirection.rotationAngle());
+                arrangeTranslation.rotate(columnTextDirection.rotationAngle());
                 graphics2D.setTransform(arrangeTranslation);
 
 
@@ -252,39 +252,37 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
         graphics2D.setFont(font);
         FontMetrics fontMetrics = graphics2D.getFontMetrics(font);
 
-        int maxHorizontalTextWidth = Integer.MIN_VALUE;
+        int maxRowTextWidth = Integer.MIN_VALUE;
         for (StringBuilder label : rowLabels) {
-            maxHorizontalTextWidth = Math.max(maxHorizontalTextWidth, fontMetrics.stringWidth(label.toString()));
+            maxRowTextWidth = Math.max(maxRowTextWidth, fontMetrics.stringWidth(label.toString()));
         }
         int maxVerticalTextWidth = Integer.MIN_VALUE;
         for (StringBuilder label : columnLabels) {
             maxVerticalTextWidth = Math.max(maxVerticalTextWidth, fontMetrics.stringWidth(label.toString()));
         }
 
-        int horizontalLabelsWidth = maxHorizontalTextWidth + 2 * MINIMUM_MARGIN;
+        int rowLabelsWidth = maxRowTextWidth + 2 * MINIMUM_MARGIN;
 
-        int verticalLabelsHeight = 0;
+        int columnTextHeight = 0;
         int tableWidth = 0;
         int tableHeight = 0;
-        switch (verticalTextDirection) {
+        switch (columnTextDirection) {
             case VERTICAL: {
-                verticalLabelsHeight = maxVerticalTextWidth + 2 * MINIMUM_MARGIN;
-                tableHeight = height - verticalLabelsHeight;
-                tableWidth = width - horizontalLabelsWidth;
-
-
+                columnTextHeight = maxVerticalTextWidth + 2 * MINIMUM_MARGIN;
+                tableHeight = height - columnTextHeight;
+                tableWidth = width - rowLabelsWidth;
                 break;
             }
             case DIAGONAL: {
-                verticalLabelsHeight = maxVerticalTextWidth + 2 * MINIMUM_MARGIN;
-                tableHeight = height - verticalLabelsHeight;
-                tableWidth = width - horizontalLabelsWidth - (int) Math.cos(verticalLabelsHeight);
+                columnTextHeight = maxVerticalTextWidth + 2 * MINIMUM_MARGIN;
+                tableHeight = height - columnTextHeight;
+                tableWidth = width - rowLabelsWidth - (int) Math.cos(columnTextHeight);
                 break;
             }
             case HORIZONTAL: {
-                verticalLabelsHeight = fontMetrics.getHeight();
-                tableHeight = height - verticalLabelsHeight;
-                tableWidth = width - horizontalLabelsWidth;
+                columnTextHeight = fontMetrics.getHeight();
+                tableHeight = height - columnTextHeight;
+                tableWidth = width - rowLabelsWidth;
                 break;
             }
         }
@@ -300,29 +298,29 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
         AffineTransform horizontalTextOrigin = new AffineTransform(origin);
         AffineTransform tableOrigin = new AffineTransform(origin);
         // arranging vertical text
-        if (verticalTextPosition == TableItem.VerticalPosition.UP) {
+        if (verticalTextPosition == TableItem.ColumnPosition.UP) {
             verticalTextOrigin.translate(0, 0);
-            tableOrigin.translate(0, verticalLabelsHeight);
-            horizontalTextOrigin.translate(0, verticalLabelsHeight);
+            tableOrigin.translate(0, columnTextHeight);
+            horizontalTextOrigin.translate(0, columnTextHeight);
         }
-        else if (verticalTextPosition == TableItem.VerticalPosition.BOTTOM) {
+        else if (verticalTextPosition == TableItem.ColumnPosition.BOTTOM) {
             verticalTextOrigin.translate(0, tableHeight);
             tableOrigin.translate(0, 0);
             horizontalTextOrigin.translate(0, 0);
         }
         // arranging horizontal text
-        if (horizontalTextPosition == TableItem.HorizontalPosition.LEFT) {
+        if (horizontalTextPosition == TableItem.RowPosition.LEFT) {
             horizontalTextOrigin.translate(0, 0);
-            verticalTextOrigin.translate(horizontalLabelsWidth, 0);
-            tableOrigin.translate(horizontalLabelsWidth, 0);
+            verticalTextOrigin.translate(rowLabelsWidth, 0);
+            tableOrigin.translate(rowLabelsWidth, 0);
         }
-        else if (horizontalTextPosition == TableItem.HorizontalPosition.RIGHT) {
+        else if (horizontalTextPosition == TableItem.RowPosition.RIGHT) {
             horizontalTextOrigin.translate(tableWidth + MINIMUM_MARGIN, 0);
             verticalTextOrigin.translate(0, 0);
             tableOrigin.translate(0, 0);
         }
-        createColumnLabels(graphics2D, verticalTextOrigin, verticalLabelsWidth, verticalLabelsHeight);
-        createRowLabels(graphics2D, horizontalTextOrigin, horizontalLabelsWidth, horizontalLabelsHeight);
+        createColumnLabels(graphics2D, verticalTextOrigin, verticalLabelsWidth, columnTextHeight);
+        createRowLabels(graphics2D, horizontalTextOrigin, rowLabelsWidth, horizontalLabelsHeight);
         if (isCellColoring) {
             normalizeWithMinValueZero(tableValuesFloat);
         }
@@ -405,18 +403,18 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
         font = properties.getFontValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_FONT));
         fontColor = properties.getColorValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_FONT_COLOR));
         isCellColoring = properties.getBooleanValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_IS_CELL_COLORING));
-        verticalExtraMargin = properties.getIntValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_VERTICAL_EXTRA_MARGIN));
-        horizontalExtraMargin = properties.getIntValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_HORIZONTAL_EXTRA_MARGIN));
+        verticalExtraMargin = properties.getIntValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_COLUMN_EXTRA_MARGIN));
+        horizontalExtraMargin = properties.getIntValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_ROW_EXTRA_MARGIN));
 
         //grid
         gridColor = properties.getColorValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_GRID_COLOR));
         isDisplayingGrid = properties.getBooleanValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_IS_DISPLAYING_GRID));
 
-        horizontalTextAlignment = (Alignment) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_HORIZONTAL_TEXT_ALIGNMENT));
-        verticalTextAlignment = (Alignment) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_VERTICAL_TEXT_ALIGNMENT));
-        verticalTextPosition = (TableItem.VerticalPosition) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_VERTICAL_TEXT_POSITION));
-        horizontalTextPosition = (TableItem.HorizontalPosition) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_HORIZONTAL_TEXT_POSITION));
-        verticalTextDirection = (TableItem.VerticalTextDirection) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_VERTICAL_TEXT_ROTATION));
+        horizontalTextAlignment = (Alignment) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_ROW_TEXT_ALIGNMENT));
+        verticalTextAlignment = (Alignment) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_COLUMN_TEXT_ALIGNMENT));
+        verticalTextPosition = (TableItem.ColumnPosition) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_COLUMN_TEXT_POSITION));
+        horizontalTextPosition = (TableItem.RowPosition) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_ROW_TEXT_POSITION));
+        columnTextDirection = (TableItem.ColumnTextDirection) properties.getValue(LegendModel.getProperty(TableProperty.OWN_PROPERTIES, itemIndex, TableProperty.TABLE_COLUMN_TEXT_ROTATION));
     }
 
     protected Font font;
@@ -428,11 +426,11 @@ public class TableItemRenderer extends AbstractLegendItemRenderer {
     protected ArrayList<Color> columnLabelColors;
     protected ArrayList<ArrayList<Color>> valueColors;
     protected Boolean isCellColoring;
-    protected TableItem.HorizontalPosition horizontalTextPosition;
+    protected TableItem.RowPosition horizontalTextPosition;
     protected Alignment horizontalTextAlignment;
-    protected TableItem.VerticalPosition verticalTextPosition;
+    protected TableItem.ColumnPosition verticalTextPosition;
     protected Alignment verticalTextAlignment;
-    protected TableItem.VerticalTextDirection verticalTextDirection;
+    protected TableItem.ColumnTextDirection columnTextDirection;
     protected Integer verticalExtraMargin;
     protected Integer horizontalExtraMargin;
     private final Integer MINIMUM_MARGIN = 3;

@@ -19,22 +19,22 @@ public class TableProperty {
     public static final int TABLE_FONT = 0;
     public static final int TABLE_FONT_COLOR = 1;
     public static final int TABLE_IS_CELL_COLORING = 2;
-    public static final int TABLE_CELL_COLORING_DIRECTION = 3;
-    public static final int TABLE_HORIZONTAL_TEXT_POSITION = 4;
-    public static final int TABLE_HORIZONTAL_TEXT_ALIGNMENT = 5;
-    public static final int TABLE_HORIZONTAL_EXTRA_MARGIN = 6;
-    public static final int TABLE_VERTICAL_TEXT_POSITION = 7;
-    public static final int TABLE_VERTICAL_TEXT_ALIGNMENT = 8;
-    public static final int TABLE_VERTICAL_TEXT_ROTATION = 9;
-    public static final int TABLE_VERTICAL_EXTRA_MARGIN = 10;
-    public static final int TABLE_IS_DISPLAYING_GRID = 11;
-    public static final int TABLE_GRID_COLOR = 12;
-    public static final int TABLE_LABEL = 13;
+//    public static final int TABLE_CELL_COLORING_DIRECTION = 3;
+    public static final int TABLE_ROW_TEXT_POSITION = 3;
+    public static final int TABLE_ROW_TEXT_ALIGNMENT = 4;
+    public static final int TABLE_ROW_EXTRA_MARGIN = 5;
+    public static final int TABLE_COLUMN_TEXT_POSITION = 6;
+    public static final int TABLE_COLUMN_TEXT_ALIGNMENT = 7;
+    public static final int TABLE_COLUMN_TEXT_ROTATION = 8;
+    public static final int TABLE_COLUMN_EXTRA_MARGIN = 9;
+    public static final int TABLE_IS_DISPLAYING_GRID = 10;
+    public static final int TABLE_GRID_COLOR = 11;
+    public static final int TABLE_LABEL = 12;
     public static String[] OWN_PROPERTIES = {
         ".table.font",
         ".table.font.color",
         ".table.isCellColoring",
-        ".table.cellColoringDirection",
+//        ".table.cellColoringDirection",
         ".table.horizontalText.position",
         ".table.horizontalText.alignment",
         ".table.horizontal.extraMargin",
@@ -51,15 +51,16 @@ public class TableProperty {
         TABLE_FONT_COLOR,
         TABLE_IS_CELL_COLORING,
 //        TABLE_CELL_COLORING_DIRECTION,
-        TABLE_HORIZONTAL_TEXT_POSITION,
-        TABLE_HORIZONTAL_TEXT_ALIGNMENT,
-        TABLE_HORIZONTAL_EXTRA_MARGIN,
-        TABLE_VERTICAL_TEXT_POSITION,
-        TABLE_VERTICAL_TEXT_ALIGNMENT,
-        TABLE_VERTICAL_TEXT_ROTATION,
-        TABLE_VERTICAL_EXTRA_MARGIN,
+        TABLE_ROW_TEXT_POSITION,
+        TABLE_ROW_TEXT_ALIGNMENT,
+        TABLE_ROW_EXTRA_MARGIN,
+        TABLE_COLUMN_TEXT_POSITION,
+        TABLE_COLUMN_TEXT_ALIGNMENT,
+        TABLE_COLUMN_TEXT_ROTATION,
+        TABLE_COLUMN_EXTRA_MARGIN,
         TABLE_IS_DISPLAYING_GRID,
-        TABLE_GRID_COLOR
+        TABLE_GRID_COLOR,
+        TABLE_LABEL
     };
 
     public static String getLabelProperty(Integer itemIndex, int i) {

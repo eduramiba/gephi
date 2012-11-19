@@ -179,10 +179,7 @@ public class ImageItemBuilder extends AbstractLegendItemBuilder {
         String valueString = reader.getElementText();
         int propertyIndex = ImageProperty.getInstance().getProperty(propertyName);
         Class valueClass = defaultValues[propertyIndex].getClass();
-        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
-        if (value == null) {
-            value = readValueFromText(valueString, valueClass);
-        }
+        Object value = readValueFromText(valueString, valueClass);
         PreviewProperty property = createLegendProperty(item, propertyIndex, value);
         return property;
     }

@@ -55,9 +55,9 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
      * @param properties PreviewProperties of the current PreviewModel
      */
     protected abstract void readOwnPropertiesAndValues(Item item, PreviewProperties properties);
-    
+
     public abstract boolean isAnAvailableRenderer(Item item);
-    
+
     private void readLocationProperties(Item item, PreviewProperties previewProperties) {
         if (item != null) {
             currentItemIndex = item.getData(LegendItem.ITEM_INDEX);
@@ -171,7 +171,7 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
 //        } else {
 //            render(graphics2D, originTranslation, currentWidth, currentHeight);
 //        }
-        
+
         render(graphics2D, originTranslation, currentWidth, currentHeight);
         graphics2D.setTransform(saveState);
     }
@@ -352,7 +352,7 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
         return new PreviewProperty[0];
     }
 
-    private float legendDrawText(Graphics2D graphics2D, String text, Font font, Color color, double x, double y, Integer width, Integer height, Alignment alignment, boolean isComputingSpace) {
+    protected float legendDrawText(Graphics2D graphics2D, String text, Font font, Color color, double x, double y, Integer width, Integer height, Alignment alignment, boolean isComputingSpace) {
 
         if (text.isEmpty()) {
             return 0f;
@@ -376,8 +376,15 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
         float descent = 0, leading = 0;
         while (measurer.getPosition() < end) {
             TextLayout layout = measurer.nextLayout(width);
+
             yText += layout.getAscent();
+
+
             if (!isComputingSpace) {
+
+
+
+
                 switch (alignment) {
                     case LEFT: {
                         break;
@@ -400,6 +407,13 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
                     }
 
                 }
+//                System.out.println("@Var: y: "+y);
+//                System.out.println("@Var: yText: " + (yText - y - layout.getAscent()));
+//                System.out.println("@Var: height: " + height);
+                if (yText - y -layout.getAscent() > height) {
+                    break;
+                }
+//                    break;
                 layout.draw(graphics2D, xText, yText);
             }
             descent = layout.getDescent();
@@ -427,7 +441,9 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
      * @return
      */
     protected float legendDrawText(Graphics2D graphics2D, String text, Font font, Color color, double x, double y, Integer width, Integer height, Alignment alignment) {
+//        System.out.println("@Var: drawElementLabel: " + text);
         float spaceUsed = legendDrawText(graphics2D, text, font, color, x, y, width, height, alignment, true);
+//        System.out.println("@Var: spaceUsed: " + spaceUsed);
         y = y + (height - spaceUsed) / 2;
         return legendDrawText(graphics2D, text, font, color, x, y, width, height, alignment, false);
     }
@@ -445,7 +461,7 @@ public abstract class AbstractLegendItemRenderer implements LegendItemRenderer, 
     protected float computeVerticalTextSpaceUsed(Graphics2D graphics2D, String text, Font font, Integer width) {
         return legendDrawText(graphics2D, text, font, Color.BLACK, 0, 0, width, currentHeight, Alignment.LEFT, true);
     }
-    
+
     @Override
     public boolean isRendererForitem(Item item, PreviewProperties properties) {
         LegendItemRenderer renderer = item.getData(LegendItem.RENDERER);

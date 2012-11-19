@@ -59,14 +59,18 @@ public class TextItemRenderer extends AbstractLegendItemRenderer {
         if (!body.isEmpty()) {
             graphics2D.setTransform(origin);
 
-            float currentSize = computeVerticalTextSpaceUsed(graphics2D, body, bodyFont, width);
-//            float currentSize = legendDrawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment, computeSpace);
-            while (currentSize > height) {
-                bodyFont = new Font(bodyFont.getName(), bodyFont.getStyle(), bodyFont.getSize() - 1);
-                currentSize = computeVerticalTextSpaceUsed(graphics2D, body, bodyFont, width);
-//                currentSize = legendDrawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment, computeSpace);
-            }
-            drawText(graphics2D, body, bodyFont, bodyFontColor, width, width, width, height, bodyAlignment);
+            // resizing text
+            
+//            float currentSize = computeVerticalTextSpaceUsed(graphics2D, body, bodyFont, width);
+////            float currentSize = legendDrawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment, computeSpace);
+//            while (currentSize > height) {
+//                bodyFont = new Font(bodyFont.getName(), bodyFont.getStyle(), bodyFont.getSize() - 1);
+//                currentSize = computeVerticalTextSpaceUsed(graphics2D, body, bodyFont, width);
+////                currentSize = legendDrawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment, computeSpace);
+//            }
+            
+            
+            drawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment);
         }
     }
 
@@ -86,7 +90,7 @@ public class TextItemRenderer extends AbstractLegendItemRenderer {
      * JUSTIFIED
      */
     protected void drawText(Graphics2D graphics2D, String text, Font font, Color color, double x, double y, Integer width, Integer height, Alignment alignment) {
-        legendDrawText(graphics2D, body, bodyFont, bodyFontColor, 0, 0, width, height, bodyAlignment);
+        legendDrawText(graphics2D, text, font, color, x, y, width, height, alignment, false);
     }
 
     // OWN PROPERTIES

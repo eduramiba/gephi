@@ -203,10 +203,7 @@ public class TextItemBuilder extends AbstractLegendItemBuilder {
         String valueString = reader.getElementText();
         int propertyIndex = TextProperty.getInstance().getProperty(propertyName);
         Class valueClass = defaultValues[propertyIndex].getClass();
-        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
-        if (value == null) {
-            value = readValueFromText(valueString, valueClass);
-        }
+        Object value = readValueFromText(valueString, valueClass);
         PreviewProperty property = createLegendProperty(item, propertyIndex, value);
         return property;
     }
@@ -215,8 +212,8 @@ public class TextItemBuilder extends AbstractLegendItemBuilder {
     // DEFAULT VALUES
     protected final String defaultBody = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras aliquam luctus ligula. Nunc mollis sagittis dui eget congue. Sed et turpis leo, vitae interdum magna. Pellentesque sollicitudin laoreet orci. Donec varius eleifend iaculis. Integer congue tempor nulla ac luctus. Nullam velit massa, convallis ut suscipit eget, auctor non velit. Etiam vitae velit sit amet justo luctus semper. Ut laoreet ullamcorper.";
     protected final Font defaultBodyFont = new Font("Arial", Font.PLAIN, 14);
-    protected final Color defaultBodyFontColor = Color.BLUE;
-    protected final Alignment defaultBodyFontAlignment = Alignment.JUSTIFIED;
+    protected final Color defaultBodyFontColor = Color.BLACK;
+    protected final Alignment defaultBodyFontAlignment = Alignment.LEFT;
     private final Object[] defaultValues = {
         defaultBody,
         defaultBodyFont,

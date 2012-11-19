@@ -239,7 +239,7 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         } else {
             activeLegendsComboBox.setSelectedIndex(-1);
         }
-        refreshRenderers();
+        refreshRenderers(activeLegendItem);
         refreshPropertySheet();
     }
 
@@ -310,12 +310,25 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
     }//GEN-LAST:event_removeLegendButtonActionPerformed
 
     private void activeLegendsComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_activeLegendsComboBoxActionPerformed
-        Item activeLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
-        setActiveItem(activeLegendItem);
+        System.out.println("@Var: activeLegendsComboBox.getSelectedItem(): "+activeLegendsComboBox.getSelectedItem());
+        if(activeLegendsComboBox.getSelectedItem()!=null){
+            Item activeLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
+            Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
+            System.out.println("@Var: OLD currentRenderer: "+currentRenderer);
+            
+            setActiveItem(activeLegendItem);
+            refreshRenderers(activeLegendItem);
+            renderersComboBox.setSelectedItem(currentRenderer);
+            currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
+            System.out.println("@Var: NEW currentRenderer: "+currentRenderer);
+        }
     }//GEN-LAST:event_activeLegendsComboBoxActionPerformed
 
     public void selectActiveItemInCombobox(Item activeLegendItem) {
+//        setActiveItem(activeLegendItem);
+//        refreshRenderers(activeLegendItem);
         activeLegendsComboBox.setSelectedItem(activeLegendItem);
+        
     }
 
     public void setActiveItem(Item activeLegendItem) {
@@ -327,9 +340,8 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
 //                return;
 //            }
 
-            Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
-
-            renderersComboBox.setSelectedItem(currentRenderer);
+//            Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
+//            renderersComboBox.setSelectedItem(currentRenderer);
 
 
             Boolean hasDynamicProperties = activeLegendItem.getData(LegendItem.HAS_DYNAMIC_PROPERTIES);
@@ -345,10 +357,10 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         refreshPropertySheet();
     }
 
-    private void refreshRenderers() {
+    private void refreshRenderers(Item activeLegendItem) {
         renderersComboBox.removeAllItems();
 
-        Item activeLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
+//        Item activeLegendItem = (Item) activeLegendsComboBox.getSelectedItem();
         if (activeLegendItem != null) {
 
             Collection<? extends LegendItemRenderer> renderers = Lookup.getDefault().lookupAll(LegendItemRenderer.class);
@@ -360,8 +372,6 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
                 }
             }
 
-            Object currentRenderer = activeLegendItem.getData(LegendItem.RENDERER);
-            renderersComboBox.setSelectedItem(currentRenderer);
         }
     }
 
@@ -399,6 +409,7 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
         tooltipRenderer.setTooltips(tooltips);
     }//GEN-LAST:event_legendItemBuildersComboBoxActionPerformed
 
+    
     private void renderersComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_renderersComboBoxActionPerformed
         Item item = (Item) activeLegendsComboBox.getSelectedItem();
         Object renderer = renderersComboBox.getSelectedItem();

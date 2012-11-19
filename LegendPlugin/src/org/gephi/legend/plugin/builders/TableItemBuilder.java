@@ -21,8 +21,8 @@ import org.gephi.legend.api.AbstractLegendItemBuilder;
 import org.gephi.legend.api.LegendModel;
 import org.gephi.legend.plugin.custombuilders.CustomTableItemBuilder;
 import org.gephi.legend.plugin.items.TableItem;
-import org.gephi.legend.plugin.items.TableItem.HorizontalPosition;
-import org.gephi.legend.plugin.items.TableItem.VerticalPosition;
+import org.gephi.legend.plugin.items.TableItem.RowPosition;
+import org.gephi.legend.plugin.items.TableItem.ColumnPosition;
 import org.gephi.legend.plugin.properties.TableProperty;
 import org.gephi.legend.plugin.renderers.TableItemRenderer;
 import org.gephi.legend.spi.CustomLegendItemBuilder;
@@ -171,7 +171,7 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
                 property);
 
         switch (property) {
-            case TableProperty.TABLE_VERTICAL_EXTRA_MARGIN: {
+            case TableProperty.TABLE_COLUMN_EXTRA_MARGIN: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
@@ -182,7 +182,7 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
                 break;
             }
 
-            case TableProperty.TABLE_HORIZONTAL_EXTRA_MARGIN: {
+            case TableProperty.TABLE_ROW_EXTRA_MARGIN: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
@@ -226,7 +226,7 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
                 break;
             }
 
-            case TableProperty.TABLE_HORIZONTAL_TEXT_ALIGNMENT: {
+            case TableProperty.TABLE_ROW_TEXT_ALIGNMENT: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
@@ -237,18 +237,18 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
                 break;
             }
 
-            case TableProperty.TABLE_HORIZONTAL_TEXT_POSITION: {
+            case TableProperty.TABLE_ROW_TEXT_POSITION: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
-                        HorizontalPosition.class,
+                        RowPosition.class,
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.horizontalText.position.displayName"),
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.horizontalText.position.description"),
                         PreviewProperty.CATEGORY_LEGEND_PROPERTY).setValue(value);
                 break;
             }
 
-            case TableProperty.TABLE_VERTICAL_TEXT_ALIGNMENT: {
+            case TableProperty.TABLE_COLUMN_TEXT_ALIGNMENT: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
@@ -259,22 +259,22 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
                 break;
             }
 
-            case TableProperty.TABLE_VERTICAL_TEXT_POSITION: {
+            case TableProperty.TABLE_COLUMN_TEXT_POSITION: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
-                        VerticalPosition.class,
+                        ColumnPosition.class,
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.verticalText.position.displayName"),
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.verticalText.position.description"),
                         PreviewProperty.CATEGORY_LEGEND_PROPERTY).setValue(value);
                 break;
             }
 
-            case TableProperty.TABLE_VERTICAL_TEXT_ROTATION: {
+            case TableProperty.TABLE_COLUMN_TEXT_ROTATION: {
                 previewProperty = PreviewProperty.createProperty(
                         this,
                         propertyString,
-                        TableItem.VerticalTextDirection.class,
+                        TableItem.ColumnTextDirection.class,
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.verticalText.rotation.displayName"),
                         NbBundle.getMessage(TableItemBuilder.class, "TableItem.property.verticalText.rotation.description"),
                         PreviewProperty.CATEGORY_LEGEND_PROPERTY).setValue(value);
@@ -613,8 +613,23 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
         for (PreviewProperty property : ownProperties) {
             writeXMLFromSingleProperty(writer, property, previewProperties);
         }
-
     }
+
+    @Override
+    protected String writeValueAsText(Object propertyValue) {
+        if( propertyValue instanceof RowPosition){
+            return ((RowPosition)propertyValue).getValue();
+        }
+        else if (propertyValue instanceof ColumnPosition){
+            return ((ColumnPosition)propertyValue).getValue();
+        }
+        else if (propertyValue instanceof TableItem.ColumnTextDirection){
+            return ((TableItem.ColumnTextDirection)propertyValue).getValue();
+        }
+        return super.writeValueAsText(propertyValue);
+    }
+    
+    
 
     @Override
     public ArrayList<PreviewProperty> readXMLToOwnProperties(XMLStreamReader reader, Item item) throws XMLStreamException {
@@ -667,17 +682,30 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
         String valueString = reader.getElementText();
         int propertyIndex = TableProperty.getInstance().getProperty(propertyName);
         Class valueClass = defaultValues[propertyIndex].getClass();
-        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
-        if (value == null) {
-            value = readValueFromText(valueString, valueClass);
-        }
+        Object value = readValueFromText(valueString, valueClass);
+//        System.out.println("@Var: readXMLToSingleOwnProperty valueClass: "+valueClass);
+//        System.out.println("@Var: readXMLToSingleOwnProperty value: "+value);
         PreviewProperty property = createLegendProperty(item, propertyIndex, value);
         return property;
     }
 
+    @Override
+    protected Object readValueFromText(String valueString, Class valueClass) {
+        if (valueClass.equals(TableItem.ColumnTextDirection.class)) {
+            return availableColumnTextDirection[Integer.parseInt(valueString)];
+        }
+        else if (valueClass.equals(TableItem.RowPosition.class)) {
+            return availableRowPosition[Integer.parseInt(valueString)];
+        }
+        else if (valueClass.equals(TableItem.ColumnPosition.class)) {
+            return availableColumnPosition[Integer.parseInt(valueString)];
+        }
+        return super.readValueFromText(valueString, valueClass);
+    }
+    
+    
+
     //default values
-    protected final Integer defaultColumnExtraMargin = 3;
-    protected final Integer defaultRowExtraMargin = 3;
     protected final Font defaultFont = new Font("Arial", Font.PLAIN, 13);
     protected final Color defaultFontColor = Color.BLACK;
     // grid
@@ -687,25 +715,43 @@ public class TableItemBuilder extends AbstractLegendItemBuilder {
     protected final Boolean defaultIsCellColoring = false;
     protected final Direction defaultCellColoringDirection = Direction.UP;
     // side labels
-    protected final HorizontalPosition defaultRowLabelsPosition = HorizontalPosition.LEFT;
+    protected final Integer defaultRowExtraMargin = 3;
+    protected final RowPosition defaultRowTextPosition = RowPosition.LEFT;
     protected final Alignment defaultRowTextAlignment = Alignment.JUSTIFIED;
     // up/bottom labels
+    protected final Integer defaultColumnExtraMargin = 3;
     protected final Alignment defaultColumnTextAlignment = Alignment.CENTER;
-    protected final VerticalPosition defaultColumnLabelsPosition = VerticalPosition.UP;
-    protected final TableItem.VerticalTextDirection defaultColumnTextRotation = TableItem.VerticalTextDirection.DIAGONAL;
+    protected final ColumnPosition defaultColumnTextPosition = ColumnPosition.UP;
+    protected final TableItem.ColumnTextDirection defaultColumnTextRotation = TableItem.ColumnTextDirection.DIAGONAL;
     private final Object[] defaultValues = {
         defaultFont,
         defaultFontColor,
         defaultIsCellColoring,
 //        defaultCellColoringDirection,
-        defaultRowLabelsPosition,
+        defaultRowTextPosition,
         defaultRowTextAlignment,
         defaultRowExtraMargin,
-        defaultColumnLabelsPosition,
+        defaultColumnTextPosition,
         defaultColumnTextAlignment,
         defaultColumnTextRotation,
         defaultColumnExtraMargin,
         defaultIsDisplayingGrid,
         defaultGridColor
+    };
+    
+    private final Object[] availableColumnTextDirection = {
+        TableItem.ColumnTextDirection.VERTICAL,
+        TableItem.ColumnTextDirection.HORIZONTAL,
+        TableItem.ColumnTextDirection.DIAGONAL,
+    };
+    
+    private final Object[] availableRowPosition = {
+        TableItem.RowPosition.RIGHT,
+        TableItem.RowPosition.LEFT
+    };
+    
+    private final Object[] availableColumnPosition = {
+        TableItem.ColumnPosition.UP,
+        TableItem.ColumnPosition.BOTTOM
     };
 }

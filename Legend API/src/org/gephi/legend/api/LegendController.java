@@ -83,6 +83,7 @@ public class LegendController {
 
         // registering renderers
         for (LegendItemRenderer legendItemRenderer : legendItemRenderers) {
+            System.out.println("@Var: registering ... legendItemRenderer: "+legendItemRenderer);
             renderers.put(legendItemRenderer.getClass().getName(), legendItemRenderer);
         }
     }

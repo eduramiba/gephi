@@ -8,6 +8,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
@@ -344,12 +346,10 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
         Object propertyValue = previewProperties.getValue(property.getName());
 
         if (propertyValue != null) {
-            String text = PreviewProperties.getValueAsText(propertyValue);
-            if (text == null) {
-                text = writeValueAsText(propertyValue);
-            }
+            String text = writeValueAsText(propertyValue);
             writer.writeStartElement(XML_PROPERTY);
             String name = LegendModel.getPropertyFromPreviewProperty(property);
+            System.out.println("@Var: SAVING XML name: "+name+" , "+text);
             writer.writeAttribute(XML_NAME, name);
             writer.writeAttribute(XML_CLASS, propertyValue.getClass().getName());
             writer.writeCharacters(text);
@@ -418,10 +418,13 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
         String valueString = reader.getElementText();
         int propertyIndex = LegendProperty.getInstance().getProperty(propertyName);
         Class valueClass = defaultValuesArrayList.get(propertyIndex).getClass();
-        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
-        if (value == null) {
-            value = readValueFromText(valueString, valueClass);
-        }
+        
+//        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
+//        if (value == null) {
+//            value = readValueFromText(valueString, valueClass);
+//        }
+        
+        Object value = readValueFromText(valueString, valueClass);
 
         PreviewProperty property = createLegendProperty(item, propertyIndex, value);
         return property;
@@ -435,7 +438,24 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
      * @return
      */
     protected Object readValueFromText(String valueString, Class valueClass) {
-        Object value = null;
+//        System.out.println("@Var: valueClass: "+valueClass);
+//        System.out.println("@Var: valueString: "+valueString);
+        
+        // bug
+        if(valueString.startsWith("org.netbeans.beaninfo.editors.ColorEditor")){
+            // bug
+            Pattern rgb = Pattern.compile(".*\\[r=(\\d+),g=(\\d+),b=(\\d+)\\]");
+            Matcher matcher = rgb.matcher(valueString);
+            if(matcher.matches()){
+                valueString = "["+matcher.group(1) +","+matcher.group(2)+","+matcher.group(3)+"]";
+            }
+        }
+        
+        Object value = PreviewProperties.readValueFromText(valueString, valueClass);
+        if (value != null){
+            return value;
+        }
+        
         if (valueClass.equals(LegendItem.Alignment.class)) {
             value = availableAlignments[Integer.parseInt(valueString)];
         } else if (valueClass.equals(LegendItem.Shape.class)) {
@@ -448,8 +468,7 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
             value = Integer.parseInt(valueString);
         } else if (valueClass.equals(File.class)) {
             value = new File(valueString);
-        }
-
+        } 
         return value;
     }
 
@@ -489,6 +508,9 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
             switch (type) {
                 case XMLStreamReader.START_ELEMENT: {
                     PreviewProperty property = readXMLToSingleLegendProperty(reader, item);
+//                    System.out.println("@Var: .. success property: "+property.getName());
+//                    System.out.println("@Var: property: "+property.getValue());
+                    
                     properties.add(property);
                     break;
                 }
@@ -508,7 +530,9 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
     public void readXMLToRenderer(XMLStreamReader reader, Item item) throws XMLStreamException {
         if (reader.getLocalName().equals(XML_RENDERER)) {
             String valueString = reader.getElementText();
+            System.out.println("@Var: renderer....  "+valueString);
             LegendItemRenderer availableRenderer = LegendController.getInstance().getRenderers().get(valueString);
+            System.out.println("@Var: renderer....  "+availableRenderer);
             if (availableRenderer != null) {
                 item.setData(LegendItem.RENDERER, availableRenderer);
             }
@@ -546,7 +570,6 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
         // closing dynamic properties
 
         // data
-//        reader.nextTag();
         reader.nextTag();
         readXMLToData(reader, item);
 
@@ -561,8 +584,8 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
 
         // setting data
         item.setData(LegendItem.ITEM_INDEX, newItemIndex);
-        item.setData(LegendItem.PROPERTIES, legendPropertiesArray);
         item.setData(LegendItem.OWN_PROPERTIES, ownPropertiesArray);
+        item.setData(LegendItem.PROPERTIES, legendPropertiesArray);
 
         item.setData(LegendItem.HAS_DYNAMIC_PROPERTIES, hasDynamicProperties());
         item.setData(LegendItem.DYNAMIC_PROPERTIES, dynamicPropertiesArray);
@@ -580,7 +603,11 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
      * @return
      */
     protected String writeValueAsText(Object propertyValue) {
-        String text;
+        
+        String text = PreviewProperties.getValueAsText(propertyValue);
+        if (text != null) {
+            return text;
+        }
         if (propertyValue instanceof LegendItem.Alignment) {
             LegendItem.Alignment propertyValueString = (LegendItem.Alignment) propertyValue;
             text = propertyValueString.getValue();
@@ -641,7 +668,7 @@ public abstract class AbstractLegendItemBuilder implements LegendItemBuilder {
         updateDefaultValues();
     }
 
-    public void updateDefaultValues() {
+    public final void updateDefaultValues() {
         this.defaultValuesArrayList = new ArrayList<Object>();
         defaultValuesArrayList.add(this.defaultLabel);
         defaultValuesArrayList.add(this.defaultIsDisplaying);

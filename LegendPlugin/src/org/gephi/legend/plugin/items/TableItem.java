@@ -43,7 +43,7 @@ public class TableItem extends AbstractItem implements LegendItem {
 
     }
 
-    public enum VerticalPosition {
+    public enum ColumnPosition {
 
         UP(0),
         BOTTOM(1);
@@ -53,7 +53,7 @@ public class TableItem extends AbstractItem implements LegendItem {
             NbBundle.getMessage(TableItem.class, "TableItem.position.bottom")
         };
 
-        private VerticalPosition(Integer value) {
+        private ColumnPosition(Integer value) {
             this.value = value;
         }
 
@@ -68,7 +68,7 @@ public class TableItem extends AbstractItem implements LegendItem {
 
     }
 
-    public enum HorizontalPosition {
+    public enum RowPosition {
 
         RIGHT(0),
         LEFT(1);
@@ -78,7 +78,7 @@ public class TableItem extends AbstractItem implements LegendItem {
             NbBundle.getMessage(TableItem.class, "TableItem.position.left")
         };
 
-        private HorizontalPosition(Integer value) {
+        private RowPosition(Integer value) {
             this.value = value;
         }
 
@@ -93,7 +93,7 @@ public class TableItem extends AbstractItem implements LegendItem {
 
     }
 
-    public enum VerticalTextDirection {
+    public enum ColumnTextDirection {
 
         // anti clockwise
         VERTICAL(0, -90d),
@@ -107,7 +107,7 @@ public class TableItem extends AbstractItem implements LegendItem {
             NbBundle.getMessage(TableItem.class, "TableItem.rotation.diagonal")
         };
 
-        private VerticalTextDirection(Integer value, double rotationAngle) {
+        private ColumnTextDirection(Integer value, double rotationAngle) {
             this.rotationAngle = rotationAngle;
             this.value = value;
         }

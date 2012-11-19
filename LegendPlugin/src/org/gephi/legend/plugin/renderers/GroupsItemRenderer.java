@@ -166,7 +166,13 @@ public class GroupsItemRenderer extends AbstractLegendItemRenderer {
                                     int y,
                                     Integer width,
                                     Integer height) {
+        
+//        AffineTransform restore = graphics2D.getTransform();
+//        AffineTransform arrange = new AffineTransform(graphics2D.getTransform());
+//        arrange.translate(x, y);
+//        graphics2D.setTransform(arrange);
         legendDrawText(graphics2D, label, labelFont, labelColor, x, y, width, height, LegendItem.Alignment.CENTER);
+//        graphics2D.setTransform(restore);
     }
 
     /**
