@@ -184,7 +184,6 @@ public class LegendMouseListener implements PreviewMouseListener {
                 relativeY = 0;
                 LegendController.getInstance().selectItem(null);
 
-                event.setConsumed(true);
                 return;
             }
         }
@@ -273,6 +272,7 @@ public class LegendMouseListener implements PreviewMouseListener {
                             previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.WIDTH), newWidth);
                             previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.HEIGHT), newHeight);
                         }
+                        event.setConsumed(true);
                     }
                 } else if (currentTransformation.equals(TRANSFORMATION_TRANSLATE_OPERATION)) {
                     float newOriginX = event.x - relativeX;
@@ -280,11 +280,11 @@ public class LegendMouseListener implements PreviewMouseListener {
 
                     previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_X), newOriginX);
                     previewProperties.putValue(LegendModel.getProperty(LegendProperty.LEGEND_PROPERTIES, itemIndex, LegendProperty.USER_ORIGIN_Y), newOriginY);
+                    
+                    event.setConsumed(true);
                 }
-
             }
         }
-        event.setConsumed(true);
     }
 
     @Override

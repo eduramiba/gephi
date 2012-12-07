@@ -58,7 +58,14 @@ public class PreviewMouseEvent {
         DRAGGED
     }
     
+    public enum Button{
+        LEFT,
+        RIGHT,
+        MIDDLE
+    }
+    
     public final Type type;
+    public final Button button;
     public final int x;
     public final int y;
     private boolean consumed;
@@ -68,10 +75,11 @@ public class PreviewMouseEvent {
      */
     public final KeyEvent keyEvent;
 
-    public PreviewMouseEvent(int x, int y, Type type, KeyEvent keyEvent) {
+    public PreviewMouseEvent(int x, int y, Type type, Button button, KeyEvent keyEvent) {
         this.x = x;
         this.y = y;
         this.type = type;
+        this.button = button;
         this.keyEvent = keyEvent;
         consumed = false;
     }

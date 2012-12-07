@@ -262,7 +262,7 @@ public class LegendManagerUI extends javax.swing.JPanel implements PreviewUI, Pr
             refreshActiveLegendsComboBox();
         } else {
             JOptionPane.showMessageDialog(
-                    this, customBuilder.stepsNeededToBuild(),
+                    null, customBuilder.stepsNeededToBuild(),
                     NbBundle.getMessage(LegendManagerUI.class, "LegendManagerUI.stepsNeededToBuildItem"),
                     JOptionPane.INFORMATION_MESSAGE,
                     null);

@@ -155,11 +155,29 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
     private PVector getMouseModelPosition(){
         return screenPositionToModelPosition(new PVector(mouseX, mouseY));
     }
+    
+    private PreviewMouseEvent buildPreviewMouseEvent(PreviewMouseEvent.Type type){
+        PVector pos = getMouseModelPosition();
+        PreviewMouseEvent.Button button;
+        
+        switch(mouseButton){
+            case CENTER:
+                button = PreviewMouseEvent.Button.MIDDLE;
+                break;
+            case RIGHT:
+                button = PreviewMouseEvent.Button.RIGHT;
+                break;
+            case LEFT:
+            default:
+                button = PreviewMouseEvent.Button.LEFT;
+        }
+        
+        return new PreviewMouseEvent((int)pos.x, (int)pos.y, type, button, keyEvent);
+    }
 
     @Override
     public void mouseClicked() {
-        PVector pos = getMouseModelPosition();
-        if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.CLICKED, keyEvent))) {
+        if (previewController.sendMouseEvent(buildPreviewMouseEvent(PreviewMouseEvent.Type.CLICKED))) {
             previewController.refreshPreview();
             redraw();
         }
@@ -167,49 +185,47 @@ public class ProcessingApplet extends PApplet implements MouseWheelListener {
 
     @Override
     public void mousePressed() {
-        if (mouseButton == RIGHT) {
-            ref.set(mouseX, mouseY, 0);
-            redraw();
-        } else {
-            PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.PRESSED, keyEvent))) {
-                previewController.refreshPreview();
-                redraw();
-            }
-        }
+        previewController.sendMouseEvent(buildPreviewMouseEvent(PreviewMouseEvent.Type.PRESSED));
+        
+        previewController.refreshPreview();
+        handleMousePress();
+        redraw();
     }
-
+    
     @Override
     public void mouseDragged() {
-        if (mouseButton == RIGHT) {
-            setMoving(true);
-            trans.set(mouseX, mouseY, 0);
-            trans.sub(ref);
-            trans.div(scaling); // ensure const. moving speed whatever the zoom is
-            trans.add(lastMove);
-            redraw();
-        } else {
-            PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.DRAGGED, keyEvent))) {
-                previewController.refreshPreview();
-                redraw();
-            }
+        if (!previewController.sendMouseEvent(buildPreviewMouseEvent(PreviewMouseEvent.Type.DRAGGED))) {
+            handleMouseDrag();
         }
+        redraw();
     }
 
     @Override
     public void mouseReleased() {
-        if (mouseButton == RIGHT) {
-            lastMove.set(trans);
-            setMoving(false);
-            redraw();
-        } else {
-            PVector pos = getMouseModelPosition();
-            if (previewController.sendMouseEvent(new PreviewMouseEvent((int)pos.x, (int)pos.y, PreviewMouseEvent.Type.RELEASED, keyEvent))) {
-                previewController.refreshPreview();
-                redraw();
-            }
+        if (!previewController.sendMouseEvent(buildPreviewMouseEvent(PreviewMouseEvent.Type.RELEASED))) {
+            handleMouseRelease();
         }
+        
+        previewController.refreshPreview();
+        redraw();
+    }
+    
+    private void handleMousePress(){
+        ref.set(mouseX, mouseY, 0);
+    }
+    
+    private void handleMouseDrag(){
+        setMoving(true);
+        trans.set(mouseX, mouseY, 0);
+        trans.sub(ref);
+        trans.div(scaling); // ensure const. moving speed whatever the zoom is
+        trans.add(lastMove);
+    }
+    
+    private void handleMouseRelease() {
+        lastMove.set(trans);
+        setMoving(false);
+        redraw();
     }
 
     @Override
