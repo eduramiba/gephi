@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.Interval;
 import org.gephi.graph.api.TimeFormat;
@@ -456,7 +457,15 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public ColumnDraft addNodeColumn(String key, Class typeClass) {
-        return addNodeColumn(key, typeClass, false);
+        if (AttributeUtils.isDynamicType(typeClass)) {
+            if (TimeSet.class.isAssignableFrom(typeClass)) {
+                return addNodeColumn(key, typeClass, true);
+            } else {
+                return addNodeColumn(key, AttributeUtils.getStaticType(typeClass), true);
+            }
+        } else {
+            return addNodeColumn(key, typeClass, false);
+        }
     }
 
     @Override
@@ -481,7 +490,15 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public ColumnDraft addEdgeColumn(String key, Class typeClass) {
-        return addEdgeColumn(key, typeClass, false);
+        if (AttributeUtils.isDynamicType(typeClass)) {
+            if (TimeSet.class.isAssignableFrom(typeClass)) {
+                return addEdgeColumn(key, typeClass, true);
+            } else {
+                return addEdgeColumn(key, AttributeUtils.getStaticType(typeClass), true);
+            }
+        } else {
+            return addEdgeColumn(key, typeClass, false);
+        }
     }
 
     @Override
@@ -503,7 +520,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
         }
         return column;
     }
-
+    
     @Override
     public ColumnDraft getNodeColumn(String key) {
         return nodeColumns.get(key.toLowerCase());
@@ -562,7 +579,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
             }
             this.interval = new Interval(start, end);
         } catch (Exception e) {
-            report.logIssue(new Issue(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Interval_Parse_Error", "["+startDateTime+","+endDateTime+"]"), Level.SEVERE));
+            report.logIssue(new Issue(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Interval_Parse_Error", "[" + startDateTime + "," + endDateTime + "]"), Level.SEVERE));
             return;
         }
         report.log(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerLog.GraphInterval", "[" + startDateTime + "," + endDateTime + "]"));

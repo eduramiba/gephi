@@ -49,6 +49,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
 import org.gephi.desktop.importer.api.ImportControllerUI;
 import org.gephi.desktop.mrufiles.api.MostRecentFiles;
 import org.gephi.desktop.project.api.ProjectControllerUI;
@@ -465,7 +466,7 @@ public class ProjectControllerUIImpl implements ProjectControllerUI {
 
         //Open dialog
         int returnFile = chooser.showOpenDialog(null);
-
+        
         if (returnFile == JFileChooser.APPROVE_OPTION) {
             File[] files = chooser.getSelectedFiles();
             FileObject[] fileObjects = new FileObject[files.length];

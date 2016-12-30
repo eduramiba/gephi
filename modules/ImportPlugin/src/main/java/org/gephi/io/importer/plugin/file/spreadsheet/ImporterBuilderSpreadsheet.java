@@ -39,35 +39,28 @@ Contributor(s):
 
 Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.io.importer.plugin.file;
+package org.gephi.io.importer.plugin.file.spreadsheet;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.gephi.io.importer.api.FileType;
 import org.gephi.io.importer.spi.FileImporter;
 import org.gephi.io.importer.spi.FileImporterBuilder;
 import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
- * @author Mathieu Bastian
+ * @author Eduardo Ramos
  */
 @ServiceProvider(service = FileImporterBuilder.class)
-public final class ImporterBuilderCSV implements FileImporterBuilder {
+public final class ImporterBuilderSpreadsheet implements FileImporterBuilder {
 
-    public static final String IDENTIFER = "csv";
+    public static final String IDENTIFER = "spreadsheet";
+    public static final String[] EXTENSIONS = new String[]{".csv", ".tsv", ".xls", ".xlsx"};
 
     @Override
     public FileImporter buildImporter() {
-        return new ImporterCSV();
+        return new ImporterSpreadsheet();
     }
 
     @Override
@@ -77,35 +70,16 @@ public final class ImporterBuilderCSV implements FileImporterBuilder {
 
     @Override
     public FileType[] getFileTypes() {
-        FileType ft = new FileType(".csv", NbBundle.getMessage(getClass(), "fileType_CSV_Name"));
-        FileType ft2 = new FileType(".edges", NbBundle.getMessage(getClass(), "fileType_Edges_Name"));
-        return new FileType[]{ft, ft2};
+        return new FileType[]{
+            new FileType(EXTENSIONS, NbBundle.getMessage(getClass(), "fileType_Spreadsheet_Name"))
+        };
     }
 
     @Override
     public boolean isMatchingImporter(FileObject fileObject) {
-        if (fileObject.getExt().equalsIgnoreCase("edges")) {
-            return true;
-        }
-
-        if (fileObject.getExt().equalsIgnoreCase("csv")) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(FileUtil.toFile(fileObject)));
-
-                String firstLine = null;
-                do {
-                    firstLine = reader.readLine().trim();
-                } while (firstLine != null && firstLine.isEmpty());
-
-                if (firstLine != null && !firstLine.isEmpty()) {
-                    Pattern moreThanOneCharInExpression = Pattern.compile("[a-zA-Z0-9_]{2,}");
-                    Matcher matcher = moreThanOneCharInExpression.matcher(firstLine);
-                    if (!matcher.find()) {
-                        return true;
-                    } //else it looks more like a spreadsheet...
-                }
-            } catch (IOException ex) {
-                return false;
+        for (String ext : EXTENSIONS) {
+            if (fileObject.getExt().equalsIgnoreCase(ext.substring(1))) {
+                return true;
             }
         }
 

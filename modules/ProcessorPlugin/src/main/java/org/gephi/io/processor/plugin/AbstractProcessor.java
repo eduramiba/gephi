@@ -42,16 +42,22 @@
 package org.gephi.io.processor.plugin;
 
 import java.awt.Color;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.gephi.graph.api.AttributeUtils;
+import org.gephi.graph.api.Column;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.Element;
 import org.gephi.graph.api.GraphModel;
+import org.gephi.graph.api.Interval;
 import org.gephi.graph.api.Node;
 import org.gephi.graph.api.Origin;
 import org.gephi.graph.api.Table;
 import org.gephi.graph.api.TimeRepresentation;
+import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.graph.api.types.TimeMap;
 import org.gephi.graph.api.types.TimeSet;
+import org.gephi.graph.api.types.TimestampSet;
 import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerUnloader;
 import org.gephi.io.importer.api.EdgeDraft;
@@ -68,33 +74,23 @@ public abstract class AbstractProcessor {
     protected GraphModel graphModel;
 
     protected void flushColumns(ContainerUnloader container) {
+        addColumnsToTable(container, graphModel.getNodeTable(), container.getNodeColumns());
+        addColumnsToTable(container, graphModel.getEdgeTable(), container.getEdgeColumns());
+    }
+
+    private void addColumnsToTable(ContainerUnloader container, Table table, Iterable<ColumnDraft> columns) {
         TimeRepresentation timeRepresentation = container.getTimeRepresentation();
-        Table nodeTable = graphModel.getNodeTable();
-        for (ColumnDraft col : container.getNodeColumns()) {
-            if (!nodeTable.hasColumn(col.getId())) {
+        for (ColumnDraft col : columns) {
+            if (!table.hasColumn(col.getId())) {
                 Class typeClass = col.getTypeClass();
-                if (col.isDynamic()) {
+                if (col.isDynamic() && TimeSet.class.isAssignableFrom(typeClass)) {
                     if (timeRepresentation.equals(TimeRepresentation.TIMESTAMP)) {
                         typeClass = AttributeUtils.getTimestampMapType(typeClass);
                     } else {
                         typeClass = AttributeUtils.getIntervalMapType(typeClass);
                     }
                 }
-                nodeTable.addColumn(col.getId(), col.getTitle(), typeClass, Origin.DATA, col.getDefaultValue(), !col.isDynamic());
-            }
-        }
-        Table edgeTable = graphModel.getEdgeTable();
-        for (ColumnDraft col : container.getEdgeColumns()) {
-            if (!edgeTable.hasColumn(col.getId())) {
-                Class typeClass = col.getTypeClass();
-                if (col.isDynamic()) {
-                    if (timeRepresentation.equals(TimeRepresentation.TIMESTAMP)) {
-                        typeClass = AttributeUtils.getTimestampMapType(typeClass);
-                    } else {
-                        typeClass = AttributeUtils.getIntervalMapType(typeClass);
-                    }
-                }
-                edgeTable.addColumn(col.getId(), col.getTitle(), typeClass, Origin.DATA, col.getDefaultValue(), !col.isDynamic());
+                table.addColumn(col.getId(), col.getTitle(), typeClass, Origin.DATA, col.getDefaultValue(), !col.isDynamic());
             }
         }
     }
@@ -174,25 +170,55 @@ public abstract class AbstractProcessor {
     }
 
     protected void flushToElementAttributes(ElementDraft elementDraft, Element element) {
-        for (ColumnDraft col : elementDraft.getColumns()) {
-            if (elementDraft instanceof EdgeDraft && col.getId().equals("weight")) {
-                continue;
+        for (ColumnDraft columnDraft : elementDraft.getColumns()) {
+            if (elementDraft instanceof EdgeDraft && columnDraft.getId().equals("weight")) {
+                continue;//Special weight column
             }
-            Object val = elementDraft.getValue(col.getId());
-            if (val != null) {
-                TimeMap existingMap;
-                if (col.isDynamic() && (existingMap = (TimeMap) element.getAttribute(col.getId())) != null && !existingMap.isEmpty()) {
-                    TimeMap valMap = (TimeMap) val;
+            Object val = elementDraft.getValue(columnDraft.getId());
 
-                    Object[] keys = existingMap.toKeysArray();
-                    Object[] vals = existingMap.toValuesArray();
-                    for (int i = 0; i < keys.length; i++) {
-                        valMap.put(keys[i], vals[i]);
+            Column column = element.getTable().getColumn(columnDraft.getId());
+            if (!column.getTypeClass().isAssignableFrom(columnDraft.getTypeClass())) {
+                Logger.getLogger("").log(
+                        Level.SEVERE,
+                        String.format(
+                                "Existing column '%s' in graph with type '%s' is not compatible with imported column type '%s'",
+                                column.getId(),
+                                column.getTypeClass(),
+                                columnDraft.getTypeClass()
+                        )
+                );
+                //TODO: Add a Report after processor??
+                //TODO: avoid repetition
+                continue;//Incompatible types!
+            }
+
+            if (val != null) {
+                Object processedNewValue = val;
+
+                Object existingValue = element.getAttribute(columnDraft.getId());
+
+                if (columnDraft.isDynamic() && existingValue != null) {
+                    if (TimeMap.class.isAssignableFrom(columnDraft.getTypeClass())) {
+                        TimeMap existingMap = (TimeMap) existingValue;
+                        if (!existingMap.isEmpty()) {
+                            TimeMap valMap = (TimeMap) val;
+
+                            Object[] keys = existingMap.toKeysArray();
+                            Object[] vals = existingMap.toValuesArray();
+                            for (int i = 0; i < keys.length; i++) {
+                                valMap.put(keys[i], vals[i]);
+                            }
+
+                            processedNewValue = valMap;
+                        }
+                    } else if (TimeSet.class.isAssignableFrom(columnDraft.getTypeClass())) {
+                        TimeSet existingTimeSet = (TimeSet) existingValue;
+                        
+                        processedNewValue = mergeTimeSets(existingTimeSet, (TimeSet) val);
                     }
-                    element.setAttribute(col.getId(), valMap);
-                } else {
-                    element.setAttribute(col.getId(), val);
                 }
+
+                element.setAttribute(columnDraft.getId(), processedNewValue);
             }
         }
     }
@@ -247,12 +273,46 @@ public abstract class AbstractProcessor {
 
     protected void flushTimeSet(TimeSet timeSet, Element element) {
         TimeSet existingTimeSet = (TimeSet) element.getAttribute("timeset");
-        if (existingTimeSet != null && !existingTimeSet.isEmpty()) {
-            for (Object o : existingTimeSet.toArray()) {
-                existingTimeSet.add(o);
+        element.setAttribute("timeset", mergeTimeSets(existingTimeSet, timeSet));
+    }
+
+    protected TimeSet mergeTimeSets(TimeSet set1, TimeSet set2) {
+        if (set1 instanceof IntervalSet) {
+            return mergeIntervalSets((IntervalSet) set1, (IntervalSet) set2);
+        } else if (set1 instanceof TimestampSet) {
+            return mergeTimestampSets((TimestampSet) set1, (TimestampSet) set2);
+        } else {
+            throw new IllegalArgumentException("Unknown TimeSet subtype " + set1.getClass());
+        }
+    }
+
+    protected IntervalSet mergeIntervalSets(IntervalSet set1, IntervalSet set2) {
+        IntervalSet merged = new IntervalSet();
+        for (Interval i : set1.toArray()) {
+            merged.add(i);
+        }
+        for (Interval i : set2.toArray()) {
+            try {
+                merged.add(i);
+            } catch (Exception e) {
+                //Catch overlapping intervals not allowed
+                //TODO: Report??
             }
         }
-        element.setAttribute("timeset", timeSet);
+
+        return merged;
+    }
+
+    protected TimestampSet mergeTimestampSets(TimestampSet set1, TimestampSet set2) {
+        TimestampSet merged = new TimestampSet();
+        for (Double t : set1.toArray()) {
+            merged.add(t);
+        }
+        for (Double t : set2.toArray()) {
+            merged.add(t);
+        }
+
+        return merged;
     }
 
     public void setWorkspace(Workspace workspace) {
