@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Mathieu Bastian, Mathieu Jacomy, Julian Bilcke, Eduardo Ramos
+Copyright 2008-2016 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,9 +37,9 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2016 Gephi Consortium.
  */
-package org.gephi.ui.importer.plugin.spreadsheet.csv;
+package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -59,21 +59,18 @@ import org.netbeans.validation.api.Validator;
 import org.netbeans.validation.api.ui.ValidationGroup;
 import org.netbeans.validation.api.ui.ValidationPanel;
 import org.openide.util.NbBundle;
-import org.openide.util.NbPreferences;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
-
-    private static final String SEPARATOR_SAVED_PREFERENCES = "ImportCSVUIVisualPanel1_Separator";
+public class WizardVisualPanel1CSV extends javax.swing.JPanel {
 
     private static final int MAX_ROWS_PREVIEW = 25;
 
     private final ImporterSpreadsheetCSV importer;
 
-    private ImportCSVUIWizardPanel1 wizard1;
+    private WizardPanel1CSV wizard1;
     private int columnCount = 0;
     private boolean hasSourceNodeColumn = false;
     private boolean hasTargetNodeColumn = false;
@@ -83,24 +80,22 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
     private boolean initialized = false;
 
     /**
-     * Creates new form ImportCSVUIVisualPanel1
+     * Creates new form WizardVisualPanel1CSV
      */
-    public ImportCSVUIVisualPanel1(ImporterSpreadsheetCSV importer, ImportCSVUIWizardPanel1 wizard1) {
+    public WizardVisualPanel1CSV(ImporterSpreadsheetCSV importer, WizardPanel1CSV wizard1) {
         initComponents();
         this.wizard1 = wizard1;
         this.importer = importer;
 
         SeparatorWrapper comma, semicolon, tab, space;
 
-        separatorComboBox.addItem(comma = new SeparatorWrapper((','), getMessage("ImportCSVUIVisualPanel1.comma")));
-        separatorComboBox.addItem(semicolon = new SeparatorWrapper((';'), getMessage("ImportCSVUIVisualPanel1.semicolon")));
-        separatorComboBox.addItem(tab = new SeparatorWrapper(('\t'), getMessage("ImportCSVUIVisualPanel1.tab")));
-        separatorComboBox.addItem(space = new SeparatorWrapper((' '), getMessage("ImportCSVUIVisualPanel1.space")));
+        separatorComboBox.addItem(comma = new SeparatorWrapper((','), getMessage("WizardVisualPanel1CSV.comma")));
+        separatorComboBox.addItem(semicolon = new SeparatorWrapper((';'), getMessage("WizardVisualPanel1CSV.semicolon")));
+        separatorComboBox.addItem(tab = new SeparatorWrapper(('\t'), getMessage("WizardVisualPanel1CSV.tab")));
+        separatorComboBox.addItem(space = new SeparatorWrapper((' '), getMessage("WizardVisualPanel1CSV.space")));
 
-        separatorComboBox.setSelectedIndex(NbPreferences.forModule(ImportCSVUIVisualPanel1.class).getInt(SEPARATOR_SAVED_PREFERENCES, 0));//Use saved separator or comma if not saved yet
-
-        tableComboBox.addItem(getMessage("ImportCSVUIVisualPanel1.nodes-table"));
-        tableComboBox.addItem(getMessage("ImportCSVUIVisualPanel1.edges-table"));
+        tableComboBox.addItem(getMessage("WizardVisualPanel1.nodes-table"));
+        tableComboBox.addItem(getMessage("WizardVisualPanel1.edges-table"));
 
         for (Charset charset : CharsetToolkit.getAvailableCharsets()) {
             charsetComboBox.addItem(charset.name());
@@ -146,32 +141,28 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
         initialized = true;
     }
 
-    public void unSetup() {
-        NbPreferences.forModule(ImportCSVUIVisualPanel1.class).putInt(SEPARATOR_SAVED_PREFERENCES, separatorComboBox.getSelectedIndex());
-    }
-
     public ValidationPanel getValidationPanel() {
         if (validationPanel != null) {
             return validationPanel;
         }
         validationPanel = new ValidationPanel();
-        validationPanel.setInnerComponent(ImportCSVUIVisualPanel1.this);
+        validationPanel.setInnerComponent(WizardVisualPanel1CSV.this);
         ValidationGroup validationGroup = validationPanel.getValidationGroup();
         validationGroup.add(pathTextField, new Validator<String>() {
 
             @Override
             public boolean validate(Problems prblms, String string, String t) {
                 if (!hasColumns()) {
-                    prblms.add(getMessage("ImportCSVUIVisualPanel1.validation.no-columns"));
+                    prblms.add(getMessage("WizardVisualPanel1CSV.validation.no-columns"));
                     return false;
                 }
                 if (!areValidColumnsForTable()) {
-                    prblms.add(getMessage("ImportCSVUIVisualPanel1.validation.edges.no-source-target-columns"));
+                    prblms.add(getMessage("WizardVisualPanel1CSV.validation.edges.no-source-target-columns"));
                     return false;
                 }
                 if (hasRowsMissingSourcesOrTargets()) {
-                    prblms.add(NbBundle.getMessage(ImportCSVUIVisualPanel1.class,
-                            "ImportCSVUIVisualPanel1.validation.edges.empty-sources-or-targets"
+                    prblms.add(NbBundle.getMessage(WizardVisualPanel1CSV.class,
+                            "WizardVisualPanel1CSV.validation.edges.empty-sources-or-targets"
                     ), Severity.WARNING);
                 }
                 return true;
@@ -310,7 +301,7 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
 
     @Override
     public String getName() {
-        return getMessage("ImportCSVUIVisualPanel1.name");
+        return getMessage("WizardVisualPanel1CSV.name");
     }
 
     public Character getSelectedSeparator() {
@@ -390,7 +381,7 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
     }
 
     private String getMessage(String resName) {
-        return NbBundle.getMessage(ImportCSVUIVisualPanel1.class, resName);
+        return NbBundle.getMessage(WizardVisualPanel1CSV.class, resName);
     }
 
     /**
@@ -412,13 +403,13 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
         charsetLabel = new javax.swing.JLabel();
         charsetComboBox = new javax.swing.JComboBox();
 
-        filePathLabel.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.filePathLabel.text")); // NOI18N
+        filePathLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.filePathLabel.text")); // NOI18N
 
         pathTextField.setEditable(false);
-        pathTextField.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.pathTextField.text")); // NOI18N
+        pathTextField.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.pathTextField.text")); // NOI18N
 
         separatorLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        separatorLabel.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.separatorLabel.text")); // NOI18N
+        separatorLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.separatorLabel.text")); // NOI18N
 
         separatorComboBox.setEditable(true);
         separatorComboBox.addItemListener(new java.awt.event.ItemListener() {
@@ -428,7 +419,7 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
         });
 
         tableLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        tableLabel.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.tableLabel.text")); // NOI18N
+        tableLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.tableLabel.text")); // NOI18N
 
         tableComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -436,12 +427,12 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
             }
         });
 
-        previewLabel.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.previewLabel.text")); // NOI18N
+        previewLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.previewLabel.text")); // NOI18N
 
         scroll.setViewportView(previewTable);
 
         charsetLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        charsetLabel.setText(org.openide.util.NbBundle.getMessage(ImportCSVUIVisualPanel1.class, "ImportCSVUIVisualPanel1.charsetLabel.text")); // NOI18N
+        charsetLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.charsetLabel.text")); // NOI18N
 
         charsetComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {

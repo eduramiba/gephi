@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Mathieu Bastian <mathieu.bastian@gephi.org>
+Copyright 2008-2016 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,7 +37,7 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.io.importer.plugin.file.spreadsheet;
 

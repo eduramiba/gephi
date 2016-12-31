@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Mathieu Bastian <mathieu.bastian@gephi.org>
+Copyright 2008-2016 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,7 +37,7 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.ui.importer.plugin.spreadsheet;
 
@@ -46,7 +46,7 @@ import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSVBuilder;
 import org.gephi.io.importer.spi.Importer;
 import org.gephi.io.importer.spi.ImporterUI;
-import org.gephi.ui.importer.plugin.spreadsheet.csv.ImportCSVUIWizard;
+import org.gephi.ui.importer.plugin.spreadsheet.wizard.ImportCSVUIWizard;
 import org.openide.WizardDescriptor;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
@@ -58,12 +58,12 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ImporterUI.class)
 public class SpreadsheetImporterCSVUI implements ImporterUI, ImporterUI.WithWizard {
 
-    private Importer[] importers;
+    private ImporterSpreadsheetCSV[] importers;
     private ImportCSVUIWizard wizard;
 
     @Override
     public void setup(Importer[] importers) {
-        this.importers = importers;
+        this.importers = (ImporterSpreadsheetCSV[]) importers;
     }
 
     @Override
@@ -94,7 +94,7 @@ public class SpreadsheetImporterCSVUI implements ImporterUI, ImporterUI.WithWiza
 
     @Override
     public WizardDescriptor getWizardDescriptor() {
-        this.wizard = new ImportCSVUIWizard((ImporterSpreadsheetCSV[]) importers);
+        this.wizard = new ImportCSVUIWizard(importers);
         return wizard.getDescriptor();
     }
 }

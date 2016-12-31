@@ -1,45 +1,45 @@
 /*
- Copyright 2008-2010 Gephi
- Authors : Eduardo Ramos <eduramiba@gmail.com>
- Website : http://www.gephi.org
+Copyright 2008-2016 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
+Website : http://www.gephi.org
 
- This file is part of Gephi.
+This file is part of Gephi.
 
- DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
- The contents of this file are subject to the terms of either the GNU
- General Public License Version 3 only ("GPL") or the Common
- Development and Distribution License("CDDL") (collectively, the
- "License"). You may not use this file except in compliance with the
- License. You can obtain a copy of the License at
- http://gephi.org/about/legal/license-notice/
- or /cddl-1.0.txt and /gpl-3.0.txt. See the License for the
- specific language governing permissions and limitations under the
- License.  When distributing the software, include this License Header
- Notice in each file and include the License files at
- /cddl-1.0.txt and /gpl-3.0.txt. If applicable, add the following below the
- License Header, with the fields enclosed by brackets [] replaced by
- your own identifying information:
- "Portions Copyrighted [year] [name of copyright owner]"
+The contents of this file are subject to the terms of either the GNU
+General Public License Version 3 only ("GPL") or the Common
+Development and Distribution License("CDDL") (collectively, the
+"License"). You may not use this file except in compliance with the
+License. You can obtain a copy of the License at
+http://gephi.org/about/legal/license-notice/
+or /cddl-1.0.txt and /gpl-3.0.txt. See the License for the
+specific language governing permissions and limitations under the
+License.  When distributing the software, include this License Header
+Notice in each file and include the License files at
+/cddl-1.0.txt and /gpl-3.0.txt. If applicable, add the following below the
+License Header, with the fields enclosed by brackets [] replaced by
+your own identifying information:
+"Portions Copyrighted [year] [name of copyright owner]"
 
- If you wish your version of this file to be governed by only the CDDL
- or only the GPL Version 3, indicate your decision by adding
- "[Contributor] elects to include this software in this distribution
- under the [CDDL or GPL Version 3] license." If you do not indicate a
- single choice of license, a recipient has the option to distribute
- your version of this file under either the CDDL, the GPL Version 3 or
- to extend the choice of license to its licensees as provided above.
- However, if you add GPL Version 3 code and therefore, elected the GPL
- Version 3 license, then the option applies only if the new code is
- made subject to such option by the copyright holder.
+If you wish your version of this file to be governed by only the CDDL
+or only the GPL Version 3, indicate your decision by adding
+"[Contributor] elects to include this software in this distribution
+under the [CDDL or GPL Version 3] license." If you do not indicate a
+single choice of license, a recipient has the option to distribute
+your version of this file under either the CDDL, the GPL Version 3 or
+to extend the choice of license to its licensees as provided above.
+However, if you add GPL Version 3 code and therefore, elected the GPL
+Version 3 license, then the option applies only if the new code is
+made subject to such option by the copyright holder.
 
- Contributor(s):
+Contributor(s):
 
- Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2016 Gephi Consortium.
  */
-package org.gephi.ui.importer.plugin.spreadsheet.csv;
+package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,11 +55,11 @@ import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
 
-public final class ImportCSVUIVisualPanel2 extends JPanel {
+public final class WizardVisualPanel2 extends JPanel {
 
-    private static final String ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES = "ImportCSVUIVisualPanel2_assign_new_nodes_ids";
-    private static final String CREATE_NEW_NODES_SAVED_PREFERENCES = "ImportCSVUIVisualPanel2_create_new_nodes";
-    private final ImportCSVUIWizardPanel2 wizard2;
+    private static final String ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES = "WizardVisualPanel2_assign_new_nodes_ids";
+    private static final String CREATE_NEW_NODES_SAVED_PREFERENCES = "WizardVisualPanel2_create_new_nodes";
+    private final WizardPanel2 wizard2;
     private final ArrayList<JCheckBox> columnsCheckBoxes = new ArrayList<>();
     private final ArrayList<JComboBox> columnsComboBoxes = new ArrayList<>();
     //Nodes table settings:
@@ -70,9 +70,9 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
     private final AbstractImporterSpreadsheet importer;
 
     /**
-     * Creates new form ImportCSVUIVisualPanel2
+     * Creates new form WizardVisualPanel2
      */
-    public ImportCSVUIVisualPanel2(AbstractImporterSpreadsheet importer, ImportCSVUIWizardPanel2 wizard2) {
+    public WizardVisualPanel2(AbstractImporterSpreadsheet importer, WizardPanel2 wizard2) {
         initComponents();
         this.importer = importer;
         this.wizard2 = wizard2;
@@ -82,10 +82,10 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
 
     public void unSetup() {
         if (assignNewNodeIds != null) {
-            NbPreferences.forModule(ImportCSVUIVisualPanel1.class).putBoolean(ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES, assignNewNodeIds.isSelected());
+            NbPreferences.forModule(WizardVisualPanel1CSV.class).putBoolean(ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES, assignNewNodeIds.isSelected());
         }
         if (createNewNodes != null) {
-            NbPreferences.forModule(ImportCSVUIVisualPanel1.class).putBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, createNewNodes.isSelected());
+            NbPreferences.forModule(WizardVisualPanel1CSV.class).putBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, createNewNodes.isSelected());
         }
     }
 
@@ -112,10 +112,10 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
         JLabel descriptionLabel = new JLabel();
         switch (importer.getTable()) {
             case NODES:
-                descriptionLabel.setText(getMessage("ImportCSVUIVisualPanel2.nodes.description"));
+                descriptionLabel.setText(getMessage("WizardVisualPanel2.nodes.description"));
                 break;
             case EDGES:
-                descriptionLabel.setText(getMessage("ImportCSVUIVisualPanel2.edges.description"));
+                descriptionLabel.setText(getMessage("WizardVisualPanel2.edges.description"));
                 break;
         }
         settingsPanel.add(descriptionLabel, "wrap 15px");
@@ -125,7 +125,7 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
         try {
             columnsCheckBoxes.clear();
             columnsComboBoxes.clear();
-            JLabel columnsLabel = new JLabel(getMessage("ImportCSVUIVisualPanel2.columnsLabel.text"));
+            JLabel columnsLabel = new JLabel(getMessage("WizardVisualPanel2.columnsLabel.text"));
             settingsPanel.add(columnsLabel, "wrap");
 
             final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
@@ -165,16 +165,16 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
 
     private void loadNodesTableSettings(JPanel settingsPanel) {
         //Create assignNewNodeIds checkbox and set its selection with saved preferences or true by default:
-        assignNewNodeIds = new JCheckBox(getMessage("ImportCSVUIVisualPanel2.nodes.assign-ids-checkbox"),
-                NbPreferences.forModule(ImportCSVUIVisualPanel1.class)
+        assignNewNodeIds = new JCheckBox(getMessage("WizardVisualPanel2.nodes.assign-ids-checkbox"),
+                NbPreferences.forModule(WizardVisualPanel1CSV.class)
                         .getBoolean(ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES, false));//False => by default update nodes instead of creating new ones
         settingsPanel.add(assignNewNodeIds, "wrap");
     }
 
     private void loadEdgesTableSettings(JPanel settingsPanel) {
         //Create createNewNodes checkbox and set its selection with saved preferences or true by default:
-        createNewNodes = new JCheckBox(getMessage("ImportCSVUIVisualPanel2.edges.create-new-nodes-checkbox"),
-                NbPreferences.forModule(ImportCSVUIVisualPanel1.class)
+        createNewNodes = new JCheckBox(getMessage("WizardVisualPanel2.edges.create-new-nodes-checkbox"),
+                NbPreferences.forModule(WizardVisualPanel1CSV.class)
                         .getBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, true));//True => by default create missing nodes
         settingsPanel.add(createNewNodes, "wrap");
     }
@@ -214,11 +214,11 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
 
     @Override
     public String getName() {
-        return NbBundle.getMessage(ImportCSVUIVisualPanel2.class, "ImportCSVUIVisualPanel2.name");
+        return NbBundle.getMessage(WizardVisualPanel2.class, "WizardVisualPanel2.name");
     }
 
     private String getMessage(String resName) {
-        return NbBundle.getMessage(ImportCSVUIVisualPanel2.class, resName);
+        return NbBundle.getMessage(WizardVisualPanel2.class, resName);
     }
 
     /**

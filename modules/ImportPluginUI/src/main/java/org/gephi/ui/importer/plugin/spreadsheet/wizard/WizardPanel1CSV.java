@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Eduardo Ramos <eduramiba@gmail.com>
+Copyright 2008-2016 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,15 +37,13 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2016 Gephi Consortium.
  */
-package org.gephi.ui.importer.plugin.spreadsheet.csv;
+package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
 import java.awt.Component;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -53,18 +51,18 @@ import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.openide.WizardDescriptor;
 import org.openide.util.HelpCtx;
 
-public class ImportCSVUIWizardPanel2 implements WizardDescriptor.Panel {
+public class WizardPanel1CSV implements WizardDescriptor.Panel {
 
+    private final ImporterSpreadsheetCSV importer;
+    
     /**
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
      */
-    private final ImportCSVUIVisualPanel2 component;
-    private final ImporterSpreadsheetCSV importer;
+    private WizardVisualPanel1CSV component;
 
-    ImportCSVUIWizardPanel2(ImporterSpreadsheetCSV importer) {
+    public WizardPanel1CSV(ImporterSpreadsheetCSV importer) {
         this.importer = importer;
-        this.component = new ImportCSVUIVisualPanel2(importer, this);
     }
 
     // Get the visual component for the panel. In this template, the component
@@ -73,7 +71,10 @@ public class ImportCSVUIWizardPanel2 implements WizardDescriptor.Panel {
     // create only those which really need to be visible.
     @Override
     public Component getComponent() {
-        return component;
+        if (component == null) {
+            component = new WizardVisualPanel1CSV(importer, this);
+        }
+        return component.getValidationPanel();
     }
 
     @Override
@@ -86,9 +87,8 @@ public class ImportCSVUIWizardPanel2 implements WizardDescriptor.Panel {
 
     @Override
     public boolean isValid() {
-        return component.isValidCSV();
+        return component.isCSVValid();
     }
-    
     private final Set<ChangeListener> listeners = new HashSet<>(1); // or can use ChangeSupport in NB 6.0
 
     @Override
@@ -122,23 +122,13 @@ public class ImportCSVUIWizardPanel2 implements WizardDescriptor.Panel {
     // by the user.
     @Override
     public void readSettings(Object settings) {
-        component.reloadSettings();
+        component.refreshPreviewTable();
     }
 
     @Override
     public void storeSettings(Object settings) {
-        String[] columnsToImport = component.getColumnsToImport();
-        Class[] columnTypes = component.getColumnsToImportTypes();
-        
-        Map<String, Class> columnsClasses = new HashMap<>();
-        for (int i = 0; i < columnsToImport.length; i++) {
-            columnsClasses.put(columnsToImport[i], columnTypes[i]);
-        }
-        
-        component.getAssignNewNodeIds();//TODO use
-        component.getCreateNewNodes();//TODO use
-        //importer.setColumnTypes(columnTypes);//TODO
-        
-        component.unSetup();
+        importer.setFieldDelimiter(component.getSelectedSeparator());
+        importer.setTable(component.getSelectedTable());
+        importer.setCharset(component.getSelectedCharset());
     }
 }

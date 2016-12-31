@@ -207,6 +207,8 @@ public class DesktopImportControllerUI implements ImportControllerUI {
 
     private void importFiles(final Reader[] readers, final FileImporter[] importers, FileObject[] fileObjects) {
         try {
+            File[] files = new File[readers.length];
+
             Map<ImporterUI, List<FileImporter>> importerUIs = new HashMap<>();
             for (int i = 0; i < importers.length; i++) {
                 FileImporter importer = importers[i];
@@ -226,15 +228,14 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                     if (fileObjects != null) {
                         file = FileUtil.toFile(fileObjects[i]);
                     } else {
-                        //Copy the file to a temp directory... It comes from an inputstream or reader:
+                        //There is no source file but the importer needs it, create temporary copy:
                         file = TempDirUtils.createTempDir().createFile("file_copy_" + i);
                         try (FileOutputStream fos = new FileOutputStream(file)) {
                             FileUtil.copy(new ReaderInputStream(reader, "UTF-8"), fos);
                         }
-                        
-                        reader.reset();
                     }
-                    
+
+                    files[i] = file;
                     ((FileImporter.FileAware) importer).setFile(file);
                 }
             }
@@ -279,7 +280,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
 
             final List<Container> results = new ArrayList<>();
             for (int i = 0; i < importers.length; i++) {
-                doImport(results, readers[i], importers[i]);
+                doImport(results, readers[i], files[i], importers[i]);
             }
 
             executor.execute(null, new Runnable() {
@@ -296,14 +297,14 @@ public class DesktopImportControllerUI implements ImportControllerUI {
         }
     }
 
-    private void doImport(final List<Container> results, final Reader reader, final FileImporter importer) {
+    private void doImport(final List<Container> results, final Reader reader, final File file, final FileImporter importer) {
         LongTask task = null;
         if (importer instanceof LongTask) {
             task = (LongTask) importer;
         }
 
-        if (reader == null) {
-            throw new NullPointerException("Null reader!");
+        if (file == null && reader == null) {
+            throw new NullPointerException("Null file and reader!");
         }
 
         if (importer == null) {
@@ -317,7 +318,13 @@ public class DesktopImportControllerUI implements ImportControllerUI {
             @Override
             public void run() {
                 try {
-                    Container container = controller.importFile(reader, importer);
+                    Container container;
+                    if (importer instanceof FileImporter.FileAware && file != null) {
+                        container = controller.importFile(file, importer);
+                    } else {
+                        container = controller.importFile(reader, importer);
+                    }
+
                     if (container != null) {
                         container.setSource(containerSource);
                         results.add(container);

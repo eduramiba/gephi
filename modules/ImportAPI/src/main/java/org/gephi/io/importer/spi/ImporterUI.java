@@ -60,7 +60,14 @@ import org.openide.WizardDescriptor;
  */
 public interface ImporterUI {
     
+    /**
+     * Optional interface to implement for {@link ImporterUI} classes that need a Wizard
+     */
     public interface WithWizard {
+        /**
+         * Used to retreive the wizard descriptor for the Importer UI.
+         * @return Wizard descriptor for the UI
+         */
         public WizardDescriptor getWizardDescriptor();
     }
 

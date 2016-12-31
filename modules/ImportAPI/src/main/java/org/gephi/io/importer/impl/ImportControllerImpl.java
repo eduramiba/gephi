@@ -43,6 +43,7 @@ package org.gephi.io.importer.impl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -66,10 +67,12 @@ import org.gephi.io.importer.spi.WizardImporterBuilder;
 import org.gephi.io.processor.spi.Processor;
 import org.gephi.io.processor.spi.Scaler;
 import org.gephi.project.api.Workspace;
+import org.gephi.utils.TempDirUtils;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import org.openide.util.io.ReaderInputStream;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -129,7 +132,7 @@ public class ImportControllerImpl implements ImportController {
             fileObject = getArchivedFile(fileObject);   //Unzip and return content file
             FileImporterBuilder builder = getMatchingImporter(fileObject);
             if (fileObject != null && builder != null) {
-                Container c = importFile(fileObject.getInputStream(), builder.buildImporter());
+                Container c = importFile(fileObject.getInputStream(), builder.buildImporter(), file);
                 return c;
             }
         }
@@ -142,7 +145,7 @@ public class ImportControllerImpl implements ImportController {
         if (fileObject != null) {
             fileObject = getArchivedFile(fileObject);   //Unzip and return content file
             if (fileObject != null) {
-                Container c = importFile(fileObject.getInputStream(), importer);
+                Container c = importFile(fileObject.getInputStream(), importer, file);
                 return c;
             }
         }
@@ -151,6 +154,11 @@ public class ImportControllerImpl implements ImportController {
 
     @Override
     public Container importFile(Reader reader, FileImporter importer) {
+        return importFile(reader, importer, null);
+    }
+
+    @Override
+    public Container importFile(Reader reader, FileImporter importer, File file) {
         //Create Container
         final Container container = Lookup.getDefault().lookup(Container.Factory.class).newContainer();
 
@@ -158,7 +166,23 @@ public class ImportControllerImpl implements ImportController {
         Report report = new Report();
         container.setReport(report);
 
-        importer.setReader(reader);
+        if (importer instanceof FileImporter.FileAware) {
+            if (file == null) {
+                //There is no source file but the importer needs it, create temporary copy:
+                try {
+                    file = TempDirUtils.createTempDir().createFile("file_copy");
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        FileUtil.copy(new ReaderInputStream(reader, "UTF-8"), fos);
+                    }
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            
+            ((FileImporter.FileAware) importer).setFile(file);
+        } else {
+            importer.setReader(reader);
+        }
 
         try {
             if (importer.execute(container.getLoader())) {
@@ -176,7 +200,7 @@ public class ImportControllerImpl implements ImportController {
             try {
                 reader.close();
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                //NOOP
             }
         }
         return null;
@@ -184,9 +208,14 @@ public class ImportControllerImpl implements ImportController {
 
     @Override
     public Container importFile(InputStream stream, FileImporter importer) {
+        return importFile(stream, importer, null);
+    }
+
+    @Override
+    public Container importFile(InputStream stream, FileImporter importer, File file) {
         try {
             Reader reader = ImportUtils.getTextReader(stream);
-            return importFile(reader, importer);
+            return importFile(reader, importer, file);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
@@ -312,7 +341,7 @@ public class ImportControllerImpl implements ImportController {
                     String fileExt1 = splittedFileName[splittedFileName.length - 1];
                     String fileExt2 = splittedFileName[splittedFileName.length - 2];
 
-                    File tempFile = null;
+                    File tempFile;
                     if (fileExt1.equalsIgnoreCase("tar")) {
                         String fname = fileObject.getName().replaceAll("\\.tar$", "");
                         fname = fname.replace(fileExt2, "");
