@@ -107,7 +107,7 @@ public class ImportControllerImpl implements ImportController {
     @Override
     public FileImporter getFileImporter(File file) {
         FileObject fileObject = FileUtil.toFileObject(file);
-        fileObject = getArchivedFile(fileObject);   //Unzip and return content file
+        fileObject = ImportUtils.getArchivedFile(fileObject);   //Unzip and return content file
         FileImporterBuilder builder = getMatchingImporter(fileObject);
         if (fileObject != null && builder != null) {
             FileImporter fi = builder.buildImporter();
@@ -129,7 +129,8 @@ public class ImportControllerImpl implements ImportController {
     public Container importFile(File file) throws FileNotFoundException {
         FileObject fileObject = FileUtil.toFileObject(file);
         if (fileObject != null) {
-            fileObject = getArchivedFile(fileObject);   //Unzip and return content file
+            fileObject = ImportUtils.getArchivedFile(fileObject);   //Unzip and return content file
+            file = FileUtil.toFile(fileObject);
             FileImporterBuilder builder = getMatchingImporter(fileObject);
             if (fileObject != null && builder != null) {
                 Container c = importFile(fileObject.getInputStream(), builder.buildImporter(), file);
@@ -143,7 +144,8 @@ public class ImportControllerImpl implements ImportController {
     public Container importFile(File file, FileImporter importer) throws FileNotFoundException {
         FileObject fileObject = FileUtil.toFileObject(file);
         if (fileObject != null) {
-            fileObject = getArchivedFile(fileObject);   //Unzip and return content file
+            fileObject = ImportUtils.getArchivedFile(fileObject);   //Unzip and return content file
+            file = FileUtil.toFile(fileObject);
             if (fileObject != null) {
                 Container c = importFile(fileObject.getInputStream(), importer, file);
                 return c;
@@ -319,59 +321,6 @@ public class ImportControllerImpl implements ImportController {
         processor.setContainers(unloaders);
         processor.setWorkspace(workspace);
         processor.process();
-    }
-
-    private FileObject getArchivedFile(FileObject fileObject) {
-        if (fileObject == null) {
-            return null;
-        }
-        // ZIP and JAR archives
-        if (FileUtil.isArchiveFile(fileObject)) {
-            fileObject = FileUtil.getArchiveRoot(fileObject).getChildren()[0];
-        } else { // GZ or BZIP2 archives
-            boolean isGz = fileObject.getExt().equalsIgnoreCase("gz");
-            boolean isBzip = fileObject.getExt().equalsIgnoreCase("bz2");
-            if (isGz || isBzip) {
-                try {
-                    String[] splittedFileName = fileObject.getName().split("\\.");
-                    if (splittedFileName.length < 2) {
-                        return fileObject;
-                    }
-
-                    String fileExt1 = splittedFileName[splittedFileName.length - 1];
-                    String fileExt2 = splittedFileName[splittedFileName.length - 2];
-
-                    File tempFile;
-                    if (fileExt1.equalsIgnoreCase("tar")) {
-                        String fname = fileObject.getName().replaceAll("\\.tar$", "");
-                        fname = fname.replace(fileExt2, "");
-                        tempFile = File.createTempFile(fname, "." + fileExt2);
-                        // Untar & unzip
-                        if (isGz) {
-                            tempFile = ImportUtils.getGzFile(fileObject, tempFile, true);
-                        } else {
-                            tempFile = ImportUtils.getBzipFile(fileObject, tempFile, true);
-                        }
-                    } else {
-                        String fname = fileObject.getName();
-                        fname = fname.replace(fileExt1, "");
-                        tempFile = File.createTempFile(fname, "." + fileExt1);
-                        // Unzip
-                        if (isGz) {
-                            tempFile = ImportUtils.getGzFile(fileObject, tempFile, false);
-                        } else {
-                            tempFile = ImportUtils.getBzipFile(fileObject, tempFile, false);
-                        }
-                    }
-                    tempFile.deleteOnExit();
-                    tempFile = FileUtil.normalizeFile(tempFile);
-                    fileObject = FileUtil.toFileObject(tempFile);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
-        }
-        return fileObject;
     }
 
     private FileImporterBuilder getMatchingImporter(FileObject fileObject) {

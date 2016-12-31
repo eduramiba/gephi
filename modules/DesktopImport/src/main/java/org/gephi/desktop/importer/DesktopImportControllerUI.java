@@ -146,7 +146,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
         try {
             for (int i = 0; i < fileObjects.length; i++) {
                 FileObject fileObject = fileObjects[i];
-                fileObject = getArchivedFile(fileObject);
+                fileObject = ImportUtils.getArchivedFile(fileObject);
 
                 importers[i] = controller.getFileImporter(FileUtil.toFile(fileObject));
 
@@ -583,60 +583,6 @@ public class DesktopImportControllerUI implements ImportControllerUI {
         public boolean isResult() {
             return result;
         }
-    }
-
-    private FileObject getArchivedFile(FileObject fileObject) {
-        // ZIP and JAR archives
-        if (FileUtil.isArchiveFile(fileObject)) {
-            try {
-                fileObject = FileUtil.getArchiveRoot(fileObject).getChildren()[0];
-            } catch (Exception e) {
-                throw new RuntimeException("The archive can't be opened, be sure it has no password and contains a single file, without folders");
-            }
-        } else { // GZ or BZIP2 archives
-            boolean isGz = fileObject.getExt().equalsIgnoreCase("gz");
-            boolean isBzip = fileObject.getExt().equalsIgnoreCase("bz2");
-            if (isGz || isBzip) {
-                try {
-                    String[] splittedFileName = fileObject.getName().split("\\.");
-                    if (splittedFileName.length < 2) {
-                        return fileObject;
-                    }
-
-                    String fileExt1 = splittedFileName[splittedFileName.length - 1];
-                    String fileExt2 = splittedFileName[splittedFileName.length - 2];
-
-                    File tempFile;
-                    if (fileExt1.equalsIgnoreCase("tar")) {
-                        String fname = fileObject.getName().replaceAll("\\.tar$", "");
-                        fname = fname.replace(fileExt2, "");
-                        tempFile = File.createTempFile(fname, "." + fileExt2);
-                        // Untar & unzip
-                        if (isGz) {
-                            tempFile = getGzFile(fileObject, tempFile, true);
-                        } else {
-                            tempFile = getBzipFile(fileObject, tempFile, true);
-                        }
-                    } else {
-                        String fname = fileObject.getName();
-                        fname = fname.replace(fileExt1, "");
-                        tempFile = File.createTempFile(fname, "." + fileExt1);
-                        // Unzip
-                        if (isGz) {
-                            tempFile = getGzFile(fileObject, tempFile, false);
-                        } else {
-                            tempFile = getBzipFile(fileObject, tempFile, false);
-                        }
-                    }
-                    tempFile.deleteOnExit();
-                    tempFile = FileUtil.normalizeFile(tempFile);
-                    fileObject = FileUtil.toFileObject(tempFile);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
-        }
-        return fileObject;
     }
 
     @Override
