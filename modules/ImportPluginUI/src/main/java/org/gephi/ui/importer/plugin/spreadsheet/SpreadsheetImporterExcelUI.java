@@ -42,7 +42,6 @@ Portions Copyrighted 2011 Gephi Consortium.
 package org.gephi.ui.importer.plugin.spreadsheet;
 
 import javax.swing.JPanel;
-import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSVBuilder;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetExcel;
 import org.gephi.io.importer.spi.Importer;

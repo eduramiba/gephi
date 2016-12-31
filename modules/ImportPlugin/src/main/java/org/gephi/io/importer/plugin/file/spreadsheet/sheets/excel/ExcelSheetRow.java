@@ -25,11 +25,20 @@ public class ExcelSheetRow implements SheetRow {
     public String get(int index) {
         Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
 
-        return getRowCellAsString(cell, index);
+        String value = getRowCellAsString(cell, index);
+        if (value != null) {
+            value = value.trim();
+
+            if (value.isEmpty()) {
+                value = null;
+            }
+        }
+
+        return value;
     }
-    
+
     @Override
-    public int size(){
+    public int size() {
         return row.getLastCellNum();
     }
 

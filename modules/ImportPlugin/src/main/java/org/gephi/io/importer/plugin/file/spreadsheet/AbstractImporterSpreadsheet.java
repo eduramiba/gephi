@@ -42,7 +42,6 @@
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetNodesConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportNodesProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.AbstractImportProcess;
@@ -50,21 +49,16 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
-import org.gephi.graph.api.TimeFormat;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.spi.FileImporter;
-import org.gephi.utils.TempDirUtils;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.ProgressTicket;
 import org.joda.time.DateTimeZone;
-import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
-import org.openide.util.io.ReaderInputStream;
 
 /**
  *
@@ -142,6 +136,10 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     @Override
     public void setFile(File file) {
         this.file = file;
+    }
+
+    public File getFile() {
+        return file;
     }
 
     @Override

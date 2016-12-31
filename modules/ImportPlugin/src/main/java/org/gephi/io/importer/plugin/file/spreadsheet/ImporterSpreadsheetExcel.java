@@ -42,11 +42,11 @@
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
 import java.io.IOException;
-import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.EmptySheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheets.excel.ExcelSheetParser;
 
@@ -55,18 +55,26 @@ import org.gephi.io.importer.plugin.file.spreadsheet.sheets.excel.ExcelSheetPars
  * @author Eduardo Ramos
  */
 public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
-    
+
     private int sheetIndex = 0;
-    
+
     @Override
     public SheetParser createParser() throws IOException {
         try {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheetAt(sheetIndex);
-            
+
             return new ExcelSheetParser(sheet);
-        } catch (InvalidFormatException | EncryptedDocumentException ex) {
-            throw new RuntimeException(ex);
+        } catch (Exception ex) {
+            //Control and report old excel files are unsupported:
+            //Control and report excel file blocked by another process (normally excel itself):
+
+            if (report != null) {
+                SpreadsheetUtils.logError(report, ex.getMessage(), null);
+                return EmptySheet.INSTANCE;
+            } else {
+                return new ErrorSheet(ex.getMessage());
+            }
         }
     }
 
@@ -77,6 +85,4 @@ public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
     public void setSheetIndex(int sheetIndex) {
         this.sheetIndex = sheetIndex;
     }
-    
-    
 }

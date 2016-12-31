@@ -64,6 +64,9 @@ public class ExcelSheetParser implements SheetParser {
 
         public ExcelIterator() {
             iterator = sheet.iterator();
+            if (iterator.hasNext()) {
+                iterator.next();//Skip headers row
+            }
         }
 
         @Override

@@ -42,11 +42,9 @@ Portions Copyrighted 2011 Gephi Consortium.
 package org.gephi.ui.importer.plugin.spreadsheet.csv;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
@@ -58,7 +56,6 @@ import org.netbeans.validation.api.Severity;
 import org.netbeans.validation.api.Validator;
 import org.netbeans.validation.api.ui.ValidationGroup;
 import org.netbeans.validation.api.ui.ValidationPanel;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
 
@@ -100,6 +97,11 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
         tableComboBox.addItem(getMessage("ImportCSVUIVisualPanel1.edges-table"));
 
         tableComboBox.setSelectedIndex(NbPreferences.forModule(ImportCSVUIVisualPanel1.class).getInt(TABLE_SAVED_PREFERENCES, 0));//Use saved table or nodes table if not saved yet
+
+        final String filePath = importer.getFile().getAbsolutePath();
+        pathTextField.setText(filePath);
+        pathTextField.setToolTipText(filePath);
+        //TODO: add time representation chooser
     }
 
     public void unSetup() {
@@ -187,9 +189,9 @@ public class ImportCSVUIVisualPanel1 extends javax.swing.JPanel {
                     // Search for missing source or target columns for edges table
                     if (table == AbstractImporterSpreadsheet.Table.EDGES) {
                         if (recordColumnCount < sourceColumnIndex
-                                || currentRecord[sourceColumnIndex].trim().isEmpty()
+                                || currentRecord[sourceColumnIndex] == null
                                 || recordColumnCount < targetColumnIndex
-                                || currentRecord[targetColumnIndex].trim().isEmpty()) {
+                                || currentRecord[targetColumnIndex] == null) {
                             hasRowsMissingSourcesOrTargets = true;
                         }
                     }
