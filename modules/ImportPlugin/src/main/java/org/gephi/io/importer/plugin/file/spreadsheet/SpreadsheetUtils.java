@@ -64,7 +64,7 @@ public class SpreadsheetUtils {
         }
     }
 
-    public static CSVParser configureCSVParser(File file, Character fieldSeparator) throws IOException {
+    public static CSVParser configureCSVParser(File file, Character fieldSeparator, Charset charset) throws IOException {
         if (fieldSeparator == null) {
             fieldSeparator = ',';
         }
@@ -79,7 +79,7 @@ public class SpreadsheetUtils {
                 .withTrim(true);
 
         FileInputStream fileInputStream = new FileInputStream(file);
-        InputStreamReader is = new InputStreamReader(fileInputStream, Charset.forName("UTF-8"));
+        InputStreamReader is = new InputStreamReader(fileInputStream, charset);
         return new CSVParser(is, csvFormat);
     }
 }

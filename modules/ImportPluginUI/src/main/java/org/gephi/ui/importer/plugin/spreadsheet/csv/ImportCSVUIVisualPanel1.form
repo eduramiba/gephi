@@ -19,24 +19,29 @@
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="1" attributes="0">
-                  <Component id="scroll" alignment="0" max="32767" attributes="0"/>
-                  <Component id="descriptionLabel" alignment="0" max="32767" attributes="0"/>
-                  <Component id="pathTextField" alignment="0" max="32767" attributes="0"/>
+                  <Component id="scroll" alignment="0" pref="537" max="32767" attributes="0"/>
+                  <Component id="filePathLabel" alignment="0" pref="537" max="32767" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="separatorLabel" max="32767" attributes="1"/>
+                          <Component id="separatorComboBox" alignment="0" pref="90" max="32767" attributes="1"/>
+                      </Group>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="tableLabel" max="32767" attributes="1"/>
+                          <Component id="tableComboBox" alignment="0" pref="123" max="32767" attributes="1"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="charsetLabel" pref="308" max="32767" attributes="0"/>
+                          <Component id="charsetComboBox" alignment="0" pref="308" max="32767" attributes="0"/>
+                      </Group>
+                  </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="previewLabel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="separatorLabel" max="32767" attributes="1"/>
-                          <Component id="separatorComboBox" alignment="0" max="32767" attributes="1"/>
-                      </Group>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="tableLabel" max="32767" attributes="1"/>
-                          <Component id="tableComboBox" max="32767" attributes="1"/>
-                      </Group>
-                  </Group>
+                  <Component id="pathTextField" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -46,7 +51,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="descriptionLabel" min="-2" max="-2" attributes="0"/>
+              <Component id="filePathLabel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="pathTextField" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -57,9 +62,15 @@
                       <Component id="separatorComboBox" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
-                      <Component id="tableLabel" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="tableLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="charsetLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="tableComboBox" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="tableComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="charsetComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
@@ -72,10 +83,10 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="javax.swing.JLabel" name="descriptionLabel">
+    <Component class="javax.swing.JLabel" name="filePathLabel">
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/datalab/plugin/manipulators/general/ui/Bundle.properties" key="ImportCSVUIVisualPanel1.descriptionLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.filePathLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
@@ -83,7 +94,7 @@
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/datalab/plugin/manipulators/general/ui/Bundle.properties" key="ImportCSVUIVisualPanel1.pathTextField.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.pathTextField.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
@@ -91,12 +102,13 @@
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/datalab/plugin/manipulators/general/ui/Bundle.properties" key="ImportCSVUIVisualPanel1.separatorLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.separatorLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JComboBox" name="separatorComboBox">
       <Properties>
+        <Property name="editable" type="boolean" value="true"/>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
           <StringArray count="0"/>
         </Property>
@@ -109,7 +121,7 @@
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/datalab/plugin/manipulators/general/ui/Bundle.properties" key="ImportCSVUIVisualPanel1.tableLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.tableLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
@@ -126,7 +138,7 @@
     <Component class="javax.swing.JLabel" name="previewLabel">
       <Properties>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/datalab/plugin/manipulators/general/ui/Bundle.properties" key="ImportCSVUIVisualPanel1.previewLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.previewLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
@@ -138,5 +150,23 @@
         </Component>
       </SubComponents>
     </Container>
+    <Component class="javax.swing.JLabel" name="charsetLabel">
+      <Properties>
+        <Property name="horizontalAlignment" type="int" value="0"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/csv/Bundle.properties" key="ImportCSVUIVisualPanel1.charsetLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="charsetComboBox">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="0"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="charsetComboBoxItemStateChanged"/>
+      </Events>
+    </Component>
   </SubComponents>
 </Form>

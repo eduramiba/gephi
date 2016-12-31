@@ -136,7 +136,7 @@ public class ImportCSVUIWizardPanel2 implements WizardDescriptor.Panel {
         }
         
         component.getAssignNewNodeIds();//TODO use
-        component.getCreateNewNodes();//TODO user
+        component.getCreateNewNodes();//TODO use
         //importer.setColumnTypes(columnTypes);//TODO
         
         component.unSetup();

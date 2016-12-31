@@ -129,6 +129,7 @@ public class ImportCSVUIWizardPanel1 implements WizardDescriptor.Panel {
     public void storeSettings(Object settings) {
         importer.setFieldDelimiter(component.getSelectedSeparator());
         importer.setTable(component.getSelectedTable());
+        importer.setCharset(component.getSelectedCharset());
         
         component.unSetup();
     }

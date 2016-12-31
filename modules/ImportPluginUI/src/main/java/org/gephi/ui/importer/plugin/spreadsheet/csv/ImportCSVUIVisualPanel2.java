@@ -50,7 +50,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
-import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.gephi.ui.utils.SupportedColumnTypeWrapper;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
@@ -68,15 +67,17 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
     //Edges table settings:
     private JCheckBox createNewNodes;
 
-    private final ImporterSpreadsheetCSV importer;
+    private final AbstractImporterSpreadsheet importer;
 
     /**
      * Creates new form ImportCSVUIVisualPanel2
      */
-    public ImportCSVUIVisualPanel2(ImporterSpreadsheetCSV importer, ImportCSVUIWizardPanel2 wizard2) {
+    public ImportCSVUIVisualPanel2(AbstractImporterSpreadsheet importer, ImportCSVUIWizardPanel2 wizard2) {
         initComponents();
         this.importer = importer;
         this.wizard2 = wizard2;
+        
+        //TODO: add time representation chooser
     }
 
     public void unSetup() {
@@ -135,11 +136,8 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
                 if (header.isEmpty()) {
                     continue;//Remove empty column headers:
                 }
-                if (isEdgesTable) {
-                    if (header.equalsIgnoreCase("target") || header.equalsIgnoreCase("target") || header.equalsIgnoreCase("type") || header.equalsIgnoreCase("kind")) {
-                        continue;
-                    }
-                }
+                
+                //TODO: auto fill with guessed types and existing graph types and mandatory special types (source, target, type, kind, weight...)
                 
                 JCheckBox columnCheckBox = new JCheckBox(header, true);
                 columnsCheckBoxes.add(columnCheckBox);

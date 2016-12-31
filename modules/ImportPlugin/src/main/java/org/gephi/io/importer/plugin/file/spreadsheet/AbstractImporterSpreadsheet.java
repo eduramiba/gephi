@@ -48,7 +48,9 @@ import org.gephi.io.importer.plugin.file.spreadsheet.process.AbstractImportProce
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.io.importer.api.ContainerLoader;
@@ -74,12 +76,12 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     protected AbstractImportProcess importer = null;
 
     protected File file;
-    
+
     //General configuration:
     protected Table table = Table.NODES;
     protected TimeRepresentation timeRepresentation = TimeRepresentation.INTERVAL;
     protected DateTimeZone timeZone = DateTimeZone.UTC;
-    
+
     public enum Table {
         NODES,
         EDGES;
@@ -89,7 +91,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     public boolean execute(ContainerLoader container) {
         this.container = container;
         this.report = new Report();
-        
+
         this.container.setTimeRepresentation(timeRepresentation);
         this.container.setTimeZone(timeZone);
 
@@ -127,6 +129,23 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         report.append(nodesImporter.getReport());
     }
 
+    private void autoDetectTable() {
+        try {
+            Set<String> headersLowerCase = new HashSet<>();
+
+            for (String header : getHeadersMap().keySet()) {
+                headersLowerCase.add(header.trim().toLowerCase());
+            }
+
+            if (headersLowerCase.contains("source") || headersLowerCase.contains("target") || headersLowerCase.contains("weight")) {
+                table = Table.EDGES;
+            } else {
+                table = Table.NODES;
+            }
+        } catch (IOException ex) {
+        }
+    }
+
     @Override
     public void setReader(Reader reader) {
         //We can't use a reader since we might need to read the file many times (get the headers first, then read again...)
@@ -136,6 +155,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     @Override
     public void setFile(File file) {
         this.file = file;
+
+        autoDetectTable();
     }
 
     public File getFile() {

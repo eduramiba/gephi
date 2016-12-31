@@ -41,23 +41,102 @@
  */
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.LineNumberReader;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
 import org.apache.commons.csv.CSVParser;
+import org.gephi.io.importer.api.ImportUtils;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheets.csv.CSVSheetParser;
+import org.gephi.utils.CharsetToolkit;
+import org.openide.filesystems.FileUtil;
 
 /**
  *
  * @author Eduardo Ramos
  */
 public class ImporterSpreadsheetCSV extends AbstractImporterSpreadsheet {
-    
+
     protected char fieldDelimiter = ',';
+    protected Charset charset = Charset.forName("UTF-8");
 
     @Override
     public SheetParser createParser() throws IOException {
-        CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter);
+        CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter, charset);
         return new CSVSheetParser(csvParser);
+    }
+
+    @Override
+    public void setFile(File file) {
+        super.setFile(file);
+
+        autoDetectCharset();
+
+        autoDetectFieldDelimiter();
+    }
+
+    private void autoDetectCharset() {
+        //Try to auto-detect the charset:
+        try {
+            FileInputStream is = new FileInputStream(file);
+            CharsetToolkit charsetToolkit = new CharsetToolkit(is);
+            charsetToolkit.setDefaultCharset(Charset.forName("UTF-8"));
+            charset = charsetToolkit.getCharset();
+        } catch (Exception ex) {
+        }
+    }
+
+    private void autoDetectFieldDelimiter() {
+        //Very simple naive detector but should work in most cases:
+        try (LineNumberReader reader = ImportUtils.getTextReader(FileUtil.toFileObject(file))) {
+            String line = reader.readLine();
+
+            //Check for typical delimiter chars in the header
+            int commaCount = 0;
+            int semicolonCount = 0;
+            int tabCount = 0;
+            int spaceCount = 0;
+
+            boolean inQuote = false;
+            for (char c : line.toCharArray()) {
+                if (c == '"' || c == '\'') {
+                    inQuote = !inQuote;
+                }
+
+                if (!inQuote) {
+                    switch (c) {
+                        case ',':
+                            commaCount++;
+                            break;
+                        case ';':
+                            semicolonCount++;
+                            break;
+                        case '\t':
+                            tabCount++;
+                            break;
+                        case ' ':
+                            spaceCount++;
+                            break;
+                    }
+                }
+            }
+
+            int max = Collections.max(Arrays.asList(commaCount, semicolonCount, tabCount, spaceCount));
+            if (commaCount == max) {
+                fieldDelimiter = ',';
+            } else if (semicolonCount == max) {
+                fieldDelimiter = ';';
+            } else if (tabCount == max) {
+                fieldDelimiter = '\t';
+            } else if (spaceCount == max) {
+                fieldDelimiter = ' ';
+            }
+        } catch (IOException ex) {
+        }
     }
 
     public char getFieldDelimiter() {
@@ -66,5 +145,13 @@ public class ImporterSpreadsheetCSV extends AbstractImporterSpreadsheet {
 
     public void setFieldDelimiter(char fieldDelimiter) {
         this.fieldDelimiter = fieldDelimiter;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public void setCharset(Charset charset) {
+        this.charset = charset;
     }
 }

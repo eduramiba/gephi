@@ -96,6 +96,7 @@ import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
+import org.openide.util.io.ReaderInputStream;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -145,6 +146,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
         try {
             for (int i = 0; i < fileObjects.length; i++) {
                 FileObject fileObject = fileObjects[i];
+                fileObject = getArchivedFile(fileObject);
 
                 importers[i] = controller.getFileImporter(FileUtil.toFile(fileObject));
 
@@ -219,18 +221,24 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                 }
 
                 if (importer instanceof FileImporter.FileAware) {
+                    Reader reader = readers[i];
                     File file;
                     if (fileObjects != null) {
                         file = FileUtil.toFile(fileObjects[i]);
                     } else {
-                        //Copy the file to a temp directory... It comes from an inputstream or reader
+                        //Copy the file to a temp directory... It comes from an inputstream or reader:
                         file = TempDirUtils.createTempDir().createFile("file_copy_" + i);
+                        try (FileOutputStream fos = new FileOutputStream(file)) {
+                            FileUtil.copy(new ReaderInputStream(reader, "UTF-8"), fos);
+                        }
+                        
+                        reader.reset();
                     }
+                    
                     ((FileImporter.FileAware) importer).setFile(file);
                 }
             }
 
-            Logger.getLogger("").info(importerUIs.toString());
             for (Map.Entry<ImporterUI, List<FileImporter>> entry : importerUIs.entrySet()) {
                 ImporterUI ui = entry.getKey();
                 String title = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.file.ui.dialog.title", ui.getDisplayName());
@@ -262,6 +270,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                     boolean finishedOk = showWizard(ui, ((ImporterUI.WithWizard) ui).getWizardDescriptor());
                     if (!finishedOk) {
                         ui.unsetup(false);
+                        return;
                     }
                 }
 
@@ -590,7 +599,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                     String fileExt1 = splittedFileName[splittedFileName.length - 1];
                     String fileExt2 = splittedFileName[splittedFileName.length - 2];
 
-                    File tempFile = null;
+                    File tempFile;
                     if (fileExt1.equalsIgnoreCase("tar")) {
                         String fname = fileObject.getName().replaceAll("\\.tar$", "");
                         fname = fname.replace(fileExt2, "");
