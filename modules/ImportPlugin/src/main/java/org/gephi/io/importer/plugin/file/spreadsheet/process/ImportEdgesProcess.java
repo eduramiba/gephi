@@ -71,8 +71,8 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
     private final SpreadsheetEdgesConfiguration config;
 
-    public ImportEdgesProcess(SpreadsheetEdgesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
-        super(container, progressTicket, parser);
+    public ImportEdgesProcess(SpreadsheetGeneralConfiguration generalConfig, SpreadsheetEdgesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
+        super(generalConfig, container, progressTicket, parser);
         this.config = config;
 
         init();
@@ -90,7 +90,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
     public boolean execute() {
         final boolean createMissingNodes = config.isCreateMissingNodes();
 
-        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(EDGE_ID, EDGE_LABEL, EDGE_WEIGHT), config.getColumnsClasses());
+        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(EDGE_SOURCE, EDGE_TARGET, EDGE_TYPE, EDGE_KIND, EDGE_ID, EDGE_LABEL, EDGE_WEIGHT), generalConfig.getColumnsClasses());
 
         Integer sourceColumnIndex = specialColumnsIndexMap.get(EDGE_SOURCE);
         Integer targetColumnIndex = specialColumnsIndexMap.get(EDGE_TARGET);
@@ -128,7 +128,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
             if (typeColumnIndex != null) {
                 String type = row.get(typeColumnIndex);
-                if (type.equalsIgnoreCase("undirected")) {
+                if ("undirected".equalsIgnoreCase(type)) {
                     direction = EdgeDirection.UNDIRECTED;
                 }
             }
@@ -146,7 +146,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                 String weightStr = row.get(weightColumnIndex);
                 try {
                     weight = Double.parseDouble(weightStr);
-                } catch (NumberFormatException ex) {
+                } catch (Exception ex) {
                     logError(String.format("Error parsing weight '%s' as double", weightStr));
                 }
             }
@@ -178,7 +178,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
 
             edge.setSource(container.getNode(source));
-            edge.setSource(container.getNode(target));
+            edge.setTarget(container.getNode(target));
             edge.setDirection(direction);
             edge.setWeight(weight);
 

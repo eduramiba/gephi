@@ -55,6 +55,9 @@ import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportEdgesProcess;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.spi.FileImporter;
 import org.gephi.utils.longtask.spi.LongTask;
@@ -95,17 +98,17 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         this.container.setTimeRepresentation(timeRepresentation);
         this.container.setTimeZone(timeZone);
 
-        if (table == Table.EDGES) {
+        Map<String, Class<?>> columnsClasses = new HashMap<>();
+        columnsClasses.put("timeset", IntervalSet.class);//DEBUG, TODO correct
 
-        } else {
-            Map<String, Class<?>> columnsClasses = new HashMap<>();
-            columnsClasses.put("timeset", IntervalSet.class);//DEBUG
-
-            try (SheetParser parser = createParser()) {
-                importNodes(parser, columnsClasses, false);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+        try (SheetParser parser = createParser()) {
+            if (table == Table.EDGES) {
+                importEdges(parser, columnsClasses, true);//TODO config
+            } else {
+                importNodes(parser, columnsClasses, false);//TODO config
             }
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
 
         return !cancel;
@@ -120,13 +123,25 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     }
 
     public void importNodes(SheetParser parser, Map<String, Class<?>> columnTypes, boolean assignNewNodeIds) throws IOException {
-        SpreadsheetNodesConfiguration config = new SpreadsheetNodesConfiguration(columnTypes, assignNewNodeIds);
-        ImportNodesProcess nodesImporter = new ImportNodesProcess(config, parser, container, progressTicket);
+        SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
+        SpreadsheetNodesConfiguration config = new SpreadsheetNodesConfiguration(assignNewNodeIds);
+        ImportNodesProcess nodesImporter = new ImportNodesProcess(generalConfig, config, parser, container, progressTicket);
         importer = nodesImporter;
 
         nodesImporter.execute();
         importer = null;
         report.append(nodesImporter.getReport());
+    }
+
+    public void importEdges(SheetParser parser, Map<String, Class<?>> columnTypes, boolean createMissingNodes) throws IOException {
+        SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
+        SpreadsheetEdgesConfiguration config = new SpreadsheetEdgesConfiguration(createMissingNodes);
+        ImportEdgesProcess edgesImporter = new ImportEdgesProcess(generalConfig, config, parser, container, progressTicket);
+        importer = edgesImporter;
+
+        edgesImporter.execute();
+        importer = null;
+        report.append(edgesImporter.getReport());
     }
 
     private void autoDetectTable() {

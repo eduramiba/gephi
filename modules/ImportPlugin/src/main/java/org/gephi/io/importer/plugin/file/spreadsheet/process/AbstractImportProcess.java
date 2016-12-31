@@ -58,6 +58,7 @@ import org.gephi.utils.progress.ProgressTicket;
  */
 public abstract class AbstractImportProcess implements Closeable {
 
+    protected final SpreadsheetGeneralConfiguration generalConfig;
     protected final ContainerLoader container;
     protected final Report report;
     protected final ProgressTicket progressTicket;
@@ -68,7 +69,8 @@ public abstract class AbstractImportProcess implements Closeable {
     protected final Map<String, Integer> headersIndexMap = new HashMap<>();
     protected final Map<String, Class<?>> headersClassMap = new HashMap<>();
 
-    public AbstractImportProcess(ContainerLoader container, ProgressTicket progressTicket, SheetParser parser) {
+    public AbstractImportProcess(SpreadsheetGeneralConfiguration generalConfig, ContainerLoader container, ProgressTicket progressTicket, SheetParser parser) {
+        this.generalConfig = generalConfig;
         this.container = container;
         this.progressTicket = progressTicket;
         this.parser = parser;
@@ -81,13 +83,13 @@ public abstract class AbstractImportProcess implements Closeable {
     protected void setupColumnsIndexesAndFindSpecialColumns(List<String> specialColumnNames, Map<String, Class<?>> columnsClasses) {
         Map<String, Integer> headerMap = parser.getHeaderMap();
         for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
-            String headerName = entry.getKey();
+            String headerName = entry.getKey().trim();
             int currentIndex = entry.getValue();
             boolean isSpecialColumn = false;
 
             //First check for special columns:
             for (String specialColumnName : specialColumnNames) {
-                if (headerName.trim().equalsIgnoreCase(specialColumnName)) {
+                if (headerName.equalsIgnoreCase(specialColumnName)) {
                     if (specialColumnsIndexMap.containsKey(specialColumnName)) {
                         logWarning("Repeated special column " + specialColumnName + ". Using only first occurrence");
                     } else {

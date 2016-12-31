@@ -61,8 +61,8 @@ public class ImportNodesProcess extends AbstractImportProcess {
     private static final String NODE_ID = "id";
     private static final String NODE_LABEL = "label";
     
-    public ImportNodesProcess(SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
-        super(container, progressTicket, parser);
+    public ImportNodesProcess(SpreadsheetGeneralConfiguration generalConfig, SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
+        super(generalConfig, container, progressTicket, parser);
         this.config = config;
     }
 
@@ -70,7 +70,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
     public boolean execute() {
         final boolean assignNewNodeIds = config.isAssignNewNodeIds();
         
-        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(NODE_ID, NODE_LABEL), config.getColumnsClasses());
+        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(NODE_ID, NODE_LABEL), generalConfig.getColumnsClasses());
 
         Integer idColumnIndex = specialColumnsIndexMap.get(NODE_ID);
         Integer labelColumnIndex = specialColumnsIndexMap.get(NODE_LABEL);
