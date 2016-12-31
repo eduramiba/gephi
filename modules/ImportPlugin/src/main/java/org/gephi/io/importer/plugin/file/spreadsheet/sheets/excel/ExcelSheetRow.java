@@ -2,7 +2,7 @@ package org.gephi.io.importer.plugin.file.spreadsheet.sheets.excel;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 
 /**
  *
@@ -26,6 +26,11 @@ public class ExcelSheetRow implements SheetRow {
         Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
 
         return getRowCellAsString(cell, index);
+    }
+    
+    @Override
+    public int size(){
+        return row.getLastCellNum();
     }
 
     public static String getRowCellAsString(Cell cell, int index) {

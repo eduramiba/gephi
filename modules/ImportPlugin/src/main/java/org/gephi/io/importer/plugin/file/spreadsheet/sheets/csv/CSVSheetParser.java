@@ -3,10 +3,11 @@ package org.gephi.io.importer.plugin.file.spreadsheet.sheets.csv;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 
 /**
  *
@@ -50,7 +51,12 @@ public class CSVSheetParser implements SheetParser {
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            try {
+                return iterator.hasNext();
+            } catch (Exception e) {
+                Logger.getLogger("").severe(e.getMessage());
+                return false;//In case of malformed CSV or bad delimiter
+            }
         }
 
         @Override

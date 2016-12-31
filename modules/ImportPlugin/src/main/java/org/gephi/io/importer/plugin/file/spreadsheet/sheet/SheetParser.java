@@ -1,4 +1,4 @@
-package org.gephi.io.importer.plugin.file.spreadsheet.sheets;
+package org.gephi.io.importer.plugin.file.spreadsheet.sheet;
 
 import java.io.Closeable;
 import java.util.Map;

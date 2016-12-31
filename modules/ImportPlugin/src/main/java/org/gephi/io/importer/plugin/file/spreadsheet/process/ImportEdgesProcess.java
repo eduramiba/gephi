@@ -39,29 +39,26 @@
 
  Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.io.importer.plugin.file.spreadsheet;
+package org.gephi.io.importer.plugin.file.spreadsheet.process;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.EdgeDraft;
 import org.gephi.io.importer.api.EdgeWeightMergeStrategy;
-import org.gephi.io.importer.api.ElementIdType;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public class ImportEdges extends AbstractImport {
+public class ImportEdgesProcess extends AbstractImportProcess {
 
     private static final String EDGE_SOURCE = "source";
     private static final String EDGE_TARGET = "target";
@@ -74,7 +71,7 @@ public class ImportEdges extends AbstractImport {
 
     private final SpreadsheetEdgesConfiguration config;
 
-    public ImportEdges(SpreadsheetEdgesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
+    public ImportEdgesProcess(SpreadsheetEdgesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
         super(container, progressTicket, parser);
         this.config = config;
 
@@ -210,8 +207,6 @@ public class ImportEdges extends AbstractImport {
             }
 
             container.addEdge(edge);
-
-            progressTicket.progress();
         }
 
         progressTicket.finish();

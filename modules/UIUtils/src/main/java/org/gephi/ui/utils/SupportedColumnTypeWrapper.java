@@ -39,7 +39,7 @@
 
  Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.datalab.utils;
+package org.gephi.ui.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,9 +142,19 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
      * @return Ordered column type wrappers list
      */
     public static List<SupportedColumnTypeWrapper> buildOrderedSupportedTypesList(GraphModel graphModel) {
+        TimeRepresentation timeRepresentation = graphModel.getConfiguration().getTimeRepresentation();
+        return buildOrderedSupportedTypesList(timeRepresentation);
+    }
+    
+    /**
+     * Build a list of column type wrappers from GraphStore supported types.
+     *
+     * @param timeRepresentation
+     * @return Ordered column type wrappers list
+     */
+    public static List<SupportedColumnTypeWrapper> buildOrderedSupportedTypesList(TimeRepresentation timeRepresentation) {
         List<SupportedColumnTypeWrapper> supportedTypesWrappers = new ArrayList<>();
 
-        TimeRepresentation timeRepresentation = graphModel.getConfiguration().getTimeRepresentation();
         for (Class<?> type : AttributeUtils.getSupportedTypes()) {
             if(type.equals(Map.class) || type.equals(List.class) || type.equals(Set.class)){
                 continue;

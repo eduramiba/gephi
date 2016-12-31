@@ -39,68 +39,50 @@ Contributor(s):
 
 Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.io.importer.spi;
+package org.gephi.io.importer.plugin.file.spreadsheet;
 
-import javax.swing.JPanel;
-import org.openide.WizardDescriptor;
+import org.gephi.io.importer.api.FileType;
+import org.gephi.io.importer.spi.FileImporter;
+import org.gephi.io.importer.spi.FileImporterBuilder;
+import org.openide.filesystems.FileObject;
+import org.openide.util.NbBundle;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Define importer settings user interface.
- * <p>
- * Declared in the system as services (i.e. singleton), the role of UI classes
- * is to provide user interface to configure importers and remember last used
- * settings if needed.
- * <p>
- * To be recognized by the system, implementations must just add the following
- * annotation:
- * <pre>@ServiceProvider(service=ImporterUI.class)</pre>
  *
- * @author Mathieu Bastian
- * @see Importer
+ * @author Eduardo Ramos
  */
-public interface ImporterUI {
-    
-    public interface WithWizard {
-        public WizardDescriptor getWizardDescriptor();
+@ServiceProvider(service = FileImporterBuilder.class)
+public final class ImporterSpreadsheetCSVBuilder implements FileImporterBuilder {
+
+    public static final String IDENTIFER = "spreadsheet_csv";
+    public static final String[] EXTENSIONS = new String[]{".csv", ".tsv"};
+
+    @Override
+    public FileImporter buildImporter() {
+        return new ImporterSpreadsheetCSV();
     }
 
-    /**
-     * Link the UI to the importers and therefore to settings values. This
-     * method is called after <code>getPanel()</code> to push settings.
-     *
-     * @param importers the importers that settings is to be set
-     */
-    public void setup(Importer[] importers);
+    @Override
+    public String getName() {
+        return IDENTIFER;
+    }
 
-    /**
-     * Returns the importer settings panel.
-     *
-     * @return a settings panel, or <code>null</code>
-     */
-    public JPanel getPanel();
+    @Override
+    public FileType[] getFileTypes() {
+        return new FileType[]{
+            new FileType(EXTENSIONS, NbBundle.getMessage(getClass(), "fileType_Spreadsheet_Name"))
+        };
+    }
 
-    /**
-     * Notify UI the settings panel has been closed and that new values can be
-     * written.
-     *
-     * @param update    <code>true</code> if user clicked OK or <code>false</code>
-     * if CANCEL.
-     */
-    public void unsetup(boolean update);
+    @Override
+    public boolean isMatchingImporter(FileObject fileObject) {
+        for (String ext : EXTENSIONS) {
+            if (fileObject.getExt().equalsIgnoreCase(ext.substring(1))) {
+                return true;
+            }
+        }
 
-    /**
-     * Returns the importer display name
-     *
-     * @return the importer display name
-     */
-    public String getDisplayName();
-
-    /**
-     * Returns <code>true</code> if this UI belongs to the given importer.
-     *
-     * @param importer the importer that has to be tested
-     * @return          <code>true</code> if the UI is matching with
-     * <code>importer</code>, <code>false</code> otherwise.
-     */
-    public boolean isUIForImporter(Importer importer);
+        return false;
+    }
 }

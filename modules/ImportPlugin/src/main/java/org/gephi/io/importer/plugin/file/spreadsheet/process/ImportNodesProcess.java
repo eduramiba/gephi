@@ -39,30 +39,29 @@
 
  Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.io.importer.plugin.file.spreadsheet;
+package org.gephi.io.importer.plugin.file.spreadsheet.process;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import org.apache.commons.csv.CSVRecord;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.NodeDraft;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public class ImportNodes extends AbstractImport {
+public class ImportNodesProcess extends AbstractImportProcess {
 
     private final SpreadsheetNodesConfiguration config;
     private static final String NODE_ID = "id";
     private static final String NODE_LABEL = "label";
     
-    public ImportNodes(SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
+    public ImportNodesProcess(SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
         super(container, progressTicket, parser);
         this.config = config;
     }
@@ -128,8 +127,6 @@ public class ImportNodes extends AbstractImport {
             }
 
             container.addNode(node);
-
-            progressTicket.progress();
         }
 
         progressTicket.finish();

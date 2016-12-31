@@ -41,6 +41,7 @@
  */
 package org.gephi.desktop.importer;
 
+import java.awt.Dialog;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -50,6 +51,7 @@ import java.io.Reader;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +70,7 @@ import org.gephi.desktop.project.api.ProjectControllerUI;
 import org.gephi.io.importer.api.Container;
 import org.gephi.io.importer.api.Database;
 import org.gephi.io.importer.api.ImportController;
+import org.gephi.io.importer.api.ImportUtils;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.spi.DatabaseImporter;
 import org.gephi.io.importer.spi.FileImporter;
@@ -78,6 +81,7 @@ import org.gephi.io.processor.spi.Processor;
 import org.gephi.io.processor.spi.ProcessorUI;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
+import org.gephi.utils.TempDirUtils;
 import org.gephi.utils.longtask.api.LongTaskErrorHandler;
 import org.gephi.utils.longtask.api.LongTaskExecutor;
 import org.gephi.utils.longtask.spi.LongTask;
@@ -85,6 +89,7 @@ import org.netbeans.validation.api.ui.ValidationPanel;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
+import org.openide.WizardDescriptor;
 import org.openide.awt.StatusDisplayer;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
@@ -128,86 +133,81 @@ public class DesktopImportControllerUI implements ImportControllerUI {
 
     @Override
     public void importFile(FileObject fileObject) {
-        try {
-            final FileImporter importer = controller.getFileImporter(FileUtil.toFile(fileObject));
-            if (importer == null) {
-                NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
-                DialogDisplayer.getDefault().notify(msg);
-                return;
-            }
-
-            //MRU
-            MostRecentFiles mostRecentFiles = Lookup.getDefault().lookup(MostRecentFiles.class);
-            mostRecentFiles.addFile(fileObject.getPath());
-
-            ImporterUI ui = controller.getUI(importer);
-            if (ui != null) {
-                String title = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.file.ui.dialog.title", ui.getDisplayName());
-                JPanel panel = ui.getPanel();
-                FileImporter[] fi = (FileImporter[]) Array.newInstance(importer.getClass(), 1);
-                fi[0] = importer;
-                ui.setup(fi);
-                final DialogDescriptor dd = new DialogDescriptor(panel, title);
-                if (panel instanceof ValidationPanel) {
-                    ValidationPanel vp = (ValidationPanel) panel;
-                    vp.addChangeListener(new ChangeListener() {
-                        @Override
-                        public void stateChanged(ChangeEvent e) {
-                            dd.setValid(!((ValidationPanel) e.getSource()).isProblem());
-                        }
-                    });
-                }
-
-                Object result = DialogDisplayer.getDefault().notify(dd);
-                if (!result.equals(NotifyDescriptor.OK_OPTION)) {
-                    ui.unsetup(false);
-                    return;
-                }
-                ui.unsetup(true);
-            }
-
-            LongTask task = null;
-            if (importer instanceof LongTask) {
-                task = (LongTask) importer;
-            }
-
-            //Execute task
-            fileObject = getArchivedFile(fileObject);
-            final String containerSource = fileObject.getNameExt();
-            final InputStream stream = fileObject.getInputStream();
-            String taskName = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.taskName", containerSource);
-            executor.execute(task, new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Container container = controller.importFile(stream, importer);
-                        if (container != null) {
-                            container.setSource(containerSource);
-                            finishImport(container);
-                        }
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            }, taskName, errorHandler);
-        } catch (Exception ex) {
-            Logger.getLogger("").log(Level.WARNING, "", ex);
-        }
+        importFiles(new FileObject[]{fileObject});
     }
 
     @Override
     public void importFiles(FileObject[] fileObjects) {
+        MostRecentFiles mostRecentFiles = Lookup.getDefault().lookup(MostRecentFiles.class);
+
+        Reader[] readers = new Reader[fileObjects.length];
+        FileImporter[] importers = new FileImporter[fileObjects.length];
         try {
-            Map<ImporterUI, List<FileImporter>> importerUIs = new HashMap<>();
-            List<FileImporter> importers = new ArrayList<>();
-            for (FileObject fileObject : fileObjects) {
-                FileImporter importer = controller.getFileImporter(FileUtil.toFile(fileObject));
-                if (importer == null) {
+            for (int i = 0; i < fileObjects.length; i++) {
+                FileObject fileObject = fileObjects[i];
+
+                importers[i] = controller.getFileImporter(FileUtil.toFile(fileObject));
+
+                if (importers[i] == null) {
                     NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
                     DialogDisplayer.getDefault().notify(msg);
                     return;
                 }
-                importers.add(importer);
+
+                readers[i] = ImportUtils.getTextReader(fileObject);
+
+                //MRU
+                mostRecentFiles.addFile(fileObject.getPath());
+            }
+
+            importFiles(readers, importers, fileObjects);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void importStream(final InputStream stream, String importerName) {
+        final FileImporter importer = controller.getFileImporter(importerName);
+        if (importer == null) {
+            NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
+            DialogDisplayer.getDefault().notify(msg);
+            return;
+        }
+
+        try {
+            Reader reader = ImportUtils.getTextReader(stream);
+            importFile(reader, importer);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void importFile(final Reader reader, String importerName) {
+        final FileImporter importer = controller.getFileImporter(importerName);
+        if (importer == null) {
+            NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
+            DialogDisplayer.getDefault().notify(msg);
+            return;
+        }
+
+        importFile(reader, importer);
+    }
+
+    private void importFile(final Reader reader, final FileImporter importer) {
+        importFiles(new Reader[]{reader}, new FileImporter[]{importer});
+    }
+
+    private void importFiles(final Reader[] readers, final FileImporter[] importers) {
+        importFiles(readers, importers, null);
+    }
+
+    private void importFiles(final Reader[] readers, final FileImporter[] importers, FileObject[] fileObjects) {
+        try {
+            Map<ImporterUI, List<FileImporter>> importerUIs = new HashMap<>();
+            for (int i = 0; i < importers.length; i++) {
+                FileImporter importer = importers[i];
                 ImporterUI ui = controller.getUI(importer);
                 if (ui != null) {
                     List<FileImporter> l = importerUIs.get(ui);
@@ -218,203 +218,120 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                     l.add(importer);
                 }
 
-                //MRU
-                MostRecentFiles mostRecentFiles = Lookup.getDefault().lookup(MostRecentFiles.class);
-                mostRecentFiles.addFile(fileObject.getPath());
+                if (importer instanceof FileImporter.FileAware) {
+                    File file;
+                    if (fileObjects != null) {
+                        file = FileUtil.toFile(fileObjects[i]);
+                    } else {
+                        //Copy the file to a temp directory... It comes from an inputstream or reader
+                        file = TempDirUtils.createTempDir().createFile("file_copy_" + i);
+                    }
+                    ((FileImporter.FileAware) importer).setFile(file);
+                }
             }
 
+            Logger.getLogger("").info(importerUIs.toString());
             for (Map.Entry<ImporterUI, List<FileImporter>> entry : importerUIs.entrySet()) {
                 ImporterUI ui = entry.getKey();
                 String title = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.file.ui.dialog.title", ui.getDisplayName());
                 JPanel panel = ui.getPanel();
+
                 FileImporter[] fi = (FileImporter[]) entry.getValue().toArray((FileImporter[]) Array.newInstance(entry.getValue().get(0).getClass(), 0));
                 ui.setup(fi);
-                final DialogDescriptor dd = new DialogDescriptor(panel, title);
-                if (panel instanceof ValidationPanel) {
-                    ValidationPanel vp = (ValidationPanel) panel;
-                    vp.addChangeListener(new ChangeListener() {
-                        @Override
-                        public void stateChanged(ChangeEvent e) {
-                            dd.setValid(!((ValidationPanel) e.getSource()).isProblem());
-                        }
-                    });
+
+                if (panel != null) {
+                    final DialogDescriptor dd = new DialogDescriptor(panel, title);
+                    if (panel instanceof ValidationPanel) {
+                        ValidationPanel vp = (ValidationPanel) panel;
+                        vp.addChangeListener(new ChangeListener() {
+                            @Override
+                            public void stateChanged(ChangeEvent e) {
+                                dd.setValid(!((ValidationPanel) e.getSource()).isProblem());
+                            }
+                        });
+                    }
+
+                    Object result = DialogDisplayer.getDefault().notify(dd);
+                    if (!result.equals(NotifyDescriptor.OK_OPTION)) {
+                        ui.unsetup(false);
+                        return;
+                    }
                 }
 
-                Object result = DialogDisplayer.getDefault().notify(dd);
-                if (!result.equals(NotifyDescriptor.OK_OPTION)) {
-                    ui.unsetup(false);
-                    return;
+                if (ui instanceof ImporterUI.WithWizard) {
+                    boolean finishedOk = showWizard(ui, ((ImporterUI.WithWizard) ui).getWizardDescriptor());
+                    if (!finishedOk) {
+                        ui.unsetup(false);
+                    }
                 }
+
                 ui.unsetup(true);
             }
 
-            final List<Container> result = new ArrayList<>();
-            for (int i = 0; i < importers.size(); i++) {
-                final FileImporter importer = importers.get(i);
-                FileObject fileObject = fileObjects[i];
-                LongTask task = null;
-                if (importer instanceof LongTask) {
-                    task = (LongTask) importer;
-                }
-
-                //Execute task
-                fileObject = getArchivedFile(fileObject);
-                final String containerSource = fileObject.getNameExt();
-                final InputStream stream = fileObject.getInputStream();
-                String taskName = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.taskName", containerSource);
-                executor.execute(task, new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Container container = controller.importFile(stream, importer);
-                            if (container != null) {
-                                container.setSource(containerSource);
-                                result.add(container);
-                            }
-                        } catch (Exception ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }
-                }, taskName, errorHandler);
+            final List<Container> results = new ArrayList<>();
+            for (int i = 0; i < importers.length; i++) {
+                doImport(results, readers[i], importers[i]);
             }
+
             executor.execute(null, new Runnable() {
 
                 @Override
                 public void run() {
-                    if (!result.isEmpty()) {
-                        finishImport(result.toArray(new Container[0]));
+                    if (!results.isEmpty()) {
+                        finishImport(results.toArray(new Container[0]));
                     }
                 }
             });
         } catch (Exception ex) {
-            Logger.getLogger("").log(Level.WARNING, "", ex);
+            Exceptions.printStackTrace(ex);
         }
     }
 
-    @Override
-    public void importStream(final InputStream stream, String importerName) {
-        try {
-            final FileImporter importer = controller.getFileImporter(importerName);
-            if (importer == null) {
-                NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
-                DialogDisplayer.getDefault().notify(msg);
-                return;
-            }
-
-            ImporterUI ui = controller.getUI(importer);
-            if (ui != null) {
-                String title = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.file.ui.dialog.title", ui.getDisplayName());
-                JPanel panel = ui.getPanel();
-                FileImporter[] fi = (FileImporter[]) Array.newInstance(importer.getClass(), 1);
-                fi[0] = importer;
-                ui.setup(fi);
-                final DialogDescriptor dd = new DialogDescriptor(panel, title);
-                if (panel instanceof ValidationPanel) {
-                    ValidationPanel vp = (ValidationPanel) panel;
-                    vp.addChangeListener(new ChangeListener() {
-                        @Override
-                        public void stateChanged(ChangeEvent e) {
-                            dd.setValid(!((ValidationPanel) e.getSource()).isProblem());
-                        }
-                    });
-                }
-
-                Object result = DialogDisplayer.getDefault().notify(dd);
-                if (!result.equals(NotifyDescriptor.OK_OPTION)) {
-                    ui.unsetup(false);
-                    return;
-                }
-                ui.unsetup(true);
-            }
-
-            LongTask task = null;
-            if (importer instanceof LongTask) {
-                task = (LongTask) importer;
-            }
-
-            //Execute task
-            final String containerSource = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.streamSource", importerName);
-            String taskName = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.taskName", containerSource);
-            executor.execute(task, new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Container container = controller.importFile(stream, importer);
-                        if (container != null) {
-                            container.setSource(containerSource);
-                            finishImport(container);
-                        }
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            }, taskName, errorHandler);
-        } catch (Exception ex) {
-            Logger.getLogger("").log(Level.WARNING, "", ex);
+    private void doImport(final List<Container> results, final Reader reader, final FileImporter importer) {
+        LongTask task = null;
+        if (importer instanceof LongTask) {
+            task = (LongTask) importer;
         }
+
+        if (reader == null) {
+            throw new NullPointerException("Null reader!");
+        }
+
+        if (importer == null) {
+            throw new NullPointerException("Null importer!");
+        }
+
+        //Execute task
+        final String containerSource = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.streamSource", importer.getClass().getSimpleName());
+        String taskName = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.taskName", containerSource);
+        executor.execute(task, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Container container = controller.importFile(reader, importer);
+                    if (container != null) {
+                        container.setSource(containerSource);
+                        results.add(container);
+                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }, taskName, errorHandler);
     }
 
-    @Override
-    public void importFile(final Reader reader, String importerName) {
-        try {
-            final FileImporter importer = controller.getFileImporter(importerName);
-            if (importer == null) {
-                NotifyDescriptor.Message msg = new NotifyDescriptor.Message(NbBundle.getMessage(getClass(), "DesktopImportControllerUI.error_no_matching_file_importer"), NotifyDescriptor.WARNING_MESSAGE);
-                DialogDisplayer.getDefault().notify(msg);
-                return;
-            }
-
-            ImporterUI ui = controller.getUI(importer);
-            if (ui != null) {
-                FileImporter[] fi = (FileImporter[]) Array.newInstance(importer.getClass(), 1);
-                fi[0] = importer;
-                ui.setup(fi);
-                String title = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.file.ui.dialog.title", ui.getDisplayName());
-                JPanel panel = ui.getPanel();
-                final DialogDescriptor dd = new DialogDescriptor(panel, title);
-                if (panel instanceof ValidationPanel) {
-                    ValidationPanel vp = (ValidationPanel) panel;
-                    vp.addChangeListener(new ChangeListener() {
-                        @Override
-                        public void stateChanged(ChangeEvent e) {
-                            dd.setValid(!((ValidationPanel) e.getSource()).isProblem());
-                        }
-                    });
-                }
-
-                Object result = DialogDisplayer.getDefault().notify(dd);
-                if (!result.equals(NotifyDescriptor.OK_OPTION)) {
-                    ui.unsetup(false);
-                    return;
-                }
-                ui.unsetup(true);
-            }
-
-            LongTask task = null;
-            if (importer instanceof LongTask) {
-                task = (LongTask) importer;
-            }
-
-            //Execute task
-            final String containerSource = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.streamSource", importerName);
-            String taskName = NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.taskName", containerSource);
-            executor.execute(task, new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Container container = controller.importFile(reader, importer);
-                        if (container != null) {
-                            container.setSource(containerSource);
-                            finishImport(container);
-                        }
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            }, taskName, errorHandler);
-        } catch (Exception ex) {
-            Logger.getLogger("").log(Level.WARNING, "", ex);
+    private boolean showWizard(ImporterUI importer, WizardDescriptor wizardDescriptor) {
+        if (wizardDescriptor == null) {
+            return true;//Nothing to show
         }
+
+        wizardDescriptor.setTitleFormat(new MessageFormat("{0} ({1})"));
+        wizardDescriptor.setTitle(importer.getDisplayName());
+        Dialog dialog = DialogDisplayer.getDefault().createDialog(wizardDescriptor);
+        dialog.setVisible(true);
+        dialog.toFront();
+
+        return wizardDescriptor.getValue() == WizardDescriptor.FINISH_OPTION;
     }
 
     @Override
@@ -627,9 +544,7 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                         }
                     });
                 }
-            } catch (InterruptedException ex) {
-                Exceptions.printStackTrace(ex);
-            } catch (InvocationTargetException ex) {
+            } catch (InterruptedException | InvocationTargetException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }

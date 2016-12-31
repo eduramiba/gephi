@@ -41,6 +41,7 @@ Portions Copyrighted 2011 Gephi Consortium.
  */
 package org.gephi.io.importer.spi;
 
+import java.io.File;
 import java.io.Reader;
 
 /**
@@ -49,6 +50,10 @@ import java.io.Reader;
  * @author Mathieu Bastian
  */
 public interface FileImporter extends Importer {
+    
+    public interface FileAware {
+        public void setFile(File file);
+    }
 
     /**
      * Sets the reader where characters can be retrieved.

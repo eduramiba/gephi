@@ -39,13 +39,9 @@
 
  Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.datalab.plugin.manipulators.general.ui;
+package org.gephi.ui.importer.plugin.spreadsheet.csv;
 
-import com.csvreader.CsvReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JCheckBox;
@@ -53,14 +49,10 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
-import org.gephi.datalab.plugin.manipulators.general.ui.ImportCSVUIWizardAction.Mode;
-import org.gephi.graph.api.Column;
-import org.gephi.graph.api.GraphController;
-import org.gephi.graph.api.GraphModel;
-import org.gephi.graph.api.Table;
+import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.gephi.ui.utils.SupportedColumnTypeWrapper;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
 
@@ -69,24 +61,21 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
     private static final String ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES = "ImportCSVUIVisualPanel2_assign_new_nodes_ids";
     private static final String CREATE_NEW_NODES_SAVED_PREFERENCES = "ImportCSVUIVisualPanel2_create_new_nodes";
     private final ImportCSVUIWizardPanel2 wizard2;
-    private Character separator;
-    private File file;
-    private ImportCSVUIWizardAction.Mode mode;
     private final ArrayList<JCheckBox> columnsCheckBoxes = new ArrayList<>();
     private final ArrayList<JComboBox> columnsComboBoxes = new ArrayList<>();
-    private GraphModel graphModel;
-    private Table table;
-    private Charset charset;
     //Nodes table settings:
     private JCheckBox assignNewNodeIds;
     //Edges table settings:
     private JCheckBox createNewNodes;
 
+    private final ImporterSpreadsheetCSV importer;
+
     /**
      * Creates new form ImportCSVUIVisualPanel2
      */
-    public ImportCSVUIVisualPanel2(ImportCSVUIWizardPanel2 wizard2) {
+    public ImportCSVUIVisualPanel2(ImporterSpreadsheetCSV importer, ImportCSVUIWizardPanel2 wizard2) {
         initComponents();
+        this.importer = importer;
         this.wizard2 = wizard2;
     }
 
@@ -100,36 +89,31 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
     }
 
     public void reloadSettings() {
-        if (separator != null && file != null && file.exists() && mode != null && charset != null) {
-            JPanel settingsPanel = new JPanel();
-            settingsPanel.setLayout(new MigLayout());
-            loadDescription(settingsPanel);
-            graphModel = Lookup.getDefault().lookup(GraphController.class).getGraphModel();
-            switch (mode) {
-                case NODES_TABLE:
-                    table = graphModel.getNodeTable();
-                    loadColumns(settingsPanel);
-                    loadNodesTableSettings(settingsPanel);
-                    break;
-                case EDGES_TABLE:
-                    table = graphModel.getEdgeTable();
-                    loadColumns(settingsPanel);
-                    loadEdgesTableSettings(settingsPanel);
-                    break;
-            }
-
-            scroll.setViewportView(settingsPanel);
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setLayout(new MigLayout());
+        loadDescription(settingsPanel);
+        switch (importer.getTable()) {
+            case NODES:
+                loadColumns(settingsPanel);
+                loadNodesTableSettings(settingsPanel);
+                break;
+            case EDGES:
+                loadColumns(settingsPanel);
+                loadEdgesTableSettings(settingsPanel);
+                break;
         }
+
+        scroll.setViewportView(settingsPanel);
         wizard2.fireChangeEvent();//Enable/disable finish button
     }
 
     private void loadDescription(JPanel settingsPanel) {
         JLabel descriptionLabel = new JLabel();
-        switch (mode) {
-            case NODES_TABLE:
+        switch (importer.getTable()) {
+            case NODES:
                 descriptionLabel.setText(getMessage("ImportCSVUIVisualPanel2.nodes.description"));
                 break;
-            case EDGES_TABLE:
+            case EDGES:
                 descriptionLabel.setText(getMessage("ImportCSVUIVisualPanel2.edges.description"));
                 break;
         }
@@ -143,48 +127,27 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
             JLabel columnsLabel = new JLabel(getMessage("ImportCSVUIVisualPanel2.columnsLabel.text"));
             settingsPanel.add(columnsLabel, "wrap");
 
-            CsvReader reader = new CsvReader(new FileInputStream(file), separator, charset);
-            reader.setTrimWhitespace(false);
-            reader.readHeaders();
-            final String[] columns = reader.getHeaders();
-            reader.close();
+            final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
 
-            boolean sourceFound = false, targetFound = false, typeFound = false;//Only first source and target columns found will be used as source and target nodes ids.
-            for (int i = 0; i < columns.length; i++) {
-                if (columns[i].isEmpty()) {
+            boolean isEdgesTable = importer.getTable() == AbstractImporterSpreadsheet.Table.EDGES;
+            
+            for (String header : headers) {
+                if (header.isEmpty()) {
                     continue;//Remove empty column headers:
                 }
-                
-                JCheckBox columnCheckBox = new JCheckBox(columns[i], true);
-                Column column = table.getColumn(columns[i]);
-                if(column != null){
-                    columnCheckBox.setToolTipText(column.getTitle());
+                if (isEdgesTable) {
+                    if (header.equalsIgnoreCase("target") || header.equalsIgnoreCase("target") || header.equalsIgnoreCase("type") || header.equalsIgnoreCase("kind")) {
+                        continue;
+                    }
                 }
                 
+                JCheckBox columnCheckBox = new JCheckBox(header, true);
                 columnsCheckBoxes.add(columnCheckBox);
                 settingsPanel.add(columnCheckBox, "wrap");
                 JComboBox columnComboBox = new JComboBox();
                 columnsComboBoxes.add(columnComboBox);
-                fillComboBoxWithColumnTypes(columns[i], columnComboBox);
+                fillComboBoxWithColumnTypes(header, columnComboBox);
                 settingsPanel.add(columnComboBox, "wrap 15px");
-
-                if (mode == ImportCSVUIWizardAction.Mode.EDGES_TABLE && columns[i].equalsIgnoreCase("source") && !sourceFound) {
-                    sourceFound = true;
-                    //Do not allow to not select source column:
-                    columnCheckBox.setEnabled(false);
-                    columnComboBox.setEnabled(false);
-                }
-                if (mode == ImportCSVUIWizardAction.Mode.EDGES_TABLE && columns[i].equalsIgnoreCase("target") && !targetFound) {
-                    targetFound = true;
-                    //Do not allow to not select target column:
-                    columnCheckBox.setEnabled(false);
-                    columnComboBox.setEnabled(false);
-                }
-                if (mode == ImportCSVUIWizardAction.Mode.EDGES_TABLE && columns[i].equalsIgnoreCase("type") && !typeFound) {
-                    typeFound = true;
-                    //Do not allow to change type column type:
-                    columnComboBox.setEnabled(false);
-                }
             }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -193,19 +156,13 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
 
     private void fillComboBoxWithColumnTypes(String column, JComboBox comboBox) {
         comboBox.removeAllItems();
-        List<SupportedColumnTypeWrapper> supportedTypesWrappers = SupportedColumnTypeWrapper.buildOrderedSupportedTypesList(graphModel);
+        List<SupportedColumnTypeWrapper> supportedTypesWrappers = SupportedColumnTypeWrapper.buildOrderedSupportedTypesList(importer.getTimeRepresentation());
 
         for (SupportedColumnTypeWrapper supportedColumnTypeWrapper : supportedTypesWrappers) {
             comboBox.addItem(supportedColumnTypeWrapper);
         }
-        
-        if (table.hasColumn(column)) {
-            //Set type of the already existing column in the table and disable the edition:
-            comboBox.setSelectedItem(new SupportedColumnTypeWrapper(table.getColumn(column).getTypeClass()));
-            comboBox.setEnabled(false);
-        } else {
-            comboBox.setSelectedItem(new SupportedColumnTypeWrapper(String.class));//Set STRING by default
-        }
+
+        comboBox.setSelectedItem(new SupportedColumnTypeWrapper(String.class));//Set STRING by default
     }
 
     private void loadNodesTableSettings(JPanel settingsPanel) {
@@ -242,7 +199,7 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
         ArrayList<Class> types = new ArrayList<>();
         for (int i = 0; i < columnsCheckBoxes.size(); i++) {
             if (columnsCheckBoxes.get(i).isSelected()) {
-                SupportedColumnTypeWrapper selected = (SupportedColumnTypeWrapper)columnsComboBoxes.get(i).getSelectedItem();
+                SupportedColumnTypeWrapper selected = (SupportedColumnTypeWrapper) columnsComboBoxes.get(i).getSelectedItem();
                 types.add(selected.getType());
             }
         }
@@ -260,38 +217,6 @@ public final class ImportCSVUIVisualPanel2 extends JPanel {
     @Override
     public String getName() {
         return NbBundle.getMessage(ImportCSVUIVisualPanel2.class, "ImportCSVUIVisualPanel2.name");
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setFile(File file) {
-        this.file = file;
-    }
-
-    public Mode getMode() {
-        return mode;
-    }
-
-    public void setMode(Mode mode) {
-        this.mode = mode;
-    }
-
-    public Character getSeparator() {
-        return separator;
-    }
-
-    public void setSeparator(Character separator) {
-        this.separator = separator;
-    }
-
-    public Charset getCharset() {
-        return charset;
-    }
-
-    void setCharset(Charset charset) {
-        this.charset = charset;
     }
 
     private String getMessage(String resName) {

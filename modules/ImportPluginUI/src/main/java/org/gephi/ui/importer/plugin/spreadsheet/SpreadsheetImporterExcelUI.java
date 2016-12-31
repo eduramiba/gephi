@@ -39,50 +39,54 @@ Contributor(s):
 
 Portions Copyrighted 2011 Gephi Consortium.
  */
-package org.gephi.io.importer.plugin.file.spreadsheet;
+package org.gephi.ui.importer.plugin.spreadsheet;
 
-import org.gephi.io.importer.api.FileType;
-import org.gephi.io.importer.spi.FileImporter;
-import org.gephi.io.importer.spi.FileImporterBuilder;
-import org.openide.filesystems.FileObject;
+import javax.swing.JPanel;
+import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
+import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSVBuilder;
+import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetExcel;
+import org.gephi.io.importer.spi.Importer;
+import org.gephi.io.importer.spi.ImporterUI;
+import org.openide.WizardDescriptor;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
- * @author Eduardo Ramos
+ * @author Mathieu Bastian
  */
-@ServiceProvider(service = FileImporterBuilder.class)
-public final class ImporterBuilderSpreadsheet implements FileImporterBuilder {
-
-    public static final String IDENTIFER = "spreadsheet";
-    public static final String[] EXTENSIONS = new String[]{".csv", ".tsv", ".xls", ".xlsx"};
+@ServiceProvider(service = ImporterUI.class)
+public class SpreadsheetImporterExcelUI implements ImporterUI, ImporterUI.WithWizard {
 
     @Override
-    public FileImporter buildImporter() {
-        return new ImporterSpreadsheet();
+    public void setup(Importer[] importers) {
     }
 
     @Override
-    public String getName() {
-        return IDENTIFER;
+    public JPanel getPanel() {
+        return null;
     }
 
     @Override
-    public FileType[] getFileTypes() {
-        return new FileType[]{
-            new FileType(EXTENSIONS, NbBundle.getMessage(getClass(), "fileType_Spreadsheet_Name"))
-        };
+    public void unsetup(boolean update) {
     }
 
     @Override
-    public boolean isMatchingImporter(FileObject fileObject) {
-        for (String ext : EXTENSIONS) {
-            if (fileObject.getExt().equalsIgnoreCase(ext.substring(1))) {
-                return true;
-            }
-        }
+    public String getDisplayName() {
+        return NbBundle.getMessage(getClass(), "Spreadsheet.displayName", "Excel");
+    }
 
-        return false;
+    public String getIdentifier() {
+        return ImporterSpreadsheetCSVBuilder.IDENTIFER;
+    }
+
+    @Override
+    public boolean isUIForImporter(Importer importer) {
+        return importer instanceof ImporterSpreadsheetExcel;
+    }
+
+    @Override
+    public WizardDescriptor getWizardDescriptor() {
+        return null;
     }
 }

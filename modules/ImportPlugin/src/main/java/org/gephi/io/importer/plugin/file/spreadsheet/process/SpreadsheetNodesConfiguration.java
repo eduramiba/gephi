@@ -1,4 +1,4 @@
-package org.gephi.io.importer.plugin.file.spreadsheet;
+package org.gephi.io.importer.plugin.file.spreadsheet.process;
 
 import java.util.HashMap;
 import java.util.Map;

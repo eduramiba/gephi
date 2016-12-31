@@ -1,4 +1,4 @@
-package org.gephi.io.importer.plugin.file.spreadsheet;
+package org.gephi.io.importer.plugin.file.spreadsheet.process;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -7,14 +7,15 @@ import java.util.List;
 import java.util.Map;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.SpreadsheetUtils;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.utils.progress.ProgressTicket;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public abstract class AbstractImport implements Closeable {
+public abstract class AbstractImportProcess implements Closeable {
 
     protected final ContainerLoader container;
     protected final Report report;
@@ -26,7 +27,7 @@ public abstract class AbstractImport implements Closeable {
     protected final Map<String, Integer> headersIndexMap = new HashMap<>();
     protected final Map<String, Class<?>> headersClassMap = new HashMap<>();
 
-    public AbstractImport(ContainerLoader container, ProgressTicket progressTicket, SheetParser parser) {
+    public AbstractImportProcess(ContainerLoader container, ProgressTicket progressTicket, SheetParser parser) {
         this.container = container;
         this.progressTicket = progressTicket;
         this.parser = parser;

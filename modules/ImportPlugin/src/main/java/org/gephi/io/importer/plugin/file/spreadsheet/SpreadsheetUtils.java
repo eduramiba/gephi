@@ -1,12 +1,16 @@
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.Report;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 
 /**
  *
@@ -39,7 +43,7 @@ public class SpreadsheetUtils {
         report.logIssue(issue);
     }
 
-    public static CSVParser configureCSVParser(Reader reader, Character fieldSeparator) throws IOException {
+    public static CSVParser configureCSVParser(File file, Character fieldSeparator) throws IOException {
         if (fieldSeparator == null) {
             fieldSeparator = ',';
         }
@@ -53,6 +57,8 @@ public class SpreadsheetUtils {
                 .withIgnoreSurroundingSpaces(true)
                 .withTrim(true);
 
-        return new CSVParser(reader, csvFormat);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStreamReader is = new InputStreamReader(fileInputStream, Charset.forName("UTF-8"));
+        return new CSVParser(is, csvFormat);
     }
 }

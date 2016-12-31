@@ -1,4 +1,4 @@
-package org.gephi.io.importer.plugin.file.spreadsheet.sheets;
+package org.gephi.io.importer.plugin.file.spreadsheet.sheet;
 
 /**
  *
@@ -6,6 +6,8 @@ package org.gephi.io.importer.plugin.file.spreadsheet.sheets;
  */
 public interface SheetRow {
     boolean isConsistent();
+    
+    int size();
     
     String get(int index);
 }

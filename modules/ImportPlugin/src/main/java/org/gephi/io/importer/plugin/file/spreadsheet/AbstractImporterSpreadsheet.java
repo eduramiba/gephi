@@ -1,13 +1,13 @@
 /*
- Copyright 2008-2010 Gephi
- Authors : Mathieu Bastian <mathieu.bastian@gephi.org>, Sebastien Heymann <sebastien.heymann@gephi.org>
+ Copyright 2008-2016 Gephi
+ Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
  Website : http://www.gephi.org
 
  This file is part of Gephi.
 
  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
- Copyright 2011 Gephi Consortium. All rights reserved.
+ Copyright 2016 Gephi Consortium. All rights reserved.
 
  The contents of this file are subject to the terms of either the GNU
  General Public License Version 3 only ("GPL") or the Common
@@ -37,68 +37,97 @@
 
  Contributor(s):
 
- Portions Copyrighted 2011 Gephi Consortium.
+ Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetNodesConfiguration;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportNodesProcess;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.AbstractImportProcess;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
-import org.apache.commons.csv.CSVParser;
+import java.util.TimeZone;
+import org.gephi.graph.api.TimeFormat;
+import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.csv.CSVSheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.spi.FileImporter;
+import org.gephi.utils.TempDirUtils;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.ProgressTicket;
+import org.joda.time.DateTimeZone;
+import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
+import org.openide.util.io.ReaderInputStream;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public class ImporterSpreadsheet implements FileImporter, LongTask {
+public abstract class AbstractImporterSpreadsheet implements FileImporter, FileImporter.FileAware, LongTask {
 
-    private Reader reader;
-    private ContainerLoader container;
-    private Report report;
-    private ProgressTicket progressTicket;
-    private boolean cancel = false;
+    protected ContainerLoader container;
+    protected Report report;
+    protected ProgressTicket progressTicket;
+    protected boolean cancel = false;
 
-    private AbstractImport importer = null;
+    protected AbstractImportProcess importer = null;
+
+    protected File file;
+    
+    //General configuration:
+    protected Table table = Table.NODES;
+    protected TimeRepresentation timeRepresentation = TimeRepresentation.INTERVAL;
+    protected DateTimeZone timeZone = DateTimeZone.UTC;
+    
+    public enum Table {
+        NODES,
+        EDGES;
+    }
 
     @Override
     public boolean execute(ContainerLoader container) {
         this.container = container;
         this.report = new Report();
+        
+        this.container.setTimeRepresentation(timeRepresentation);
+        this.container.setTimeZone(timeZone);
 
-        Map<String, Class<?>> columnsClasses = new HashMap<>();
-        columnsClasses.put("timeset", IntervalSet.class);//DEBUG
+        if (table == Table.EDGES) {
 
-        try (SheetParser parser = buildCSVParser()) {
-            importNodes(parser, columnsClasses, false);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+        } else {
+            Map<String, Class<?>> columnsClasses = new HashMap<>();
+            columnsClasses.put("timeset", IntervalSet.class);//DEBUG
+
+            try (SheetParser parser = createParser()) {
+                importNodes(parser, columnsClasses, false);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
 
-        //TODO: manage time representation, timezone...
         return !cancel;
     }
 
-    private SheetParser buildCSVParser() throws IOException {
-        CSVParser csvParser = SpreadsheetUtils.configureCSVParser(reader, ','); //TODO separator
-        return new CSVSheetParser(csvParser);
+    public abstract SheetParser createParser() throws IOException;
+
+    public Map<String, Integer> getHeadersMap() throws IOException {
+        try (SheetParser parser = createParser()) {
+            return parser.getHeaderMap();
+        }
     }
 
     public void importNodes(SheetParser parser, Map<String, Class<?>> columnTypes, boolean assignNewNodeIds) throws IOException {
         SpreadsheetNodesConfiguration config = new SpreadsheetNodesConfiguration(columnTypes, assignNewNodeIds);
-        ImportNodes nodesImporter = new ImportNodes(config, parser, container, progressTicket);
+        ImportNodesProcess nodesImporter = new ImportNodesProcess(config, parser, container, progressTicket);
         importer = nodesImporter;
-        
+
         nodesImporter.execute();
         importer = null;
         report.append(nodesImporter.getReport());
@@ -106,7 +135,13 @@ public class ImporterSpreadsheet implements FileImporter, LongTask {
 
     @Override
     public void setReader(Reader reader) {
-        this.reader = reader;
+        //We can't use a reader since we might need to read the file many times (get the headers first, then read again...)
+        //See setFile(File file)
+    }
+
+    @Override
+    public void setFile(File file) {
+        this.file = file;
     }
 
     @Override
@@ -131,5 +166,29 @@ public class ImporterSpreadsheet implements FileImporter, LongTask {
     @Override
     public void setProgressTicket(ProgressTicket progressTicket) {
         this.progressTicket = progressTicket;
+    }
+
+    public Table getTable() {
+        return table;
+    }
+
+    public void setTable(Table table) {
+        this.table = table;
+    }
+
+    public TimeRepresentation getTimeRepresentation() {
+        return timeRepresentation;
+    }
+
+    public void setTimeRepresentation(TimeRepresentation timeRepresentation) {
+        this.timeRepresentation = timeRepresentation;
+    }
+
+    public DateTimeZone getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(DateTimeZone timeZone) {
+        this.timeZone = timeZone;
     }
 }

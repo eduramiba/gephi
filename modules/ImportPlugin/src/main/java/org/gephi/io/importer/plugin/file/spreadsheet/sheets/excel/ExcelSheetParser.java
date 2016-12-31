@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 
 /**
  *
@@ -17,17 +17,17 @@ import org.gephi.io.importer.plugin.file.spreadsheet.sheets.SheetRow;
  */
 public class ExcelSheetParser implements SheetParser {
 
-    private final XSSFSheet parser;
+    private final Sheet sheet;
     private final Map<String, Integer> headerMap = new HashMap<>();
     private ExcelIterator iterator;
 
-    public ExcelSheetParser(XSSFSheet parser) {
-        this.parser = parser;
+    public ExcelSheetParser(Sheet sheet) {
+        this.sheet = sheet;
         initHeaderInfo();
     }
 
     private void initHeaderInfo() {
-        XSSFRow firstRow = parser.getRow(parser.getFirstRowNum());
+        Row firstRow = sheet.getRow(sheet.getFirstRowNum());
 
         if (firstRow != null) {
             for (Cell cell : firstRow) {
@@ -54,7 +54,7 @@ public class ExcelSheetParser implements SheetParser {
 
     @Override
     public void close() throws IOException {
-        parser.getWorkbook().close();
+        sheet.getWorkbook().close();
     }
 
     private class ExcelIterator implements Iterator<SheetRow> {
@@ -63,12 +63,17 @@ public class ExcelSheetParser implements SheetParser {
         private Row currentRow = null;
 
         public ExcelIterator() {
-            iterator = parser.iterator();
+            iterator = sheet.iterator();
         }
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            try {
+                return iterator.hasNext();
+            } catch (Exception e) {
+                Logger.getLogger("").severe(e.getMessage());
+                return false;//In case of malformed excel
+            }
         }
 
         @Override
