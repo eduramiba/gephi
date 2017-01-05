@@ -9,16 +9,16 @@ import java.util.Map;
  */
 public class SpreadsheetGeneralConfiguration {
 
-    private final Map<String, Class<?>> columnsClasses;
+    private final Map<String, Class> columnsClasses;
 
-    public SpreadsheetGeneralConfiguration(Map<String, Class<?>> columnsClasses) {
+    public SpreadsheetGeneralConfiguration(Map<String, Class> columnsClasses) {
         if (columnsClasses == null) {
             columnsClasses = new HashMap<>();
         }
         this.columnsClasses = columnsClasses;
     }
 
-    public Map<String, Class<?>> getColumnsClasses() {
+    public Map<String, Class> getColumnsClasses() {
         return columnsClasses;
     }
 }

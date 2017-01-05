@@ -67,7 +67,7 @@ public abstract class AbstractImportProcess implements Closeable {
 
     protected final Map<String, Integer> specialColumnsIndexMap = new HashMap<>();
     protected final Map<String, Integer> headersIndexMap = new HashMap<>();
-    protected final Map<String, Class<?>> headersClassMap = new HashMap<>();
+    protected final Map<String, Class> headersClassMap = new HashMap<>();
 
     public AbstractImportProcess(SpreadsheetGeneralConfiguration generalConfig, ContainerLoader container, ProgressTicket progressTicket, SheetParser parser) {
         this.generalConfig = generalConfig;
@@ -76,11 +76,13 @@ public abstract class AbstractImportProcess implements Closeable {
         this.parser = parser;
 
         this.report = new Report();
+        
+        container.setFillLabelWithId(false);
     }
 
     public abstract boolean execute();
 
-    protected void setupColumnsIndexesAndFindSpecialColumns(List<String> specialColumnNames, Map<String, Class<?>> columnsClasses) {
+    protected void setupColumnsIndexesAndFindSpecialColumns(List<String> specialColumnNames, Map<String, Class> columnsClasses) {
         Map<String, Integer> headerMap = parser.getHeaderMap();
         for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
             String headerName = entry.getKey().trim();
@@ -105,15 +107,19 @@ public abstract class AbstractImportProcess implements Closeable {
                 continue;
             }
 
-            Class<?> clazz = columnsClasses.containsKey(headerName) ? columnsClasses.get(headerName) : String.class;
-            headersClassMap.put(headerName, clazz);
+            Class clazz = columnsClasses.get(headerName);
 
-            if (isEdgesImport()) {
-                container.addEdgeColumn(headerName, clazz);
-            } else {
-                container.addNodeColumn(headerName, clazz);
+            //Only add columns that have a class defined by the user. This also allows to filter the input columns
+            if (clazz != null) {
+                headersClassMap.put(headerName, clazz);
+                if (isEdgesImport()) {
+                    container.addEdgeColumn(headerName, clazz);
+                } else {
+                    container.addNodeColumn(headerName, clazz);
+                }
+
+                headersIndexMap.put(headerName, currentIndex);
             }
-            headersIndexMap.put(headerName, currentIndex);
         }
     }
 

@@ -76,7 +76,7 @@ public final class WizardVisualPanel2 extends JPanel {
         initComponents();
         this.importer = importer;
         this.wizard2 = wizard2;
-        
+
         //TODO: add time representation chooser
     }
 
@@ -131,14 +131,13 @@ public final class WizardVisualPanel2 extends JPanel {
             final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
 
             boolean isEdgesTable = importer.getTable() == AbstractImporterSpreadsheet.Table.EDGES;
-            
+
             for (String header : headers) {
                 if (header.isEmpty()) {
                     continue;//Remove empty column headers:
                 }
-                
-                //TODO: auto fill with guessed types and existing graph types and mandatory special types (source, target, type, kind, weight...)
-                
+
+                //TODO: mandatory special columns always selected, without type (source, target, type, kind, weight...)
                 JCheckBox columnCheckBox = new JCheckBox(header, true);
                 columnsCheckBoxes.add(columnCheckBox);
                 settingsPanel.add(columnCheckBox, "wrap");
@@ -160,7 +159,16 @@ public final class WizardVisualPanel2 extends JPanel {
             comboBox.addItem(supportedColumnTypeWrapper);
         }
 
-        comboBox.setSelectedItem(new SupportedColumnTypeWrapper(String.class));//Set STRING by default
+        Class defaultClass = importer.getColumnClass(column);
+        if (defaultClass == null) {
+            defaultClass = String.class;//Default
+        }
+
+        SupportedColumnTypeWrapper selection = new SupportedColumnTypeWrapper(defaultClass);
+        if (!supportedTypesWrappers.contains(selection)) {
+            selection = new SupportedColumnTypeWrapper(String.class);//Default
+        }
+        comboBox.setSelectedItem(selection);
     }
 
     private void loadNodesTableSettings(JPanel settingsPanel) {

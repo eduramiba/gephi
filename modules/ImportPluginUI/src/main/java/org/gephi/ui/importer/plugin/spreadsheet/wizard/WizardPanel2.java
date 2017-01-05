@@ -137,7 +137,7 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
         
         component.getAssignNewNodeIds();//TODO use
         component.getCreateNewNodes();//TODO use
-        //importer.setColumnTypes(columnTypes);//TODO
+        importer.setColumnsClasses(columnsClasses);
         
         component.unSetup();
     }

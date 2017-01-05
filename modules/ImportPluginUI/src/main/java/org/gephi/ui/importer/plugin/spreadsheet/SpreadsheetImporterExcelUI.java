@@ -64,6 +64,9 @@ public class SpreadsheetImporterExcelUI implements ImporterUI, ImporterUI.WithWi
     @Override
     public void setup(Importer[] importers) {
         this.importers = (ImporterSpreadsheetExcel[]) importers;
+        for (ImporterSpreadsheetExcel importer : this.importers) {
+            importer.refreshAutoDetections();
+        }
     }
 
     @Override

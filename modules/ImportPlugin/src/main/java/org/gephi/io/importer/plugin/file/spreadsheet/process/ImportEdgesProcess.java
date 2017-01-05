@@ -189,7 +189,11 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             for (Map.Entry<String, Integer> columnEntry : headersIndexMap.entrySet()) {
                 String column = columnEntry.getKey();
                 Integer index = columnEntry.getValue();
-                Class<?> type = headersClassMap.get(column);
+                Class type = headersClassMap.get(column);
+
+                if (type == null) {
+                    continue;
+                }
 
                 Object value = row.get(index);
                 if (value != null) {

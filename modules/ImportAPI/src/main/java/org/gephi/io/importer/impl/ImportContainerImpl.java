@@ -957,6 +957,11 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     public boolean allowSelfLoop() {
         return parameters.isSelfLoops();
     }
+    
+    @Override
+    public boolean isFillLabelWithId() {
+        return parameters.isFillLabelWithId();
+    }
 
     @Override
     public EdgeWeightMergeStrategy getEdgesMergeStrategy() {
@@ -992,6 +997,11 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     @Override
     public void setAllowSelfLoop(boolean value) {
         parameters.setSelfLoops(value);
+    }
+    
+    @Override
+    public void setFillLabelWithId(boolean value) {
+        parameters.setFillLabelWithId(value);
     }
 
     @Override

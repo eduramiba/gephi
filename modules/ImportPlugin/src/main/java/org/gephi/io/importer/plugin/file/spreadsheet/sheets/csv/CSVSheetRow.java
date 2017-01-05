@@ -68,6 +68,9 @@ public class CSVSheetRow implements SheetRow {
 
     @Override
     public String get(int index) {
+        if (index < 0 || index > record.size() - 1) {
+            return null;
+        }
         return record.get(index);
     }
 }

@@ -71,12 +71,10 @@ public class ImporterSpreadsheetCSV extends AbstractImporterSpreadsheet {
     }
 
     @Override
-    public void setFile(File file) {
-        super.setFile(file);
-
+    public void refreshAutoDetections() {
         autoDetectCharset();
-
         autoDetectFieldDelimiter();
+        super.refreshAutoDetections();
     }
 
     private void autoDetectCharset() {

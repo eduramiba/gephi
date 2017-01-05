@@ -64,6 +64,9 @@ public class SpreadsheetImporterCSVUI implements ImporterUI, ImporterUI.WithWiza
     @Override
     public void setup(Importer[] importers) {
         this.importers = (ImporterSpreadsheetCSV[]) importers;
+        for (ImporterSpreadsheetCSV importer : this.importers) {
+            importer.refreshAutoDetections();
+        }
     }
 
     @Override

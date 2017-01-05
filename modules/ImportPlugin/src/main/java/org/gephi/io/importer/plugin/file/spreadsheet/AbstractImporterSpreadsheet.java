@@ -47,18 +47,37 @@ import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportNodesProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.AbstractImportProcess;
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.TimeRepresentation;
+import org.gephi.graph.api.types.IntervalDoubleMap;
+import org.gephi.graph.api.types.IntervalLongMap;
 import org.gephi.graph.api.types.IntervalSet;
+import org.gephi.graph.api.types.IntervalStringMap;
+import org.gephi.graph.api.types.TimeMap;
+import org.gephi.graph.api.types.TimeSet;
+import org.gephi.graph.api.types.TimestampDoubleMap;
+import org.gephi.graph.api.types.TimestampLongMap;
+import org.gephi.graph.api.types.TimestampSet;
+import org.gephi.graph.api.types.TimestampStringMap;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportEdgesProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.io.importer.spi.FileImporter;
 import org.gephi.utils.longtask.spi.LongTask;
 import org.gephi.utils.progress.ProgressTicket;
@@ -70,6 +89,8 @@ import org.openide.util.Exceptions;
  * @author Eduardo Ramos
  */
 public abstract class AbstractImporterSpreadsheet implements FileImporter, FileImporter.FileAware, LongTask {
+
+    private static final int MAX_ROWS_TO_ANALYZE_COLUMN_TYPES = 25;
 
     protected ContainerLoader container;
     protected Report report;
@@ -84,6 +105,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     protected Table table = Table.NODES;
     protected TimeRepresentation timeRepresentation = TimeRepresentation.INTERVAL;
     protected DateTimeZone timeZone = DateTimeZone.UTC;
+    protected Map<String, Class> columnsClasses = new LinkedHashMap<>();
 
     public enum Table {
         NODES,
@@ -98,14 +120,13 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         this.container.setTimeRepresentation(timeRepresentation);
         this.container.setTimeZone(timeZone);
 
-        Map<String, Class<?>> columnsClasses = new HashMap<>();
-        columnsClasses.put("timeset", IntervalSet.class);//DEBUG, TODO correct
-
         try (SheetParser parser = createParser()) {
+            Map<String, Class> columnTypes = getColumnsClasses();
+
             if (table == Table.EDGES) {
-                importEdges(parser, columnsClasses, true);//TODO config
+                importEdges(parser, columnTypes, true);//TODO config
             } else {
-                importNodes(parser, columnsClasses, false);//TODO config
+                importNodes(parser, columnTypes, false);//TODO config
             }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -122,7 +143,24 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         }
     }
 
-    public void importNodes(SheetParser parser, Map<String, Class<?>> columnTypes, boolean assignNewNodeIds) throws IOException {
+    public List<SheetRow> getFirstRows(int maxRows) throws IOException {
+        try (SheetParser parser = createParser()) {
+            return getFirstRows(parser, maxRows);
+        }
+    }
+
+    public List<SheetRow> getFirstRows(SheetParser parser, int maxRows) throws IOException {
+        List<SheetRow> rows = new ArrayList<>();
+
+        Iterator<SheetRow> iterator = parser.iterator();
+        for (int i = 0; i < maxRows && iterator.hasNext(); i++) {
+            rows.add(iterator.next());
+        }
+
+        return rows;
+    }
+
+    public void importNodes(SheetParser parser, Map<String, Class> columnTypes, boolean assignNewNodeIds) throws IOException {
         SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
         SpreadsheetNodesConfiguration config = new SpreadsheetNodesConfiguration(assignNewNodeIds);
         ImportNodesProcess nodesImporter = new ImportNodesProcess(generalConfig, config, parser, container, progressTicket);
@@ -133,7 +171,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         report.append(nodesImporter.getReport());
     }
 
-    public void importEdges(SheetParser parser, Map<String, Class<?>> columnTypes, boolean createMissingNodes) throws IOException {
+    public void importEdges(SheetParser parser, Map<String, Class> columnTypes, boolean createMissingNodes) throws IOException {
         SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
         SpreadsheetEdgesConfiguration config = new SpreadsheetEdgesConfiguration(createMissingNodes);
         ImportEdgesProcess edgesImporter = new ImportEdgesProcess(generalConfig, config, parser, container, progressTicket);
@@ -144,7 +182,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         report.append(edgesImporter.getReport());
     }
 
-    private void autoDetectTable() {
+    protected void autoDetectTargetTable() {
         try {
             Set<String> headersLowerCase = new HashSet<>();
 
@@ -158,7 +196,123 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                 table = Table.NODES;
             }
         } catch (IOException ex) {
+            //NOOP
         }
+    }
+
+    protected void autoDetectColumnTypes() {
+        try (SheetParser parser = createParser()) {
+            List<SheetRow> rows = getFirstRows(parser, MAX_ROWS_TO_ANALYZE_COLUMN_TYPES);
+            int rowCount = rows.size();
+
+            if (rowCount == 0) {
+                return;
+            }
+
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            Map<String, LinkedHashSet<Class>> classMatchByHeader = new HashMap<>();
+
+            List<Class> classesToTry = Arrays.asList(new Class[]{
+                //Classes to check, in order of preference
+                Boolean.class,
+                Integer.class,
+                Long.class,
+                BigInteger.class,
+                Double.class,
+                BigDecimal.class,
+                IntervalSet.class,
+                TimestampSet.class,
+                IntervalLongMap.class,
+                IntervalDoubleMap.class,
+                IntervalStringMap.class,
+                TimestampLongMap.class,
+                TimestampDoubleMap.class,
+                TimestampStringMap.class
+            });
+
+            //Initialize:
+            for (String column : headerMap.keySet()) {
+                classMatchByHeader.put(column, new LinkedHashSet<Class>());
+
+                classMatchByHeader.get(column).addAll(classesToTry); //First assume all values match
+            }
+
+            //Try to parse all types:
+            for (SheetRow row : rows) {
+                for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
+                    String column = entry.getKey();
+                    int index = entry.getValue();
+                    String value = row.get(index);
+                    if (value != null) {
+                        value = value.trim();
+                    }
+
+                    LinkedHashSet<Class> columnMatches = classMatchByHeader.get(column);
+
+                    for (Class clazz : classesToTry) {
+                        if (columnMatches.contains(clazz)) {
+                            if (value != null && !value.isEmpty()) {
+                                if (clazz.equals(Boolean.class)) {//Special case for booleans to not accept 0/1, only true or false
+                                    if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+                                        columnMatches.remove(clazz);
+                                    }
+                                } else {
+                                    try {
+                                        Object parsed;
+                                        if (clazz.equals(Integer.class)) {
+                                            parsed = Integer.parseInt(value);
+                                        } else if (clazz.equals(Long.class)) {
+                                            parsed = Long.parseLong(value);
+                                        } else if (clazz.equals(BigInteger.class)) {
+                                            parsed = new BigInteger(value);
+                                        } else if (clazz.equals(Double.class)) {
+                                            parsed = Double.parseDouble(value);
+                                        } else if (clazz.equals(BigDecimal.class)) {
+                                            parsed = new BigDecimal(value);
+                                        } else {
+                                            parsed = AttributeUtils.parse(value, clazz);
+                                        }
+
+                                        if (parsed instanceof TimeMap && ((TimeMap) parsed).isEmpty()) {
+                                            parsed = null;//Actually invalid
+                                        }
+                                        if (parsed instanceof TimeSet && ((TimeSet) parsed).isEmpty()) {
+                                            parsed = null;//Actually invalid
+                                        }
+
+                                        if (parsed == null) {
+                                            columnMatches.remove(clazz);//Non empty value produced null, invalid parsing
+                                        }
+                                    } catch (Exception parseError) {
+                                        //Invalid value
+                                        columnMatches.remove(clazz);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Obtain best match for each column:
+            for (String column : headerMap.keySet()) {
+                LinkedHashSet<Class> columnMatches = classMatchByHeader.get(column);
+
+                Class detectedClass = String.class;//Default
+                if (!columnMatches.isEmpty() && columnMatches.size() != classesToTry.size()) {
+                    detectedClass = columnMatches.iterator().next();
+                }
+
+                setColumnClass(column, detectedClass);
+            }
+        } catch (IOException ex) {
+            //NOOP
+        }
+    }
+    
+    public void refreshAutoDetections(){
+        autoDetectTargetTable();
+        autoDetectColumnTypes();
     }
 
     @Override
@@ -170,10 +324,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     @Override
     public void setFile(File file) {
         this.file = file;
-
-        autoDetectTable();
     }
-
+    
     public File getFile() {
         return file;
     }
@@ -224,5 +376,24 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
 
     public void setTimeZone(DateTimeZone timeZone) {
         this.timeZone = timeZone;
+    }
+
+    public Map<String, Class> getColumnsClasses() {
+        return new LinkedHashMap<>(columnsClasses);
+    }
+
+    public void setColumnsClasses(Map<String, Class> columnsClasses) {
+        this.columnsClasses.clear();
+        for (String column : columnsClasses.keySet()) {
+            setColumnClass(column, columnsClasses.get(column));
+        }
+    }
+
+    public Class getColumnClass(String column) {
+        return columnsClasses.get(column);
+    }
+
+    public void setColumnClass(String column, Class clazz) {
+        columnsClasses.put(column.trim(), clazz);
     }
 }
