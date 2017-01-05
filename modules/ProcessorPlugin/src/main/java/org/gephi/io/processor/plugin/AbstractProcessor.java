@@ -83,7 +83,8 @@ public abstract class AbstractProcessor {
         for (ColumnDraft col : columns) {
             if (!table.hasColumn(col.getId())) {
                 Class typeClass = col.getTypeClass();
-                if (col.isDynamic() && TimeSet.class.isAssignableFrom(typeClass)) {
+                //Get final dynamic type:
+                if (col.isDynamic() && !TimeSet.class.isAssignableFrom(typeClass) && !TimeMap.class.isAssignableFrom(typeClass)) {
                     if (timeRepresentation.equals(TimeRepresentation.TIMESTAMP)) {
                         typeClass = AttributeUtils.getTimestampMapType(typeClass);
                     } else {
@@ -177,7 +178,7 @@ public abstract class AbstractProcessor {
             Object val = elementDraft.getValue(columnDraft.getId());
 
             Column column = element.getTable().getColumn(columnDraft.getId());
-            if (!column.getTypeClass().isAssignableFrom(columnDraft.getTypeClass())) {
+            if (!column.getTypeClass().equals(columnDraft.getTypeClass())) {
                 Logger.getLogger("").log(
                         Level.SEVERE,
                         String.format(
@@ -282,7 +283,7 @@ public abstract class AbstractProcessor {
         } else if (set1 instanceof TimestampSet) {
             return mergeTimestampSets((TimestampSet) set1, (TimestampSet) set2);
         } else {
-            throw new IllegalArgumentException("Unknown TimeSet subtype " + set1.getClass());
+            return set2;//Set 1 must be null
         }
     }
 

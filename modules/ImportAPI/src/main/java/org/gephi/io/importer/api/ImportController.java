@@ -71,10 +71,6 @@ public interface ImportController {
 
     public Container importFile(InputStream stream, FileImporter importer);
     
-    public Container importFile(Reader reader, FileImporter importer, File file);
-
-    public Container importFile(InputStream stream, FileImporter importer, File file);
-
     public Container importWizard(WizardImporter importer);
 
     public FileImporter getFileImporter(File file);
