@@ -47,13 +47,24 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
  */
 public class SpreadsheetNodesConfiguration {
 
-    private final boolean assignNewNodeIds;
+    private boolean assignNewNodeIds = false;
+
+    public SpreadsheetNodesConfiguration() {
+    }
 
     public SpreadsheetNodesConfiguration(boolean assignNewNodeIds) {
         this.assignNewNodeIds = assignNewNodeIds;
     }
-    
+
+    public void setup(SpreadsheetNodesConfiguration copy) {
+        assignNewNodeIds = copy.assignNewNodeIds;
+    }
+
     public boolean isAssignNewNodeIds() {
         return assignNewNodeIds;
+    }
+
+    public void setAssignNewNodeIds(boolean assignNewNodeIds) {
+        this.assignNewNodeIds = assignNewNodeIds;
     }
 }

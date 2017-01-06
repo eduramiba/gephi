@@ -76,7 +76,7 @@ public abstract class AbstractImportProcess implements Closeable {
         this.parser = parser;
 
         this.report = new Report();
-        
+
         container.setFillLabelWithId(false);
     }
 
@@ -88,6 +88,11 @@ public abstract class AbstractImportProcess implements Closeable {
             String headerName = entry.getKey().trim();
             int currentIndex = entry.getValue();
             boolean isSpecialColumn = false;
+
+            //Only add columns that have a class defined by the user. This also allows to filter the input columns
+            if (!columnsClasses.containsKey(headerName)) {
+                continue;
+            }
 
             //First check for special columns:
             for (String specialColumnName : specialColumnNames) {
@@ -107,19 +112,10 @@ public abstract class AbstractImportProcess implements Closeable {
                 continue;
             }
 
-            Class clazz = columnsClasses.get(headerName);
-
-            //Only add columns that have a class defined by the user. This also allows to filter the input columns
-            if (clazz != null) {
-                headersClassMap.put(headerName, clazz);
-                if (isEdgesImport()) {
-                    container.addEdgeColumn(headerName, clazz);
-                } else {
-                    container.addNodeColumn(headerName, clazz);
-                }
-
-                headersIndexMap.put(headerName, currentIndex);
-            }
+            Class type = columnsClasses.get(headerName);
+            headersClassMap.put(headerName, type);
+            headersIndexMap.put(headerName, currentIndex);
+            addColumn(headerName, type);
         }
     }
 
@@ -150,5 +146,5 @@ public abstract class AbstractImportProcess implements Closeable {
         return report;
     }
 
-    public abstract boolean isEdgesImport();
+    protected abstract void addColumn(String name, Class type);
 }

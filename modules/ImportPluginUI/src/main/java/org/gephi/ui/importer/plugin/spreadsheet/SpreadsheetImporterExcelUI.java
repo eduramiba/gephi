@@ -76,6 +76,7 @@ public class SpreadsheetImporterExcelUI implements ImporterUI, ImporterUI.WithWi
 
     @Override
     public void unsetup(boolean update) {
+        //NOOP
     }
 
     @Override

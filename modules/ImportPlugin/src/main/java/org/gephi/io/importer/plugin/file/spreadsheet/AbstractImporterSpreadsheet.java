@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +75,7 @@ import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportEdgesProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.io.importer.spi.FileImporter;
@@ -102,31 +102,25 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     protected File file;
 
     //General configuration:
-    protected Table table = Table.NODES;
-    protected TimeRepresentation timeRepresentation = TimeRepresentation.INTERVAL;
-    protected DateTimeZone timeZone = DateTimeZone.UTC;
-    protected Map<String, Class> columnsClasses = new LinkedHashMap<>();
+    protected final SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration();
 
-    public enum Table {
-        NODES,
-        EDGES;
-    }
+    //Specific table configuration:
+    protected final SpreadsheetNodesConfiguration nodesConfiguration = new SpreadsheetNodesConfiguration();
+    protected final SpreadsheetEdgesConfiguration edgesConfiguration = new SpreadsheetEdgesConfiguration();
 
     @Override
     public boolean execute(ContainerLoader container) {
         this.container = container;
         this.report = new Report();
 
-        this.container.setTimeRepresentation(timeRepresentation);
-        this.container.setTimeZone(timeZone);
+        this.container.setTimeRepresentation(generalConfig.getTimeRepresentation());
+        this.container.setTimeZone(generalConfig.getTimeZone());
 
         try (SheetParser parser = createParser()) {
-            Map<String, Class> columnTypes = getColumnsClasses();
-
-            if (table == Table.EDGES) {
-                importEdges(parser, columnTypes, true);//TODO config
+            if (getTable() == Table.EDGES) {
+                importEdges(parser);
             } else {
-                importNodes(parser, columnTypes, false);//TODO config
+                importNodes(parser);
             }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -160,10 +154,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         return rows;
     }
 
-    public void importNodes(SheetParser parser, Map<String, Class> columnTypes, boolean assignNewNodeIds) throws IOException {
-        SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
-        SpreadsheetNodesConfiguration config = new SpreadsheetNodesConfiguration(assignNewNodeIds);
-        ImportNodesProcess nodesImporter = new ImportNodesProcess(generalConfig, config, parser, container, progressTicket);
+    public void importNodes(SheetParser parser) throws IOException {
+        ImportNodesProcess nodesImporter = new ImportNodesProcess(generalConfig, nodesConfiguration, parser, container, progressTicket);
         importer = nodesImporter;
 
         nodesImporter.execute();
@@ -171,10 +163,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         report.append(nodesImporter.getReport());
     }
 
-    public void importEdges(SheetParser parser, Map<String, Class> columnTypes, boolean createMissingNodes) throws IOException {
-        SpreadsheetGeneralConfiguration generalConfig = new SpreadsheetGeneralConfiguration(columnTypes);
-        SpreadsheetEdgesConfiguration config = new SpreadsheetEdgesConfiguration(createMissingNodes);
-        ImportEdgesProcess edgesImporter = new ImportEdgesProcess(generalConfig, config, parser, container, progressTicket);
+    public void importEdges(SheetParser parser) throws IOException {
+        ImportEdgesProcess edgesImporter = new ImportEdgesProcess(generalConfig, edgesConfiguration, parser, container, progressTicket);
         importer = edgesImporter;
 
         edgesImporter.execute();
@@ -190,11 +180,13 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                 headersLowerCase.add(header.trim().toLowerCase());
             }
 
-            if (headersLowerCase.contains("source") || headersLowerCase.contains("target") || headersLowerCase.contains("weight")) {
+            Table table;
+            if (headersLowerCase.contains("source") || headersLowerCase.contains("target")) {
                 table = Table.EDGES;
             } else {
                 table = Table.NODES;
             }
+            setTable(table);
         } catch (IOException ex) {
             //NOOP
         }
@@ -301,6 +293,22 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                 Class detectedClass = String.class;//Default
                 if (!columnMatches.isEmpty() && columnMatches.size() != classesToTry.size()) {
                     detectedClass = columnMatches.iterator().next();
+
+                }
+
+                //Change some typical column types to expected types when possible:
+                if (column.equalsIgnoreCase("id") || column.equalsIgnoreCase("label")) {
+                    detectedClass = String.class;
+                }
+
+                if (getTable() == Table.EDGES) {
+                    if (column.equalsIgnoreCase("source") || column.equalsIgnoreCase("target") || column.equalsIgnoreCase("type") || column.equalsIgnoreCase("kind")) {
+                        detectedClass = String.class;
+                    }
+
+                    if (column.equalsIgnoreCase("weight") && columnMatches.contains(Double.class)) {
+                        detectedClass = Double.class;
+                    }
                 }
 
                 setColumnClass(column, detectedClass);
@@ -309,8 +317,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
             //NOOP
         }
     }
-    
-    public void refreshAutoDetections(){
+
+    public void refreshAutoDetections() {
         autoDetectTargetTable();
         autoDetectColumnTypes();
     }
@@ -325,7 +333,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     public void setFile(File file) {
         this.file = file;
     }
-    
+
     public File getFile() {
         return file;
     }
@@ -355,45 +363,58 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     }
 
     public Table getTable() {
-        return table;
+        return generalConfig.getTable();
     }
 
     public void setTable(Table table) {
-        this.table = table;
+        generalConfig.setTable(table);
     }
 
     public TimeRepresentation getTimeRepresentation() {
-        return timeRepresentation;
+        return generalConfig.getTimeRepresentation();
     }
 
     public void setTimeRepresentation(TimeRepresentation timeRepresentation) {
-        this.timeRepresentation = timeRepresentation;
+        generalConfig.setTimeRepresentation(timeRepresentation);
     }
 
     public DateTimeZone getTimeZone() {
-        return timeZone;
+        return generalConfig.getTimeZone();
     }
 
     public void setTimeZone(DateTimeZone timeZone) {
-        this.timeZone = timeZone;
+        generalConfig.setTimeZone(timeZone);
     }
 
     public Map<String, Class> getColumnsClasses() {
-        return new LinkedHashMap<>(columnsClasses);
+        return generalConfig.getColumnsClasses();
     }
 
     public void setColumnsClasses(Map<String, Class> columnsClasses) {
-        this.columnsClasses.clear();
-        for (String column : columnsClasses.keySet()) {
-            setColumnClass(column, columnsClasses.get(column));
-        }
+        generalConfig.setColumnsClasses(columnsClasses);
     }
 
     public Class getColumnClass(String column) {
-        return columnsClasses.get(column);
+        return generalConfig.getColumnClass(column);
     }
 
     public void setColumnClass(String column, Class clazz) {
-        columnsClasses.put(column.trim(), clazz);
+        generalConfig.setColumnClass(column, clazz);
+    }
+
+    public SpreadsheetNodesConfiguration getNodesConfiguration() {
+        return nodesConfiguration;
+    }
+
+    public SpreadsheetEdgesConfiguration getEdgesConfiguration() {
+        return edgesConfiguration;
+    }
+
+    public void setNodesConfiguration(SpreadsheetNodesConfiguration nodesConfig) {
+        this.nodesConfiguration.setup(nodesConfig);
+    }
+
+    public void setEdgesConfiguration(SpreadsheetEdgesConfiguration edgesConfig) {
+        this.edgesConfiguration.setup(edgesConfig);
     }
 }

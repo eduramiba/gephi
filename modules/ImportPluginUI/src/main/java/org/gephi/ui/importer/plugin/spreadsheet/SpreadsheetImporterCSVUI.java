@@ -76,9 +76,7 @@ public class SpreadsheetImporterCSVUI implements ImporterUI, ImporterUI.WithWiza
 
     @Override
     public void unsetup(boolean update) {
-        if (update) {
-            //TODO
-        }
+        //NOOP
     }
 
     @Override

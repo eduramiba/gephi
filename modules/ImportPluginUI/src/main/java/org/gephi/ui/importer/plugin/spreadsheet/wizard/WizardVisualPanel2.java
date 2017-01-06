@@ -50,6 +50,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
 import org.gephi.ui.utils.SupportedColumnTypeWrapper;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
@@ -65,7 +66,7 @@ public final class WizardVisualPanel2 extends JPanel {
     //Nodes table settings:
     private JCheckBox assignNewNodeIds;
     //Edges table settings:
-    private JCheckBox createNewNodes;
+    private JCheckBox createMissingNodes;
 
     private final AbstractImporterSpreadsheet importer;
 
@@ -84,8 +85,8 @@ public final class WizardVisualPanel2 extends JPanel {
         if (assignNewNodeIds != null) {
             NbPreferences.forModule(WizardVisualPanel1CSV.class).putBoolean(ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES, assignNewNodeIds.isSelected());
         }
-        if (createNewNodes != null) {
-            NbPreferences.forModule(WizardVisualPanel1CSV.class).putBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, createNewNodes.isSelected());
+        if (createMissingNodes != null) {
+            NbPreferences.forModule(WizardVisualPanel1CSV.class).putBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, createMissingNodes.isSelected());
         }
     }
 
@@ -130,7 +131,7 @@ public final class WizardVisualPanel2 extends JPanel {
 
             final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
 
-            boolean isEdgesTable = importer.getTable() == AbstractImporterSpreadsheet.Table.EDGES;
+            boolean isEdgesTable = importer.getTable() == Table.EDGES;
 
             for (String header : headers) {
                 if (header.isEmpty()) {
@@ -181,10 +182,10 @@ public final class WizardVisualPanel2 extends JPanel {
 
     private void loadEdgesTableSettings(JPanel settingsPanel) {
         //Create createNewNodes checkbox and set its selection with saved preferences or true by default:
-        createNewNodes = new JCheckBox(getMessage("WizardVisualPanel2.edges.create-new-nodes-checkbox"),
+        createMissingNodes = new JCheckBox(getMessage("WizardVisualPanel2.edges.create-new-nodes-checkbox"),
                 NbPreferences.forModule(WizardVisualPanel1CSV.class)
                         .getBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, true));//True => by default create missing nodes
-        settingsPanel.add(createNewNodes, "wrap");
+        settingsPanel.add(createMissingNodes, "wrap");
     }
 
     public boolean isValidCSV() {
@@ -216,8 +217,8 @@ public final class WizardVisualPanel2 extends JPanel {
         return assignNewNodeIds != null ? assignNewNodeIds.isSelected() : false;
     }
 
-    public boolean getCreateNewNodes() {
-        return createNewNodes != null ? createNewNodes.isSelected() : false;
+    public boolean getCreateMissingNodes() {
+        return createMissingNodes != null ? createMissingNodes.isSelected() : false;
     }
 
     @Override

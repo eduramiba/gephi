@@ -47,8 +47,8 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
-import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetExcel;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.netbeans.validation.api.Problems;
@@ -95,7 +95,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
         }
 
         //Table:
-        tableComboBox.setSelectedIndex(importer.getTable() == AbstractImporterSpreadsheet.Table.NODES ? 0 : 1);
+        tableComboBox.setSelectedIndex(importer.getTable() == Table.NODES ? 0 : 1);
 
         //File path:
         final String filePath = importer.getFile().getAbsolutePath();
@@ -138,9 +138,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
     }
 
     public void refreshPreviewTable() {
-        SheetParser parser = null;
-        try {
-            parser = importer.createParser();
+        try (SheetParser parser = importer.createParser()) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             String[] headers = headerMap.keySet().toArray(new String[0]);
 
@@ -164,7 +162,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
 
             ArrayList<String[]> records = new ArrayList<>();
             hasRowsMissingSourcesOrTargets = false;
-            AbstractImporterSpreadsheet.Table table = getSelectedTable();
+            Table table = getSelectedTable();
             if (columnCount > 0) {
                 String[] currentRecord;
 
@@ -183,7 +181,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
                     }
 
                     // Search for missing source or target columns for edges table
-                    if (table == AbstractImporterSpreadsheet.Table.EDGES) {
+                    if (table == Table.EDGES) {
                         if (recordColumnCount < sourceColumnIndex
                                 || currentRecord[sourceColumnIndex] == null
                                 || recordColumnCount < targetColumnIndex
@@ -250,14 +248,6 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
             });
         } catch (IOException ex) {
             throw new RuntimeException(ex);
-        } finally {
-            if (parser != null) {
-                try {
-                    parser.close();
-                } catch (IOException ex) {
-                    //NOOP
-                }
-            }
         }
         wizard1.fireChangeEvent();
         pathTextField.setText(pathTextField.getText());//To fire validation panel messages.
@@ -268,12 +258,12 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
         return getMessage("WizardVisualPanel1Excel.name");
     }
 
-    public AbstractImporterSpreadsheet.Table getSelectedTable() {
+    public Table getSelectedTable() {
         switch (tableComboBox.getSelectedIndex()) {
             case 1:
-                return AbstractImporterSpreadsheet.Table.EDGES;
+                return Table.EDGES;
             default:
-                return AbstractImporterSpreadsheet.Table.NODES;
+                return Table.NODES;
         }
     }
 

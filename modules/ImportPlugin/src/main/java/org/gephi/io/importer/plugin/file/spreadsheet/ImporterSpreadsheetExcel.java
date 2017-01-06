@@ -61,7 +61,8 @@ public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
     @Override
     public SheetParser createParser() throws IOException {
         try {
-            Workbook workbook = WorkbookFactory.create(file);
+            boolean readOnly = true;
+            Workbook workbook = WorkbookFactory.create(file, null, readOnly);
             Sheet sheet = workbook.getSheetAt(sheetIndex);
 
             return new ExcelSheetParser(sheet);
@@ -89,7 +90,7 @@ public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
 
             return names;
         } catch (Exception ex) {
-            return new String[0];
+            return new String[]{"Error"};
         }
     }
 

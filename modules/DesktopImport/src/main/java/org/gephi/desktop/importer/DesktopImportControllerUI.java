@@ -223,20 +223,21 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                 }
 
                 if (importer instanceof FileImporter.FileAware) {
-                    Reader reader = readers[i];
-                    File file;
-                    if (fileObjects != null) {
-                        file = FileUtil.toFile(fileObjects[i]);
-                    } else {
-                        //There is no source file but the importer needs it, create temporary copy:
-                        file = TempDirUtils.createTempDir().createFile("file_copy_" + i);
-                        try (FileOutputStream fos = new FileOutputStream(file)) {
-                            FileUtil.copy(new ReaderInputStream(reader, "UTF-8"), fos);
+                    try (Reader reader = readers[i]) {
+                        File file;
+                        if (fileObjects != null) {
+                            file = FileUtil.toFile(fileObjects[i]);
+                        } else {
+                            //There is no source file but the importer needs it, create temporary copy:
+                            file = TempDirUtils.createTempDir().createFile("file_copy_" + i);
+                            try (FileOutputStream fos = new FileOutputStream(file)) {
+                                FileUtil.copy(new ReaderInputStream(reader, "UTF-8"), fos);
+                            }
                         }
-                    }
 
-                    files[i] = file;
-                    ((FileImporter.FileAware) importer).setFile(file);
+                        files[i] = file;
+                        ((FileImporter.FileAware) importer).setFile(file);
+                    }
                 }
             }
 
@@ -294,6 +295,15 @@ public class DesktopImportControllerUI implements ImportControllerUI {
             });
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
+        } finally {
+            for (Reader reader : readers) {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ex) {
+                    }
+                }
+            }
         }
     }
 

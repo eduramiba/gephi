@@ -50,6 +50,9 @@ import java.util.Set;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetNodesConfiguration;
 import org.openide.WizardDescriptor;
 import org.openide.util.HelpCtx;
 
@@ -135,8 +138,11 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
             columnsClasses.put(columnsToImport[i], columnTypes[i]);
         }
         
-        component.getAssignNewNodeIds();//TODO use
-        component.getCreateNewNodes();//TODO use
+        if(importer.getTable() == SpreadsheetGeneralConfiguration.Table.NODES){
+            importer.setNodesConfiguration(new SpreadsheetNodesConfiguration(component.getAssignNewNodeIds()));
+        } else {
+            importer.setEdgesConfiguration(new SpreadsheetEdgesConfiguration(component.getCreateMissingNodes()));
+        }
         importer.setColumnsClasses(columnsClasses);
         
         component.unSetup();

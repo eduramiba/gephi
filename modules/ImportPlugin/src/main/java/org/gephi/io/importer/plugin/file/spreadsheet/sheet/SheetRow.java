@@ -42,13 +42,27 @@ Portions Copyrighted 2016 Gephi Consortium.
 package org.gephi.io.importer.plugin.file.spreadsheet.sheet;
 
 /**
- *
+ * Simple sheet row abstraction to support CSV, Excel...
  * @author Eduardo Ramos
  */
 public interface SheetRow {
+    
+    /**
+     * CSV rows can be inconsistent, this method says if the row is consistent.
+     * @return 
+     */
     boolean isConsistent();
     
+    /**
+     * Cell count in the row
+     * @return 
+     */
     int size();
     
+    /**
+     * Returns cell value at given index (starting at 0 up to size - 1)
+     * @param index
+     * @return 
+     */
     String get(int index);
 }

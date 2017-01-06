@@ -139,7 +139,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
     }
 
     @Override
-    public boolean isEdgesImport() {
-        return false;
+    protected void addColumn(String name, Class type) {
+        container.addNodeColumn(name, type);
     }
 }

@@ -42,6 +42,7 @@ Portions Copyrighted 2016 Gephi Consortium.
 package org.gephi.io.importer.plugin.file.spreadsheet.sheets.excel;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 
@@ -50,6 +51,8 @@ import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
  * @author Eduardo Ramos
  */
 public class ExcelSheetRow implements SheetRow {
+
+    private static final DataFormatter FORMATTER = new DataFormatter();
 
     private final Row row;
     private final int firstIndex;
@@ -69,7 +72,7 @@ public class ExcelSheetRow implements SheetRow {
     @Override
     public String get(int index) {
         index += firstIndex;
-        
+
         Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
 
         String value = getRowCellAsString(cell, index);
@@ -94,13 +97,6 @@ public class ExcelSheetRow implements SheetRow {
             return null;
         }
 
-        switch (cell.getCellTypeEnum()) {
-            case NUMERIC:
-                return String.valueOf(cell.getNumericCellValue());
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            default:
-                return cell.getStringCellValue();
-        }
+        return FORMATTER.formatCellValue(cell);
     }
 }

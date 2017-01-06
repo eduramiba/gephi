@@ -47,13 +47,24 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
  */
 public class SpreadsheetEdgesConfiguration {
 
-    private final boolean createMissingNodes;
+    private boolean createMissingNodes = true;
+
+    public SpreadsheetEdgesConfiguration() {
+    }
 
     public SpreadsheetEdgesConfiguration(boolean createMissingNodes) {
         this.createMissingNodes = createMissingNodes;
     }
 
+    public void setup(SpreadsheetEdgesConfiguration copy) {
+        this.createMissingNodes = copy.createMissingNodes;
+    }
+    
     public boolean isCreateMissingNodes() {
         return createMissingNodes;
+    }
+
+    public void setCreateMissingNodes(boolean createMissingNodes) {
+        this.createMissingNodes = createMissingNodes;
     }
 }

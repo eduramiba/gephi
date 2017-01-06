@@ -82,7 +82,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
         //Make sure default container configuration is correct for importing edges:
         container.setAllowParallelEdge(true);
         container.setAllowSelfLoop(true);
-        container.setEdgeDefault(EdgeDirectionDefault.DIRECTED);
+        container.setEdgeDefault(EdgeDirectionDefault.MIXED);
         container.setEdgesMergeStrategy(EdgeWeightMergeStrategy.SUM);
     }
 
@@ -144,10 +144,12 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
             if (weightColumnIndex != null) {
                 String weightStr = row.get(weightColumnIndex);
-                try {
-                    weight = Double.parseDouble(weightStr);
-                } catch (Exception ex) {
-                    logError(String.format("Error parsing weight '%s' as double", weightStr));
+                if(weightStr != null){
+                    try {
+                        weight = Double.parseDouble(weightStr);
+                    } catch (Exception ex) {
+                        logError(String.format("Error parsing weight '%s' as double", weightStr));
+                    }
                 }
             }
 
@@ -219,7 +221,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
     }
 
     @Override
-    public boolean isEdgesImport() {
-        return true;
+    protected void addColumn(String name, Class type) {
+        container.addEdgeColumn(name, type);
     }
 }

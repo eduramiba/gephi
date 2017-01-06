@@ -61,7 +61,7 @@ public class ExcelSheetParser implements SheetParser {
     private final Sheet sheet;
     private final Map<String, Integer> headerMap = new LinkedHashMap<>();
     private ExcelIterator iterator;
-    
+
     private int rowsFirstIndex = 0;
     private int rowsLastIndex = 0;
 
@@ -80,7 +80,7 @@ public class ExcelSheetParser implements SheetParser {
             int zeroBasedIndex = 0;
             for (int i = rowsFirstIndex; i < rowsLastIndex; i++) {
                 Cell cell = firstRow.getCell(i);
-                headerMap.put(ExcelSheetRow.getRowCellAsString(cell, i), zeroBasedIndex);
+                headerMap.put(ExcelSheetRow.getRowCellAsString(cell, i).trim(), zeroBasedIndex);
                 zeroBasedIndex++;
             }
         }
@@ -103,6 +103,7 @@ public class ExcelSheetParser implements SheetParser {
 
     @Override
     public void close() throws IOException {
+        iterator = null;
         sheet.getWorkbook().close();
     }
 
