@@ -42,7 +42,6 @@ Portions Copyrighted 2011 Gephi Consortium.
 package org.gephi.io.importer.plugin.file;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -52,7 +51,6 @@ import org.gephi.io.importer.spi.FileImporter;
 import org.gephi.io.importer.spi.FileImporterBuilder;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
-import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 

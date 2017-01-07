@@ -295,15 +295,6 @@ public class DesktopImportControllerUI implements ImportControllerUI {
             });
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
-        } finally {
-            for (Reader reader : readers) {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException ex) {
-                    }
-                }
-            }
         }
     }
 
