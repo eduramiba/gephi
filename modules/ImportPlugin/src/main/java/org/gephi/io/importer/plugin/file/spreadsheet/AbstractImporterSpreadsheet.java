@@ -68,6 +68,7 @@ import org.gephi.graph.api.types.TimeMap;
 import org.gephi.graph.api.types.TimeSet;
 import org.gephi.graph.api.types.TimestampDoubleMap;
 import org.gephi.graph.api.types.TimestampLongMap;
+import org.gephi.graph.api.types.TimestampMap;
 import org.gephi.graph.api.types.TimestampSet;
 import org.gephi.graph.api.types.TimestampStringMap;
 import org.gephi.io.importer.api.ContainerLoader;
@@ -287,13 +288,13 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
             }
 
             //Obtain best match for each column:
+            TimeRepresentation foundTimeRepresentation = TimeRepresentation.INTERVAL;
             for (String column : headerMap.keySet()) {
                 LinkedHashSet<Class> columnMatches = classMatchByHeader.get(column);
 
                 Class detectedClass = String.class;//Default
                 if (!columnMatches.isEmpty() && columnMatches.size() != classesToTry.size()) {
                     detectedClass = columnMatches.iterator().next();
-
                 }
 
                 //Change some typical column types to expected types when possible:
@@ -312,7 +313,13 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                 }
 
                 setColumnClass(column, detectedClass);
+
+                if (TimestampSet.class.isAssignableFrom(detectedClass) || TimestampMap.class.isAssignableFrom(detectedClass)) {
+                    foundTimeRepresentation = TimeRepresentation.TIMESTAMP;
+                }
             }
+
+            setTimeRepresentation(foundTimeRepresentation);
         } catch (IOException ex) {
             //NOOP
         }

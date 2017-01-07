@@ -41,6 +41,8 @@ Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +51,11 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.miginfocom.swing.MigLayout;
+import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
 import org.gephi.ui.utils.SupportedColumnTypeWrapper;
+import org.gephi.ui.utils.TimeRepresentationWrapper;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
@@ -61,6 +65,8 @@ public final class WizardVisualPanel2 extends JPanel {
     private static final String ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES = "WizardVisualPanel2_assign_new_nodes_ids";
     private static final String CREATE_NEW_NODES_SAVED_PREFERENCES = "WizardVisualPanel2_create_new_nodes";
     private final WizardPanel2 wizard2;
+
+    private JComboBox timeRepresentationComboBox = new JComboBox();
     private final ArrayList<JCheckBox> columnsCheckBoxes = new ArrayList<>();
     private final ArrayList<JComboBox> columnsComboBoxes = new ArrayList<>();
     //Nodes table settings:
@@ -73,12 +79,25 @@ public final class WizardVisualPanel2 extends JPanel {
     /**
      * Creates new form WizardVisualPanel2
      */
-    public WizardVisualPanel2(AbstractImporterSpreadsheet importer, WizardPanel2 wizard2) {
+    public WizardVisualPanel2(final AbstractImporterSpreadsheet importer, final WizardPanel2 wizard2) {
         initComponents();
         this.importer = importer;
         this.wizard2 = wizard2;
 
-        //TODO: add time representation chooser
+        timeRepresentationComboBox = new JComboBox();
+        for (TimeRepresentation value : TimeRepresentation.values()) {
+            timeRepresentationComboBox.addItem(new TimeRepresentationWrapper(value));
+        }
+        
+        timeRepresentationComboBox.setSelectedItem(new TimeRepresentationWrapper(importer.getTimeRepresentation()));
+
+        timeRepresentationComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                importer.setTimeRepresentation(getSelectedTimeRepresentation());
+                reloadSettings();
+            }
+        });
     }
 
     public void unSetup() {
@@ -93,7 +112,7 @@ public final class WizardVisualPanel2 extends JPanel {
     public void reloadSettings() {
         JPanel settingsPanel = new JPanel();
         settingsPanel.setLayout(new MigLayout());
-        loadDescription(settingsPanel);
+        createTimeRepresentationComboBox(settingsPanel);
         switch (importer.getTable()) {
             case NODES:
                 loadColumns(settingsPanel);
@@ -109,17 +128,11 @@ public final class WizardVisualPanel2 extends JPanel {
         wizard2.fireChangeEvent();//Enable/disable finish button
     }
 
-    private void loadDescription(JPanel settingsPanel) {
-        JLabel descriptionLabel = new JLabel();
-        switch (importer.getTable()) {
-            case NODES:
-                descriptionLabel.setText(getMessage("WizardVisualPanel2.nodes.description"));
-                break;
-            case EDGES:
-                descriptionLabel.setText(getMessage("WizardVisualPanel2.edges.description"));
-                break;
-        }
-        settingsPanel.add(descriptionLabel, "wrap 15px");
+    private void createTimeRepresentationComboBox(JPanel settingsPanel) {
+        JLabel timeRepresentationLabel = new JLabel(getMessage("WizardVisualPanel2.timeRepresentationLabel.text"));
+
+        settingsPanel.add(timeRepresentationLabel, "wrap");
+        settingsPanel.add(timeRepresentationComboBox, "wrap 15px");
     }
 
     private void loadColumns(JPanel settingsPanel) {
@@ -188,8 +201,8 @@ public final class WizardVisualPanel2 extends JPanel {
         settingsPanel.add(createMissingNodes, "wrap");
     }
 
-    public boolean isValidCSV() {
-        return true;
+    public TimeRepresentation getSelectedTimeRepresentation() {
+        return ((TimeRepresentationWrapper) timeRepresentationComboBox.getSelectedItem()).getTimeRepresentation();
     }
 
     public String[] getColumnsToImport() {

@@ -202,7 +202,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                     try {
                         value = AttributeUtils.parse((String) value, type);
                     } catch (Exception e) {
-                        logError(String.format("Error when parsing value '%s' as a '%s'", value, type));
+                        logError(String.format("Error when parsing value '%s' as a '%s'", value, type.getSimpleName()));
                         value = null;
                     }
 

@@ -89,7 +89,7 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
 
     @Override
     public boolean isValid() {
-        return component.isValidCSV();
+        return true;
     }
     
     private final Set<ChangeListener> listeners = new HashSet<>(1); // or can use ChangeSupport in NB 6.0
@@ -144,6 +144,7 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
             importer.setEdgesConfiguration(new SpreadsheetEdgesConfiguration(component.getCreateMissingNodes()));
         }
         importer.setColumnsClasses(columnsClasses);
+        importer.setTimeRepresentation(component.getSelectedTimeRepresentation());
         
         component.unSetup();
     }

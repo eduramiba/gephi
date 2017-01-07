@@ -41,7 +41,10 @@
  */
 package org.gephi.ui.utils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +105,20 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
         return true;
     }
 
+    private static final List<Class> SIMPLE_TYPES_ORDER = Arrays.asList(new Class[]{
+        String.class,
+        Integer.class,
+        Long.class,
+        Float.class,
+        Double.class,
+        Boolean.class,
+        BigInteger.class,
+        BigDecimal.class,
+        Byte.class,
+        Short.class,
+        Character.class
+    });
+
     /**
      * Order for column types by name. Simple types appear first, then dynamic types and then array/list types.
      *
@@ -130,7 +147,14 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
                     return -1;
                 }
             } else {
-                return type.getSimpleName().compareTo(other.type.getSimpleName());
+                int i1 = SIMPLE_TYPES_ORDER.indexOf(type);
+                int i2 = SIMPLE_TYPES_ORDER.indexOf(other.type);
+
+                if (i1 != -1 && i2 != -1) {
+                    return i1 - i2;
+                } else {
+                    return type.getSimpleName().compareTo(other.type.getSimpleName());
+                }
             }
         }
     }
@@ -145,7 +169,7 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
         TimeRepresentation timeRepresentation = graphModel.getConfiguration().getTimeRepresentation();
         return buildOrderedSupportedTypesList(timeRepresentation);
     }
-    
+
     /**
      * Build a list of column type wrappers from GraphStore supported types.
      *
@@ -156,11 +180,11 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
         List<SupportedColumnTypeWrapper> supportedTypesWrappers = new ArrayList<>();
 
         for (Class<?> type : AttributeUtils.getSupportedTypes()) {
-            if(type.equals(Map.class) || type.equals(List.class) || type.equals(Set.class)){
+            if (type.equals(Map.class) || type.equals(List.class) || type.equals(Set.class)) {
                 continue;
                 //Not yet supported in Gephi
             }
-            
+
             if (AttributeUtils.isStandardizedType(type) && isTypeAvailable(type, timeRepresentation)) {
                 supportedTypesWrappers.add(new SupportedColumnTypeWrapper(type));
             }
@@ -170,10 +194,10 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
 
         return supportedTypesWrappers;
     }
-    
-    private static boolean isTypeAvailable(Class<?> type, TimeRepresentation timeRepresentation){
-        if(AttributeUtils.isDynamicType(type)){
-            switch(timeRepresentation){
+
+    private static boolean isTypeAvailable(Class<?> type, TimeRepresentation timeRepresentation) {
+        if (AttributeUtils.isDynamicType(type)) {
+            switch (timeRepresentation) {
                 case INTERVAL:
                     return isIntervalType(type);
                 case TIMESTAMP:
@@ -181,17 +205,17 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
                 default:
                     throw new IllegalArgumentException("Unknown timeRepresentation");
             }
-        }else{
+        } else {
             return true;
         }
     }
-    
-    private static boolean isTimestampType(Class<?> type){
+
+    private static boolean isTimestampType(Class<?> type) {
         return TimestampSet.class.isAssignableFrom(type)
                 || TimestampMap.class.isAssignableFrom(type);
     }
-    
-    private static boolean isIntervalType(Class<?> type){
+
+    private static boolean isIntervalType(Class<?> type) {
         return IntervalSet.class.isAssignableFrom(type)
                 || IntervalMap.class.isAssignableFrom(type);
     }
