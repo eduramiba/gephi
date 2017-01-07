@@ -57,9 +57,10 @@ import org.gephi.utils.progress.ProgressTicket;
  */
 public class ImportNodesProcess extends AbstractImportProcess {
 
+    public static final String NODE_ID = "id";
+    public static final String NODE_LABEL = "label";
+    
     private final SpreadsheetNodesConfiguration config;
-    private static final String NODE_ID = "id";
-    private static final String NODE_LABEL = "label";
     
     public ImportNodesProcess(SpreadsheetGeneralConfiguration generalConfig, SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
         super(generalConfig, container, progressTicket, parser);
@@ -120,7 +121,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
                     try {
                         value = AttributeUtils.parse((String) value, type);
                     } catch (Exception e) {
-                        logError(String.format("Error when parsing value '%s' as a '%s'", value, type.getSimpleName()));
+                        logError(String.format("Error when parsing value '%s' as a '%s' for column '%s'", value, type.getSimpleName(), column));
                         value = null;
                     }
 

@@ -60,14 +60,14 @@ import org.gephi.utils.progress.ProgressTicket;
  */
 public class ImportEdgesProcess extends AbstractImportProcess {
 
-    private static final String EDGE_SOURCE = "source";
-    private static final String EDGE_TARGET = "target";
-    private static final String EDGE_TYPE = "type";
-    private static final String EDGE_KIND = "kind";
+    public static final String EDGE_SOURCE = "source";
+    public static final String EDGE_TARGET = "target";
+    public static final String EDGE_TYPE = "type";
+    public static final String EDGE_KIND = "kind";
 
-    private static final String EDGE_ID = "id";
-    private static final String EDGE_LABEL = "label";
-    private static final String EDGE_WEIGHT = "weight";
+    public static final String EDGE_ID = "id";
+    public static final String EDGE_LABEL = "label";
+    public static final String EDGE_WEIGHT = "weight";
 
     private final SpreadsheetEdgesConfiguration config;
 
@@ -202,7 +202,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                     try {
                         value = AttributeUtils.parse((String) value, type);
                     } catch (Exception e) {
-                        logError(String.format("Error when parsing value '%s' as a '%s'", value, type.getSimpleName()));
+                        logError(String.format("Error when parsing value '%s' as a '%s' for column '%s'", value, type.getSimpleName(), column));
                         value = null;
                     }
 

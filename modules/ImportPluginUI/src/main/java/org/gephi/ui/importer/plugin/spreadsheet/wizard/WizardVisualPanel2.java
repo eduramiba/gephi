@@ -50,6 +50,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import net.miginfocom.swing.MigLayout;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
@@ -88,7 +89,7 @@ public final class WizardVisualPanel2 extends JPanel {
         for (TimeRepresentation value : TimeRepresentation.values()) {
             timeRepresentationComboBox.addItem(new TimeRepresentationWrapper(value));
         }
-        
+
         timeRepresentationComboBox.setSelectedItem(new TimeRepresentationWrapper(importer.getTimeRepresentation()));
 
         timeRepresentationComboBox.addActionListener(new ActionListener() {
@@ -111,15 +112,20 @@ public final class WizardVisualPanel2 extends JPanel {
 
     public void reloadSettings() {
         JPanel settingsPanel = new JPanel();
-        settingsPanel.setLayout(new MigLayout());
+        settingsPanel.setLayout(new MigLayout("fillx"));
         createTimeRepresentationComboBox(settingsPanel);
+        
+        settingsPanel.add(new JSeparator(), "growx, wrap");
+        
         switch (importer.getTable()) {
             case NODES:
                 loadColumns(settingsPanel);
+                settingsPanel.add(new JSeparator(), "growx, wrap");
                 loadNodesTableSettings(settingsPanel);
                 break;
             case EDGES:
                 loadColumns(settingsPanel);
+                settingsPanel.add(new JSeparator(), "growx, wrap");
                 loadEdgesTableSettings(settingsPanel);
                 break;
         }
@@ -144,21 +150,31 @@ public final class WizardVisualPanel2 extends JPanel {
 
             final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
 
-            boolean isEdgesTable = importer.getTable() == Table.EDGES;
+            final Table table = importer.getTable();
 
             for (String header : headers) {
                 if (header.isEmpty()) {
                     continue;//Remove empty column headers:
                 }
 
-                //TODO: mandatory special columns always selected, without type (source, target, type, kind, weight...)
                 JCheckBox columnCheckBox = new JCheckBox(header, true);
+
                 columnsCheckBoxes.add(columnCheckBox);
-                settingsPanel.add(columnCheckBox, "wrap");
                 JComboBox columnComboBox = new JComboBox();
-                columnsComboBoxes.add(columnComboBox);
-                fillComboBoxWithColumnTypes(header, columnComboBox);
-                settingsPanel.add(columnComboBox, "wrap 15px");
+
+                if (table.isSpecialColumn(header)) {
+                    settingsPanel.add(columnCheckBox, "wrap 15px");
+
+                    //Special columns such as id, label, source and target... don't need a type selector
+                    //The type is not used by the importer anyway
+                    columnsComboBoxes.add(null);
+                } else {
+                    settingsPanel.add(columnCheckBox, "wrap");
+
+                    columnsComboBoxes.add(columnComboBox);
+                    fillComboBoxWithColumnTypes(header, columnComboBox);
+                    settingsPanel.add(columnComboBox, "wrap 15px");
+                }
             }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -190,6 +206,7 @@ public final class WizardVisualPanel2 extends JPanel {
         assignNewNodeIds = new JCheckBox(getMessage("WizardVisualPanel2.nodes.assign-ids-checkbox"),
                 NbPreferences.forModule(WizardVisualPanel1CSV.class)
                         .getBoolean(ASSIGN_NEW_NODES_IDS_SAVED_PREFERENCES, false));//False => by default update nodes instead of creating new ones
+        
         settingsPanel.add(assignNewNodeIds, "wrap");
     }
 
@@ -198,6 +215,7 @@ public final class WizardVisualPanel2 extends JPanel {
         createMissingNodes = new JCheckBox(getMessage("WizardVisualPanel2.edges.create-new-nodes-checkbox"),
                 NbPreferences.forModule(WizardVisualPanel1CSV.class)
                         .getBoolean(CREATE_NEW_NODES_SAVED_PREFERENCES, true));//True => by default create missing nodes
+        
         settingsPanel.add(createMissingNodes, "wrap");
     }
 
@@ -219,8 +237,16 @@ public final class WizardVisualPanel2 extends JPanel {
         ArrayList<Class> types = new ArrayList<>();
         for (int i = 0; i < columnsCheckBoxes.size(); i++) {
             if (columnsCheckBoxes.get(i).isSelected()) {
-                SupportedColumnTypeWrapper selected = (SupportedColumnTypeWrapper) columnsComboBoxes.get(i).getSelectedItem();
-                types.add(selected.getType());
+
+                JComboBox columnComboBox = columnsComboBoxes.get(i);
+                Class type;
+
+                if (columnComboBox != null) {
+                    type = ((SupportedColumnTypeWrapper) columnComboBox.getSelectedItem()).getType();
+                } else {
+                    type = String.class;
+                }
+                types.add(type);
             }
         }
         return types.toArray(new Class[0]);
