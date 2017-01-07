@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Eduardo Ramos <eduramiba@gmail.com>
+Copyright 2008-2017 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,64 +37,48 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2017 Gephi Consortium.
  */
-package org.gephi.datalab.plugin.manipulators.general;
+package org.gephi.desktop.datalab.utils;
 
-import javax.swing.Icon;
-import org.gephi.datalab.api.datatables.DataTablesController;
-import org.gephi.datalab.spi.ManipulatorUI;
-import org.gephi.datalab.spi.general.GeneralActionsManipulator;
-import org.openide.util.ImageUtilities;
-import org.openide.util.Lookup;
-import org.openide.util.NbBundle;
-import org.openide.util.lookup.ServiceProvider;
+import org.gephi.io.exporter.api.FileType;
+import org.gephi.io.exporter.plugin.ExporterSpreadsheet;
+import org.gephi.io.exporter.spi.GraphExporter;
+import org.gephi.io.exporter.spi.GraphFileExporterBuilder;
 
 /**
- * GeneralActionsManipulator that exports a table to a spreadsheet file.
+ * A simple decorator to make sure the current table is initially auto-selected when exporting from Data Laboratory window.
+ *
  * @author Eduardo Ramos
  */
-@ServiceProvider(service=GeneralActionsManipulator.class)
-public class ExportTable implements GeneralActionsManipulator {
+public class GraphFileExporterBuilderDecorator implements GraphFileExporterBuilder {
+
+    private final GraphFileExporterBuilder instance;
+    private final ExporterSpreadsheet.ExportTable initialSelectedTable;
+
+    public GraphFileExporterBuilderDecorator(GraphFileExporterBuilder instance, ExporterSpreadsheet.ExportTable initialSelectedTable) {
+        this.instance = instance;
+        this.initialSelectedTable = initialSelectedTable;
+    }
 
     @Override
-    public void execute() {
-        DataTablesController dtc=Lookup.getDefault().lookup(DataTablesController.class);
-        dtc.exportCurrentTable();
+    public GraphExporter buildExporter() {
+        GraphExporter exporter = instance.buildExporter();
+
+        if (exporter instanceof ExporterSpreadsheet) {
+            ((ExporterSpreadsheet) exporter).setTableToExport(initialSelectedTable);
+        }
+
+        return exporter;
+    }
+
+    @Override
+    public FileType[] getFileTypes() {
+        return instance.getFileTypes();
     }
 
     @Override
     public String getName() {
-        return NbBundle.getMessage(ExportTable.class, "ExportTable.name");
-    }
-
-    @Override
-    public String getDescription() {
-        return "";
-    }
-
-    @Override
-    public boolean canExecute() {
-        return true;
-    }
-
-    @Override
-    public ManipulatorUI getUI() {
-        return null;
-    }
-
-    @Override
-    public int getType() {
-        return 100;
-    }
-
-    @Override
-    public int getPosition() {
-        return 200;
-    }
-
-    @Override
-    public Icon getIcon() {
-        return ImageUtilities.loadImageIcon("org/gephi/datalab/plugin/manipulators/resources/table-excel.png", true);
+        return instance.getName();
     }
 }

@@ -1,13 +1,13 @@
 /*
-Copyright 2008-2010 Gephi
-Authors : Eduardo Ramos <eduramiba@gmail.com>
+Copyright 2008-2017 Gephi
+Authors : Eduardo Ramos <eduardo.ramos@gephi.org>
 Website : http://www.gephi.org
 
 This file is part of Gephi.
 
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright 2011 Gephi Consortium. All rights reserved.
+Copyright 2016 Gephi Consortium. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 3 only ("GPL") or the Common
@@ -37,64 +37,36 @@ made subject to such option by the copyright holder.
 
 Contributor(s):
 
-Portions Copyrighted 2011 Gephi Consortium.
+Portions Copyrighted 2017 Gephi Consortium.
  */
-package org.gephi.datalab.plugin.manipulators.general;
+package org.gephi.io.exporter.plugin;
 
-import javax.swing.Icon;
-import org.gephi.datalab.api.datatables.DataTablesController;
-import org.gephi.datalab.spi.ManipulatorUI;
-import org.gephi.datalab.spi.general.GeneralActionsManipulator;
-import org.openide.util.ImageUtilities;
-import org.openide.util.Lookup;
+import org.gephi.io.exporter.api.FileType;
+import org.gephi.io.exporter.spi.GraphExporter;
+import org.gephi.io.exporter.spi.GraphFileExporterBuilder;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * GeneralActionsManipulator that exports a table to a spreadsheet file.
+ *
  * @author Eduardo Ramos
  */
-@ServiceProvider(service=GeneralActionsManipulator.class)
-public class ExportTable implements GeneralActionsManipulator {
+@ServiceProvider(service = GraphFileExporterBuilder.class)
+public class ExporterBuilderSpreadsheet implements GraphFileExporterBuilder {
 
     @Override
-    public void execute() {
-        DataTablesController dtc=Lookup.getDefault().lookup(DataTablesController.class);
-        dtc.exportCurrentTable();
+    public GraphExporter buildExporter() {
+        return new ExporterSpreadsheet();
+    }
+
+    @Override
+    public FileType[] getFileTypes() {
+        FileType ft = new FileType(new String[]{".csv", ".tsv"}, NbBundle.getMessage(ExporterBuilderSpreadsheet.class, "fileType_Spreadsheet_Name"));
+        return new FileType[]{ft};
     }
 
     @Override
     public String getName() {
-        return NbBundle.getMessage(ExportTable.class, "ExportTable.name");
-    }
-
-    @Override
-    public String getDescription() {
-        return "";
-    }
-
-    @Override
-    public boolean canExecute() {
-        return true;
-    }
-
-    @Override
-    public ManipulatorUI getUI() {
-        return null;
-    }
-
-    @Override
-    public int getType() {
-        return 100;
-    }
-
-    @Override
-    public int getPosition() {
-        return 200;
-    }
-
-    @Override
-    public Icon getIcon() {
-        return ImageUtilities.loadImageIcon("org/gephi/datalab/plugin/manipulators/resources/table-excel.png", true);
+        return "Spreadsheet";
     }
 }
