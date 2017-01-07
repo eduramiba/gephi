@@ -53,6 +53,7 @@ import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.openide.util.NbBundle;
 
 /**
  *
@@ -78,7 +79,7 @@ public class SpreadsheetUtils {
 
     public static void logIssue(Report report, Issue issue, SheetParser parser) {
         if (parser != null) {
-            String newMessage = "[Record #" + parser.getCurrentRecordNumber() + "] " + issue.getMessage();
+            String newMessage = "[" + NbBundle.getMessage(SpreadsheetUtils.class, "SpreadsheetUtils.recordNumber", parser.getCurrentRecordNumber()) + "] " + issue.getMessage();
             issue = new Issue(newMessage, issue.getLevel());
         }
 

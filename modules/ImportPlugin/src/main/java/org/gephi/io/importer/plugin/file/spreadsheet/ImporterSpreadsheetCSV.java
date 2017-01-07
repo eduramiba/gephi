@@ -41,7 +41,6 @@ Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;

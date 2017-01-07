@@ -44,12 +44,12 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
+import org.openide.util.NbBundle;
 
 /**
  *
@@ -59,9 +59,9 @@ public class ImportNodesProcess extends AbstractImportProcess {
 
     public static final String NODE_ID = "id";
     public static final String NODE_LABEL = "label";
-    
+
     private final SpreadsheetNodesConfiguration config;
-    
+
     public ImportNodesProcess(SpreadsheetGeneralConfiguration generalConfig, SpreadsheetNodesConfiguration config, SheetParser parser, ContainerLoader container, ProgressTicket progressTicket) throws IOException {
         super(generalConfig, container, progressTicket, parser);
         this.config = config;
@@ -70,7 +70,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
     @Override
     public boolean execute() {
         final boolean assignNewNodeIds = config.isAssignNewNodeIds();
-        
+
         setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(NODE_ID, NODE_LABEL), generalConfig.getColumnsClasses());
 
         Integer idColumnIndex = specialColumnsIndexMap.get(NODE_ID);
@@ -82,8 +82,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
                 break;
             }
 
-            if (!row.isConsistent()) {
-                logError("The record is inconsistent. Skipping record");
+            if (!checkRow(row)) {
                 continue;
             }
 
@@ -97,7 +96,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
             }
 
             if (id != null && container.nodeExists(id)) {
-                logError("Node with id '" + id + "' already exists. Skipping record");
+                logError(NbBundle.getMessage(ImportNodesProcess.class, "ImportNodesProcess.error.repeatedId", id));
                 continue;
             }
 
@@ -111,19 +110,14 @@ public class ImportNodesProcess extends AbstractImportProcess {
                 String column = columnEntry.getKey();
                 Integer index = columnEntry.getValue();
                 Class type = headersClassMap.get(column);
-                
+
                 if (type == null) {
                     continue;
                 }
 
                 Object value = row.get(index);
                 if (value != null) {
-                    try {
-                        value = AttributeUtils.parse((String) value, type);
-                    } catch (Exception e) {
-                        logError(String.format("Error when parsing value '%s' as a '%s' for column '%s'", value, type.getSimpleName(), column));
-                        value = null;
-                    }
+                    value = parseValue((String) value, type, column);
 
                     if (value != null) {
                         node.setValue(column, value);
@@ -135,7 +129,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
         }
 
         progressTicket.finish();
-        
+
         return !cancel;
     }
 

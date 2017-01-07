@@ -288,6 +288,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
         //Type
         int edgeType = getEdgeType(edgeDraftImpl.getType());
         long sourceTargetLong = getLongId(edgeDraftImpl);
+
         ensureLongSetArraySize(edgeType);
         Long2ObjectMap<int[]> edgeTypeSet = edgeTypeSets[edgeType];
 
@@ -303,7 +304,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
                 edgeTypeSet.put(sourceTargetLong, newEdges);
 
                 if (!reportedParallelEdges) {
-                    report.logIssue(new Issue(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Parallel_Edge", edgeDraftImpl.getId()), Level.INFO));
+                    report.logIssue(new Issue(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Parallel_Edge_Merged", edgeDraftImpl.getId()), Level.INFO));
                     reportedParallelEdges = true;
                 }
             }
@@ -520,7 +521,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
         }
         return column;
     }
-    
+
     @Override
     public ColumnDraft getNodeColumn(String key) {
         return nodeColumns.get(key.toLowerCase());
@@ -597,8 +598,10 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public void setElementIdType(ElementIdType type) {
-        this.elementIdType = type;
-        report.log(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerLog.ElementIdType", elementIdType.toString()));
+        if (this.elementIdType != type) {
+            this.elementIdType = type;
+            report.log(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerLog.ElementIdType", elementIdType.toString()));
+        }
     }
 
     @Override
@@ -909,14 +912,21 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     protected void mergeDirectedEdges(EdgeDraftImpl source, EdgeDraftImpl dest) {
         EdgeWeightMergeStrategy mergeStrategy = parameters.getEdgesMergeStrategy();
         double result = dest.getWeight();
-        if (mergeStrategy.equals(EdgeWeightMergeStrategy.AVG)) {
-            result = (source.getWeight() + dest.getWeight()) / 2.0;
-        } else if (mergeStrategy.equals(EdgeWeightMergeStrategy.MAX)) {
-            result = Math.max(source.getWeight(), dest.getWeight());
-        } else if (mergeStrategy.equals(EdgeWeightMergeStrategy.MIN)) {
-            result = Math.min(source.getWeight(), dest.getWeight());
-        } else if (mergeStrategy.equals(EdgeWeightMergeStrategy.SUM)) {
-            result = source.getWeight() + dest.getWeight();
+        switch (mergeStrategy) {
+            case AVG:
+                result = (source.getWeight() + dest.getWeight()) / 2.0;
+                break;
+            case MAX:
+                result = Math.max(source.getWeight(), dest.getWeight());
+                break;
+            case MIN:
+                result = Math.min(source.getWeight(), dest.getWeight());
+                break;
+            case SUM:
+                result = source.getWeight() + dest.getWeight();
+                break;
+            default:
+                break;
         }
         dest.setWeight(result);
     }
@@ -957,7 +967,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     public boolean allowSelfLoop() {
         return parameters.isSelfLoops();
     }
-    
+
     @Override
     public boolean isFillLabelWithId() {
         return parameters.isFillLabelWithId();
@@ -998,7 +1008,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     public void setAllowSelfLoop(boolean value) {
         parameters.setSelfLoops(value);
     }
-    
+
     @Override
     public void setFillLabelWithId(boolean value) {
         parameters.setFillLabelWithId(value);
@@ -1006,8 +1016,10 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public void setEdgeDefault(EdgeDirectionDefault edgeDefault) {
-        this.edgeDefault = edgeDefault;
-        report.log(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Set_EdgeDefault", edgeDefault.toString()));
+        if (this.edgeDefault != edgeDefault) {
+            this.edgeDefault = edgeDefault;
+            report.log(NbBundle.getMessage(ImportContainerImpl.class, "ImportContainerException_Set_EdgeDefault", edgeDefault.toString()));
+        }
     }
 
     @Override
@@ -1077,7 +1089,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     private long getLongId(EdgeDraftImpl edge) {
         EdgeDirection direction = edge.getDirection();
         boolean directed = edgeDefault.equals(EdgeDirectionDefault.DIRECTED)
-                || (edgeDefault.equals(EdgeDirectionDefault.MIXED) && ((direction != null && direction == EdgeDirection.DIRECTED) || direction == null));
+                || (edgeDefault.equals(EdgeDirectionDefault.MIXED) && direction != EdgeDirection.UNDIRECTED);
         return getLongId(edge.getSource(), edge.getTarget(), directed);
     }
 

@@ -151,30 +151,52 @@ public abstract class AbstractProcessor {
         flushToElementAttributes(nodeDraft, node);
     }
 
-    protected void flushEdgeWeight(EdgeDraft edgeDraft, Edge edge) {
-        Object val = edgeDraft.getValue("weight");
-        if (val != null && val instanceof TimeMap) {
-            TimeMap valMap = (TimeMap) val;
+    protected void flushEdgeWeight(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
+        if (graphModel.getEdgeTable().getColumn("weight").isDynamic()) {
+            Object val = edgeDraft.getValue("weight");
+            if (val != null && val instanceof TimeMap) {
+                TimeMap valMap = (TimeMap) val;
 
-            TimeMap existingMap = (TimeMap) edge.getAttribute("weight");
-            if (existingMap != null) {
-                Object[] keys = ((TimeMap) val).toKeysArray();
-                Object[] vals = ((TimeMap) val).toValuesArray();
+                TimeMap existingMap = (TimeMap) edge.getAttribute("weight");
+                if (existingMap != null) {
+                    Object[] keys = ((TimeMap) val).toKeysArray();
+                    Object[] vals = ((TimeMap) val).toValuesArray();
 
-                for (int i = 0; i < keys.length; i++) {
-                    valMap.put(keys[i], ((Number) vals[i]).doubleValue());
+                    for (int i = 0; i < keys.length; i++) {
+                        valMap.put(keys[i], ((Number) vals[i]).doubleValue());
+                    }
                 }
+
+                edge.setAttribute("weight", val);
+            }
+        } else if (!newEdge) {
+            //Merge the existing edge and the draft edge weights:
+            double result = edge.getWeight();
+
+            switch (containers[0].getEdgesMergeStrategy()) {
+                case AVG:
+                    result = (edgeDraft.getWeight() + edge.getWeight()) / 2.0;
+                    break;
+                case MAX:
+                    result = Math.max(edgeDraft.getWeight(), edge.getWeight());
+                    break;
+                case MIN:
+                    result = Math.min(edgeDraft.getWeight(), edge.getWeight());
+                    break;
+                case SUM:
+                    result = edgeDraft.getWeight() + edge.getWeight();
+                    break;
+                default:
+                    break;
             }
 
-            edge.setAttribute("weight", val);
+            edge.setWeight(result);
         }
+
     }
 
     protected void flushToElementAttributes(ElementDraft elementDraft, Element element) {
         for (ColumnDraft columnDraft : elementDraft.getColumns()) {
-            if (elementDraft instanceof EdgeDraft && columnDraft.getId().equals("weight")) {
-                continue;//Special weight column
-            }
             Object val = elementDraft.getValue(columnDraft.getId());
 
             Column column = element.getTable().getColumn(columnDraft.getId());
@@ -214,7 +236,7 @@ public abstract class AbstractProcessor {
                         }
                     } else if (TimeSet.class.isAssignableFrom(columnDraft.getTypeClass())) {
                         TimeSet existingTimeSet = (TimeSet) existingValue;
-                        
+
                         processedNewValue = mergeTimeSets(existingTimeSet, (TimeSet) val);
                     }
                 }
@@ -224,7 +246,7 @@ public abstract class AbstractProcessor {
         }
     }
 
-    protected void flushToEdge(EdgeDraft edgeDraft, Edge edge) {
+    protected void flushToEdge(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
         if (edgeDraft.getColor() != null) {
             edge.setColor(edgeDraft.getColor());
         } else {
@@ -266,7 +288,7 @@ public abstract class AbstractProcessor {
         }
 
         //Dynamic edge weight (if any)
-        flushEdgeWeight(edgeDraft, edge);
+        flushEdgeWeight(edgeDraft, edge, newEdge);
 
         //Attributes
         flushToElementAttributes(edgeDraft, edge);

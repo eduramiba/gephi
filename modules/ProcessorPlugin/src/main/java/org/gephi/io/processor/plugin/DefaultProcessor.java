@@ -67,8 +67,7 @@ import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Processor 'Add full graph' that unloads the complete container into the
- * workspace.
+ * Processor 'Add full graph' that unloads the complete container into the workspace.
  *
  * @author Mathieu Bastian
  */
@@ -186,25 +185,45 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
             Object type = draftEdge.getType();
             int edgeType = graphModel.addEdgeType(type);
 
+            boolean createDirected = true;
+            switch (container.getEdgeDefault()) {
+                case DIRECTED:
+                    createDirected = true;
+                    break;
+                case UNDIRECTED:
+                    createDirected = false;
+                    break;
+                case MIXED:
+                    createDirected = draftEdge.getDirection() != EdgeDirection.UNDIRECTED;
+                    draftEdge.setDirection(createDirected ? EdgeDirection.DIRECTED : EdgeDirection.UNDIRECTED);
+                    break;
+            }
+
             Edge edge = graph.getEdge(source, target, edgeType);
+
+            //Undirected and directed edges are incompatible, check for them or we could get an exception:
+            if (edge == null) {
+                if (createDirected) {
+                    //The edge may exist with opposite source-target but undirected. In that case we can't create a directed one:
+                    edge = graph.getEdge(target, source, edgeType);
+
+                    if (edge != null && edge.isDirected()) {
+                        edge = null;//Actually it's directed so we can create the opposite directed edge
+                    }
+                } else {
+                    edge = graph.getEdge(target, source, edgeType);
+                }
+            }
+
             boolean newEdge = false;
             if (edge == null) {
-                switch (container.getEdgeDefault()) {
-                    case DIRECTED:
-                        edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), true);
-                        break;
-                    case UNDIRECTED:
-                        edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), false);
-                        break;
-                    case MIXED:
-                        boolean directed = draftEdge.getDirection() == null || !draftEdge.getDirection().equals(EdgeDirection.UNDIRECTED);
-                        edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), directed);
-                        break;
-                }
+                edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), createDirected);
+
                 addedEdges++;
                 newEdge = true;
             }
-            flushToEdge(draftEdge, edge);
+
+            flushToEdge(draftEdge, edge, newEdge);
 
             if (newEdge) {
                 graph.addEdge(edge);

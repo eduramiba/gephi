@@ -46,11 +46,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.SpreadsheetUtils;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
+import org.openide.util.NbBundle;
 
 /**
  *
@@ -98,7 +101,7 @@ public abstract class AbstractImportProcess implements Closeable {
             for (String specialColumnName : specialColumnNames) {
                 if (headerName.equalsIgnoreCase(specialColumnName)) {
                     if (specialColumnsIndexMap.containsKey(specialColumnName)) {
-                        logWarning("Repeated special column " + specialColumnName + ". Using only first occurrence");
+                        logWarning(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.repeatedSpecialColumn", specialColumnName));
                     } else {
                         specialColumnsIndexMap.put(specialColumnName, currentIndex);
                     }
@@ -117,6 +120,24 @@ public abstract class AbstractImportProcess implements Closeable {
             headersIndexMap.put(headerName, currentIndex);
             addColumn(headerName, type);
         }
+    }
+
+    protected Object parseValue(String value, Class type, String column) {
+        try {
+            return AttributeUtils.parse(value, type);
+        } catch (Exception e) {
+            logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.parseError", value, type.getSimpleName(), column));
+            return null;
+        }
+    }
+
+    protected boolean checkRow(SheetRow row) {
+        boolean consistent = row.isConsistent();
+        if (!consistent) {
+            logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.inconsistentRow"));
+        }
+
+        return consistent;
     }
 
     public boolean cancel() {

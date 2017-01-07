@@ -44,7 +44,6 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
@@ -53,6 +52,7 @@ import org.gephi.io.importer.api.EdgeWeightMergeStrategy;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
+import org.openide.util.NbBundle;
 
 /**
  *
@@ -107,8 +107,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                 break;
             }
 
-            if (!row.isConsistent()) {
-                logError("The record is inconsistent. Skipping record");
+            if (!checkRow(row)) {
                 continue;
             }
 
@@ -144,17 +143,17 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
             if (weightColumnIndex != null) {
                 String weightStr = row.get(weightColumnIndex);
-                if(weightStr != null){
+                if (weightStr != null) {
                     try {
                         weight = Double.parseDouble(weightStr);
                     } catch (Exception ex) {
-                        logError(String.format("Error parsing weight '%s' as double", weightStr));
+                        logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.invalidEdgeWeight", weightStr));
                     }
                 }
             }
 
             if (id != null && container.edgeExists(id)) {
-                logError("Edge with id '" + id + "' already exists. Skipping record");
+                logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.repeatedId", id));
                 continue;
             }
 
@@ -165,17 +164,17 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
 
             if (source == null || target == null) {
-                logError("Ignoring edge due to empty source and/or target node ids");
+                logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.noSourceOrTargetData"));
                 continue;
             }
 
             if (!container.nodeExists(source) && !createMissingNodes) {
-                logWarning(String.format("Missing source node '%s' and create missing nodes is disabled. Skipping record", source));
+                logWarning(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.warning.missingSourceNode", source));
                 continue;
             }
 
             if (!container.nodeExists(target) && !createMissingNodes) {
-                logWarning(String.format("Missing target node '%s' and create missing nodes is disabled. Skipping record", target));
+                logWarning(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.warning.missingTargetNode", target));
                 continue;
             }
 
@@ -199,12 +198,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
                 Object value = row.get(index);
                 if (value != null) {
-                    try {
-                        value = AttributeUtils.parse((String) value, type);
-                    } catch (Exception e) {
-                        logError(String.format("Error when parsing value '%s' as a '%s' for column '%s'", value, type.getSimpleName(), column));
-                        value = null;
-                    }
+                    value = parseValue((String) value, type, column);
 
                     if (value != null) {
                         edge.setValue(column, value);
