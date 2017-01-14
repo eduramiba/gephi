@@ -49,6 +49,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.ImportUtils;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.EmptySheet;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheets.csv.CSVSheetParser;
 import org.gephi.utils.CharsetToolkit;
@@ -65,8 +67,17 @@ public class ImporterSpreadsheetCSV extends AbstractImporterSpreadsheet {
 
     @Override
     public SheetParser createParser() throws IOException {
-        CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter, charset);
-        return new CSVSheetParser(csvParser);
+        try {
+            CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter, charset);
+            return new CSVSheetParser(csvParser);
+        } catch (Exception ex) {
+            if (report != null) {
+                SpreadsheetUtils.logError(report, ex.getMessage(), null);
+                return EmptySheet.INSTANCE;
+            } else {
+                return new ErrorSheet(ex.getMessage());
+            }
+        }
     }
 
     @Override

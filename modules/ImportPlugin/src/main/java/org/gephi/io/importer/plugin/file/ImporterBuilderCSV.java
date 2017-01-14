@@ -82,31 +82,7 @@ public final class ImporterBuilderCSV implements FileImporterBuilder {
 
     @Override
     public boolean isMatchingImporter(FileObject fileObject) {
-        if (fileObject.getExt().equalsIgnoreCase("edges")) {
-            return true;
-        }
-
-        if (fileObject.getExt().equalsIgnoreCase("csv")) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(FileUtil.toFile(fileObject)));
-
-                String firstLine = null;
-                do {
-                    firstLine = reader.readLine().trim();
-                } while (firstLine != null && firstLine.isEmpty());
-
-                if (firstLine != null && !firstLine.isEmpty()) {
-                    Pattern moreThanOneCharInExpression = Pattern.compile("[a-zA-Z0-9_]{2,}");
-                    Matcher matcher = moreThanOneCharInExpression.matcher(firstLine);
-                    if (!matcher.find()) {
-                        return true;
-                    } //else it looks more like a spreadsheet...
-                }
-            } catch (IOException ex) {
-                return false;
-            }
-        }
-
-        return false;
+        return fileObject.getExt().equalsIgnoreCase("edges");
+        //FIXME: do something with CSV...
     }
 }

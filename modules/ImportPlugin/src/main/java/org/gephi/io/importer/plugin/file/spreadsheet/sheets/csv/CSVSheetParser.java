@@ -61,10 +61,14 @@ public class CSVSheetParser implements SheetParser {
     public CSVSheetParser(CSVParser parser) {
         this.parser = parser;
     }
-    
+
     @Override
     public Map<String, Integer> getHeaderMap() {
-        return parser.getHeaderMap();
+        Map<String, Integer> map = parser.getHeaderMap();
+        if (map.containsKey(null)) {//Ignore columns without header
+            map.remove(null);
+        }
+        return map;
     }
 
     @Override
@@ -81,7 +85,7 @@ public class CSVSheetParser implements SheetParser {
     public void close() throws IOException {
         parser.close();
     }
-    
+
     private class CSVIterator implements Iterator<SheetRow> {
 
         private final Iterator<CSVRecord> iterator;

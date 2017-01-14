@@ -52,6 +52,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.Report;
+import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.openide.util.NbBundle;
 
@@ -117,7 +118,9 @@ public class SpreadsheetUtils {
                 .withCommentMarker('#')
                 .withNullString("")
                 .withIgnoreSurroundingSpaces(true)
-                .withTrim(true);
+                .withTrim(true)
+                .withIgnoreHeaderCase(false)
+                .withAllowMissingColumnNames(true);
 
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader is = new InputStreamReader(fileInputStream, charset);

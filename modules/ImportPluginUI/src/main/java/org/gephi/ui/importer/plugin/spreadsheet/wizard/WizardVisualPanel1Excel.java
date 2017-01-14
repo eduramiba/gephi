@@ -41,16 +41,9 @@ Portions Copyrighted 2016 Gephi Consortium.
  */
 package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.TableModel;
+import javax.swing.JTable;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetExcel;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.netbeans.validation.api.Problems;
 import org.netbeans.validation.api.Severity;
 import org.netbeans.validation.api.Validator;
@@ -62,17 +55,11 @@ import org.openide.util.NbBundle;
  *
  * @author Eduardo Ramos
  */
-public class WizardVisualPanel1Excel extends javax.swing.JPanel {
-
-    private static final int MAX_ROWS_PREVIEW = 25;
+public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
 
     private final ImporterSpreadsheetExcel importer;
 
     private final WizardPanel1Excel wizard1;
-    private int columnCount = 0;
-    private boolean hasSourceNodeColumn = false;
-    private boolean hasTargetNodeColumn = false;
-    private boolean hasRowsMissingSourcesOrTargets = false;
     private ValidationPanel validationPanel;
 
     private boolean initialized = false;
@@ -81,6 +68,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
      * Creates new form WizardVisualPanel1CSV
      */
     public WizardVisualPanel1Excel(ImporterSpreadsheetExcel importer, WizardPanel1Excel wizard1) {
+        super(importer);
         initComponents();
         this.wizard1 = wizard1;
         this.importer = importer;
@@ -137,118 +125,9 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
         return validationPanel;
     }
 
+    @Override
     public void refreshPreviewTable() {
-        try (SheetParser parser = importer.createParser()) {
-            Map<String, Integer> headerMap = parser.getHeaderMap();
-            String[] headers = headerMap.keySet().toArray(new String[0]);
-
-            columnCount = headers.length;
-
-            hasSourceNodeColumn = false;
-            hasTargetNodeColumn = false;
-            int sourceColumnIndex = 0;
-            int targetColumnIndex = 0;
-
-            for (String header : headers) {
-                if (header.equalsIgnoreCase("source")) {
-                    hasSourceNodeColumn = true;
-                    sourceColumnIndex = headerMap.get(header);
-                }
-                if (header.equalsIgnoreCase("target")) {
-                    hasTargetNodeColumn = true;
-                    targetColumnIndex = headerMap.get(header);
-                }
-            }
-
-            ArrayList<String[]> records = new ArrayList<>();
-            hasRowsMissingSourcesOrTargets = false;
-            Table table = getSelectedTable();
-            if (columnCount > 0) {
-                String[] currentRecord;
-
-                Iterator<SheetRow> iterator = parser.iterator();
-
-                int count = 0;
-                while (iterator.hasNext() && count < MAX_ROWS_PREVIEW) {
-                    count++;
-
-                    SheetRow row = iterator.next();
-
-                    int recordColumnCount = row.size();
-                    currentRecord = new String[recordColumnCount];
-                    for (int i = 0; i < currentRecord.length; i++) {
-                        currentRecord[i] = row.get(i);
-                    }
-
-                    // Search for missing source or target columns for edges table
-                    if (table == Table.EDGES) {
-                        if (recordColumnCount < sourceColumnIndex
-                                || currentRecord[sourceColumnIndex] == null
-                                || recordColumnCount < targetColumnIndex
-                                || currentRecord[targetColumnIndex] == null) {
-                            hasRowsMissingSourcesOrTargets = true;
-                        }
-                    }
-
-                    if (records.size() < MAX_ROWS_PREVIEW) {
-                        records.add(currentRecord);
-                    }
-                }
-            }
-
-            final String[] columnNames = headers;
-            final String[][] values = records.toArray(new String[0][]);
-            previewTable.setModel(new TableModel() {
-
-                @Override
-                public int getRowCount() {
-                    return values.length;
-                }
-
-                @Override
-                public int getColumnCount() {
-                    return columnNames.length;
-                }
-
-                @Override
-                public String getColumnName(int columnIndex) {
-                    return columnNames[columnIndex];
-                }
-
-                @Override
-                public Class<?> getColumnClass(int columnIndex) {
-                    return String.class;
-                }
-
-                @Override
-                public boolean isCellEditable(int rowIndex, int columnIndex) {
-                    return false;
-                }
-
-                @Override
-                public Object getValueAt(int rowIndex, int columnIndex) {
-                    if (values[rowIndex].length > columnIndex) {
-                        return values[rowIndex][columnIndex];
-                    } else {
-                        return null;
-                    }
-                }
-
-                @Override
-                public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-                }
-
-                @Override
-                public void addTableModelListener(TableModelListener l) {
-                }
-
-                @Override
-                public void removeTableModelListener(TableModelListener l) {
-                }
-            });
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        super.refreshPreviewTable();
         wizard1.fireChangeEvent();
         pathTextField.setText(pathTextField.getText());//To fire validation panel messages.
     }
@@ -258,6 +137,7 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
         return getMessage("WizardVisualPanel1Excel.name");
     }
 
+    @Override
     public Table getSelectedTable() {
         switch (tableComboBox.getSelectedIndex()) {
             case 1:
@@ -298,6 +178,11 @@ public class WizardVisualPanel1Excel extends javax.swing.JPanel {
 
     private String getMessage(String resName) {
         return NbBundle.getMessage(WizardVisualPanel1Excel.class, resName);
+    }
+    
+    @Override
+    protected JTable getPreviewTable() {
+        return previewTable;
     }
 
     /**

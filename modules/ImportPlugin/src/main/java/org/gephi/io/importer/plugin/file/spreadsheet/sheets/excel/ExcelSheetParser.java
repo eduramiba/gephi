@@ -80,7 +80,10 @@ public class ExcelSheetParser implements SheetParser {
             int zeroBasedIndex = 0;
             for (int i = rowsFirstIndex; i < rowsLastIndex; i++) {
                 Cell cell = firstRow.getCell(i);
-                headerMap.put(ExcelSheetRow.getRowCellAsString(cell, i).trim(), zeroBasedIndex);
+                String header = ExcelSheetRow.getRowCellAsString(cell, i);
+                if (header != null && !header.trim().isEmpty()) {
+                    headerMap.put(header.trim(), zeroBasedIndex);
+                }
                 zeroBasedIndex++;
             }
         }
