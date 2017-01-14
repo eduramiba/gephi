@@ -120,7 +120,7 @@ public class SpreadsheetUtils {
                 .withIgnoreSurroundingSpaces(true)
                 .withTrim(true)
                 .withIgnoreHeaderCase(false)
-                .withAllowMissingColumnNames(true);
+                .withAllowMissingColumnNames(false);
 
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader is = new InputStreamReader(fileInputStream, charset);
