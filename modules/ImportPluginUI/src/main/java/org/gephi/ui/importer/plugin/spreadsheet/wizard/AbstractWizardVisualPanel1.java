@@ -47,7 +47,6 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.swing.JTable;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;

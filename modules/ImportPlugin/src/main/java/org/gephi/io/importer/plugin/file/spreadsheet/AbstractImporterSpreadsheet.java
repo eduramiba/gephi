@@ -52,12 +52,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalDoubleMap;
@@ -73,7 +71,9 @@ import org.gephi.graph.api.types.TimestampSet;
 import org.gephi.graph.api.types.TimestampStringMap;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.Report;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportAdjacencyListProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportEdgesProcess;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportMatrixProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
@@ -120,22 +120,29 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         try (SheetParser parser = createParser()) {
             switch (getMode()) {
                 case NODES_TABLE:
-                    importNodes(parser);
+                    importer = new ImportNodesProcess(generalConfig, nodesConfiguration, parser, container, progressTicket);
                     break;
                 case EDGES_TABLE:
-                    importEdges(parser);
+                    importer = new ImportEdgesProcess(generalConfig, edgesConfiguration, parser, container, progressTicket);
                     break;
                 case ADJACENCY_LIST:
-                    importAdjacencyList(parser);
+                    importer = new ImportAdjacencyListProcess(generalConfig, container, progressTicket, parser);
                     break;
                 case MATRIX:
-                    importMatrix(parser);
+                    importer = new ImportMatrixProcess(generalConfig, container, progressTicket, parser);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown mode " + getMode());
             }
+            
+            importer.execute();
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
+        } finally {
+            if(importer != null){
+                report.append(importer.getReport());
+                importer = null;
+            }
         }
 
         return !cancel;
@@ -166,32 +173,6 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         }
 
         return rows;
-    }
-
-    public void importNodes(SheetParser parser) throws IOException {
-        ImportNodesProcess nodesImporter = new ImportNodesProcess(generalConfig, nodesConfiguration, parser, container, progressTicket);
-        importer = nodesImporter;
-
-        nodesImporter.execute();
-        importer = null;
-        report.append(nodesImporter.getReport());
-    }
-
-    public void importEdges(SheetParser parser) throws IOException {
-        ImportEdgesProcess edgesImporter = new ImportEdgesProcess(generalConfig, edgesConfiguration, parser, container, progressTicket);
-        importer = edgesImporter;
-
-        edgesImporter.execute();
-        importer = null;
-        report.append(edgesImporter.getReport());
-    }
-
-    public void importAdjacencyList(SheetParser parser) throws IOException {
-        //TODO
-    }
-
-    public void importMatrix(SheetParser parser) throws IOException {
-        //TODO
     }
 
     protected void autoDetectImportMode() {

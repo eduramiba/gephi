@@ -43,8 +43,11 @@ package org.gephi.io.exporter.plugin;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.gephi.graph.api.Edge;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphModel;
@@ -73,6 +76,15 @@ public class ExporterCSV implements GraphExporter, CharacterExporter, LongTask {
     private boolean cancel = false;
     private ProgressTicket progressTicket;
 
+    /**
+     * Formatter for limiting precision to 6 decimals, avoiding precision errors (epsilon).
+     */
+    public static final DecimalFormat FORMAT = new DecimalFormat("0.######");
+    static {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        FORMAT.setDecimalFormatSymbols(symbols);
+    }
+    
     @Override
     public boolean execute() {
         GraphModel graphModel = workspace.getLookup().lookup(GraphModel.class);
@@ -158,9 +170,9 @@ public class ExporterCSV implements GraphExporter, CharacterExporter, LongTask {
     private void writeEdge(Edge edge, boolean writeSeparator) throws IOException {
         if (edge != null) {
             if (edgeWeight) {
-                writer.append(Double.toString(edge.getWeight()));
+                writer.append(FORMAT.format(edge.getWeight()));
             } else {
-                writer.append(Double.toString(1.0));
+                writer.append(FORMAT.format(1.0));
             }
             if (writeSeparator) {
                 writer.append(SEPARATOR);

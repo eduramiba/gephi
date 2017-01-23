@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
+import org.gephi.io.importer.api.EdgeDraft;
+import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.SpreadsheetUtils;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
@@ -138,6 +140,34 @@ public abstract class AbstractImportProcess implements Closeable {
         }
 
         return consistent;
+    }
+    
+    protected void addEdge(String source, String target) {
+        addEdge(source, target, 1);
+    }
+
+    protected void addEdge(String source, String target, float weight) {
+        NodeDraft sourceNode;
+        if (!container.nodeExists(source)) {
+            sourceNode = container.factory().newNodeDraft(source);
+            container.addNode(sourceNode);
+        } else {
+            sourceNode = container.getNode(source);
+        }
+
+        NodeDraft targetNode;
+        if (!container.nodeExists(target)) {
+            targetNode = container.factory().newNodeDraft(target);
+            container.addNode(targetNode);
+        } else {
+            targetNode = container.getNode(target);
+        }
+
+        EdgeDraft edge = container.factory().newEdgeDraft();
+        edge.setSource(sourceNode);
+        edge.setTarget(targetNode);
+        edge.setWeight(weight);
+        container.addEdge(edge);
     }
 
     public boolean cancel() {
