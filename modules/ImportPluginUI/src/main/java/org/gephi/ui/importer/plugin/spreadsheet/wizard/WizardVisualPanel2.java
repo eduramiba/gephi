@@ -54,7 +54,7 @@ import javax.swing.JSeparator;
 import net.miginfocom.swing.MigLayout;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
-import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
 import org.gephi.ui.utils.SupportedColumnTypeWrapper;
 import org.gephi.ui.utils.TimeRepresentationWrapper;
 import org.openide.util.Exceptions;
@@ -117,13 +117,13 @@ public final class WizardVisualPanel2 extends JPanel {
         
         settingsPanel.add(new JSeparator(), "growx, wrap");
         
-        switch (importer.getTable()) {
-            case NODES:
+        switch (importer.getMode()) {
+            case NODES_TABLE:
                 loadColumns(settingsPanel);
                 settingsPanel.add(new JSeparator(), "growx, wrap");
                 loadNodesTableSettings(settingsPanel);
                 break;
-            case EDGES:
+            case EDGES_TABLE:
                 loadColumns(settingsPanel);
                 settingsPanel.add(new JSeparator(), "growx, wrap");
                 loadEdgesTableSettings(settingsPanel);
@@ -150,7 +150,7 @@ public final class WizardVisualPanel2 extends JPanel {
 
             final String[] headers = importer.getHeadersMap().keySet().toArray(new String[0]);
 
-            final Table table = importer.getTable();
+            final Mode mode = importer.getMode();
 
             for (String header : headers) {
                 if (header.isEmpty()) {
@@ -162,7 +162,7 @@ public final class WizardVisualPanel2 extends JPanel {
                 columnsCheckBoxes.add(columnCheckBox);
                 JComboBox columnComboBox = new JComboBox();
 
-                if (table.isSpecialColumn(header)) {
+                if (mode.isSpecialColumn(header)) {
                     settingsPanel.add(columnCheckBox, "wrap 15px");
 
                     //Special columns such as id, label, source and target... don't need a type selector

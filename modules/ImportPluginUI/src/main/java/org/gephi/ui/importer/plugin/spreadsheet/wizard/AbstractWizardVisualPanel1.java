@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.swing.JTable;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
@@ -58,7 +59,7 @@ import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
  * @author Eduardo Ramos
  */
 public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
-    
+
     protected static final int MAX_ROWS_PREVIEW = 25;
 
     private final AbstractImporterSpreadsheet importer;
@@ -96,41 +97,42 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
 
             ArrayList<String[]> records = new ArrayList<>();
             hasRowsMissingSourcesOrTargets = false;
-            SpreadsheetGeneralConfiguration.Table table = getSelectedTable();
-            if (columnCount > 0) {
-                String[] currentRecord;
+            SpreadsheetGeneralConfiguration.Mode mode = getSelectedMode();
+            int maxRowSize = 0;
+            String[] currentRecord;
 
-                Iterator<SheetRow> iterator = parser.iterator();
+            Iterator<SheetRow> iterator = parser.iterator();
 
-                int count = 0;
-                while (iterator.hasNext() && count < MAX_ROWS_PREVIEW) {
-                    count++;
+            int count = 0;
+            while (iterator.hasNext() && count < MAX_ROWS_PREVIEW) {
+                count++;
 
-                    SheetRow row = iterator.next();
+                SheetRow row = iterator.next();
 
-                    currentRecord = new String[headerMap.size()];
-                    int i = 0;
-                    for (Integer columnIndex : headerMap.values()) {
-                        currentRecord[i] = row.get(columnIndex);
-                        i++;
-                    }
+                maxRowSize = Math.max(maxRowSize, row.size());
 
-                    // Search for missing source or target columns for edges table
-                    if (table == SpreadsheetGeneralConfiguration.Table.EDGES) {
-                        if (currentRecord[sourceColumnIndex] == null || currentRecord[targetColumnIndex] == null) {
-                            hasRowsMissingSourcesOrTargets = true;
-                        }
-                    }
+                currentRecord = new String[row.size()];
+                for (int i = 0; i < row.size(); i++) {
+                    currentRecord[i] = row.get(i);
+                }
 
-                    if (records.size() < MAX_ROWS_PREVIEW) {
-                        records.add(currentRecord);
+                // Search for missing source or target columns for edges table
+                if (mode == SpreadsheetGeneralConfiguration.Mode.EDGES_TABLE) {
+                    if (currentRecord[sourceColumnIndex] == null || currentRecord[targetColumnIndex] == null) {
+                        hasRowsMissingSourcesOrTargets = true;
                     }
                 }
+
+                records.add(currentRecord);
             }
 
             final String[] columnNames = headers;
             final String[][] values = records.toArray(new String[0][]);
-            getPreviewTable().setModel(new TableModel() {
+            final int rowSize = maxRowSize;
+
+            JTable table = getPreviewTable();
+
+            table.setModel(new TableModel() {
 
                 @Override
                 public int getRowCount() {
@@ -139,11 +141,14 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
 
                 @Override
                 public int getColumnCount() {
-                    return columnNames.length;
+                    return rowSize;
                 }
 
                 @Override
                 public String getColumnName(int columnIndex) {
+                    if (columnIndex > columnNames.length - 1) {
+                        return null;
+                    }
                     return columnNames[columnIndex];
                 }
 
@@ -182,8 +187,9 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
             throw new RuntimeException(ex);
         }
     }
-    
+
     protected abstract JTable getPreviewTable();
-    
-    protected abstract SpreadsheetGeneralConfiguration.Table getSelectedTable();
+
+    protected abstract SpreadsheetGeneralConfiguration.Mode getSelectedMode();
+
 }

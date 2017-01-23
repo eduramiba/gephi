@@ -28,8 +28,8 @@
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="tableLabel" max="32767" attributes="1"/>
-                          <Component id="tableComboBox" alignment="0" pref="123" max="32767" attributes="1"/>
+                          <Component id="modeLabel" max="32767" attributes="1"/>
+                          <Component id="modeComboBox" alignment="0" pref="123" max="32767" attributes="1"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -63,12 +63,12 @@
                   </Group>
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="tableLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="modeLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="charsetLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="tableComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="modeComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="charsetComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -117,22 +117,22 @@
         <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="separatorComboBoxItemStateChanged"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JLabel" name="tableLabel">
+    <Component class="javax.swing.JLabel" name="modeLabel">
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/wizard/Bundle.properties" key="WizardVisualPanel1CSV.tableLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/wizard/Bundle.properties" key="WizardVisualPanel1CSV.modeLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JComboBox" name="tableComboBox">
+    <Component class="javax.swing.JComboBox" name="modeComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
           <StringArray count="0"/>
         </Property>
       </Properties>
       <Events>
-        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="tableComboBoxItemStateChanged"/>
+        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="modeComboBoxItemStateChanged"/>
       </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="previewLabel">

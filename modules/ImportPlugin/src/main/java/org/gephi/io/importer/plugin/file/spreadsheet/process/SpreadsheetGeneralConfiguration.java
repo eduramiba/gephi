@@ -16,12 +16,12 @@ import org.joda.time.DateTimeZone;
  */
 public class SpreadsheetGeneralConfiguration {
 
-    public enum Table {
-        NODES(Arrays.asList(
+    public enum Mode {
+        NODES_TABLE(Arrays.asList(
                 ImportNodesProcess.NODE_ID,
                 ImportNodesProcess.NODE_LABEL
         )),
-        EDGES(Arrays.asList(
+        EDGES_TABLE(Arrays.asList(
                 ImportEdgesProcess.EDGE_ID,
                 ImportEdgesProcess.EDGE_KIND,
                 ImportEdgesProcess.EDGE_LABEL,
@@ -29,11 +29,17 @@ public class SpreadsheetGeneralConfiguration {
                 ImportEdgesProcess.EDGE_TARGET,
                 ImportEdgesProcess.EDGE_TYPE,
                 ImportEdgesProcess.EDGE_WEIGHT
-        ));
+        )),
+        ADJACENCY_LIST,
+        MATRIX;
 
         private final Set<String> specialColumnNames;
 
-        private Table(List<String> specialColumnNames) {
+        private Mode() {
+            this.specialColumnNames = Collections.emptySet();
+        }
+
+        private Mode(List<String> specialColumnNames) {
             this.specialColumnNames = Collections.unmodifiableSet(new HashSet<>(specialColumnNames));
         }
 
@@ -48,16 +54,16 @@ public class SpreadsheetGeneralConfiguration {
 
     protected final Map<String, Class> columnsClasses = new LinkedHashMap<>();
 
-    protected Table table = Table.NODES;
+    protected Mode mode = Mode.NODES_TABLE;
     protected TimeRepresentation timeRepresentation = TimeRepresentation.INTERVAL;
     protected DateTimeZone timeZone = DateTimeZone.UTC;
 
-    public Table getTable() {
-        return table;
+    public Mode getMode() {
+        return mode;
     }
 
-    public void setTable(Table table) {
-        this.table = table;
+    public void setTable(Mode table) {
+        this.mode = table;
     }
 
     public TimeRepresentation getTimeRepresentation() {

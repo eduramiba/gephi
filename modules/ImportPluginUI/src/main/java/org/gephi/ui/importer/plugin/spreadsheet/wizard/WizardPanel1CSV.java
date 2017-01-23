@@ -87,7 +87,7 @@ public class WizardPanel1CSV implements WizardDescriptor.Panel {
 
     @Override
     public boolean isValid() {
-        return component.isCSVValid();
+        return component.isValidData();
     }
     private final Set<ChangeListener> listeners = new HashSet<>(1); // or can use ChangeSupport in NB 6.0
 
@@ -128,7 +128,7 @@ public class WizardPanel1CSV implements WizardDescriptor.Panel {
     @Override
     public void storeSettings(Object settings) {
         importer.setFieldDelimiter(component.getSelectedSeparator());
-        importer.setTable(component.getSelectedTable());
+        importer.setMode(component.getSelectedMode());
         importer.setCharset(component.getSelectedCharset());
     }
 }

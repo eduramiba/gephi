@@ -39,27 +39,32 @@ Contributor(s):
 
 Portions Copyrighted 2017 Gephi Consortium.
  */
-package org.gephi.ui.utils;
+package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
-import org.gephi.graph.api.TimeFormat;
+import java.util.Objects;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.openide.util.NbBundle;
 
 /**
  *
  * @author Eduardo Ramos
  */
-public class TimeFormatWrapper {
+public class ImportModeWrapper {
 
-    private final TimeFormat timeFormat;
+    private final SpreadsheetGeneralConfiguration.Mode mode;
 
-    public TimeFormatWrapper(TimeFormat timeFormat) {
-        this.timeFormat = timeFormat;
+    public ImportModeWrapper(SpreadsheetGeneralConfiguration.Mode mode) {
+        this.mode = mode;
+    }
+
+    public SpreadsheetGeneralConfiguration.Mode getMode() {
+        return mode;
     }
 
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 53 * hash + (this.timeFormat != null ? this.timeFormat.hashCode() : 0);
+        hash = 43 * hash + Objects.hashCode(this.mode);
         return hash;
     }
 
@@ -74,19 +79,15 @@ public class TimeFormatWrapper {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final TimeFormatWrapper other = (TimeFormatWrapper) obj;
-        if (this.timeFormat != other.timeFormat) {
+        final ImportModeWrapper other = (ImportModeWrapper) obj;
+        if (this.mode != other.mode) {
             return false;
         }
         return true;
     }
 
-    public TimeFormat getTimeFormat() {
-        return timeFormat;
-    }
-
     @Override
     public String toString() {
-        return NbBundle.getMessage(TimeFormatWrapper.class, "TimeFormatWrapper.timeFormat." + timeFormat.name());
+        return NbBundle.getMessage(ImportModeWrapper.class, "ImportModeWrapper.mode." + mode.name());
     }
 }

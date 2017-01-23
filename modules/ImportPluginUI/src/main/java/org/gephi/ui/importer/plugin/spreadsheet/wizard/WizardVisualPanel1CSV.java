@@ -44,7 +44,7 @@ package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 import java.nio.charset.Charset;
 import javax.swing.JTable;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
-import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
 import org.gephi.utils.CharsetToolkit;
 import org.netbeans.validation.api.Problems;
 import org.netbeans.validation.api.Severity;
@@ -82,8 +82,9 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
         separatorComboBox.addItem(tab = new SeparatorWrapper(('\t'), getMessage("WizardVisualPanel1CSV.tab")));
         separatorComboBox.addItem(space = new SeparatorWrapper((' '), getMessage("WizardVisualPanel1CSV.space")));
 
-        tableComboBox.addItem(getMessage("WizardVisualPanel1.nodes-table"));
-        tableComboBox.addItem(getMessage("WizardVisualPanel1.edges-table"));
+        for (Mode mode : Mode.values()) {
+            modeComboBox.addItem(new ImportModeWrapper(mode));
+        }
 
         for (Charset charset : CharsetToolkit.getAvailableCharsets()) {
             charsetComboBox.addItem(charset.name());
@@ -110,8 +111,8 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
                 break;
         }
 
-        //Table:
-        tableComboBox.setSelectedIndex(importer.getTable() == Table.NODES ? 0 : 1);
+        //Mode:
+        modeComboBox.setSelectedItem(new ImportModeWrapper(importer.getMode()));
 
         //Charset:
         Charset selectedCharset = importer.getCharset();
@@ -140,10 +141,6 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
 
             @Override
             public boolean validate(Problems prblms, String string, String t) {
-                if (!hasColumns()) {
-                    prblms.add(getMessage("WizardVisualPanel1CSV.validation.no-columns"));
-                    return false;
-                }
                 if (!areValidColumnsForTable()) {
                     prblms.add(getMessage("WizardVisualPanel1CSV.validation.edges.no-source-target-columns"));
                     return false;
@@ -164,7 +161,7 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
     @Override
     public void refreshPreviewTable() {
         super.refreshPreviewTable();
-        
+
         wizard1.fireChangeEvent();
         pathTextField.setText(pathTextField.getText());//To fire validation panel messages.
     }
@@ -189,13 +186,11 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
     }
 
     @Override
-    public Table getSelectedTable() {
-        switch (tableComboBox.getSelectedIndex()) {
-            case 1:
-                return Table.EDGES;
-            default:
-                return Table.NODES;
+    public Mode getSelectedMode() {
+        if (modeComboBox.getItemCount() == 0) {
+            return Mode.ADJACENCY_LIST;
         }
+        return ((ImportModeWrapper) modeComboBox.getSelectedItem()).getMode();
     }
 
     public Charset getSelectedCharset() {
@@ -211,16 +206,18 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
     }
 
     public boolean areValidColumnsForTable() {
-        switch (getSelectedTable()) {
-            case EDGES:
+        switch (getSelectedMode()) {
+            case EDGES_TABLE:
                 return hasSourceNodeColumn && hasTargetNodeColumn;
+            case NODES_TABLE:
+                return hasColumns();
             default:
                 return true;
         }
     }
 
-    public boolean isCSVValid() {
-        return hasColumns() && areValidColumnsForTable();
+    public boolean isValidData() {
+        return areValidColumnsForTable();
     }
 
     public boolean hasRowsMissingSourcesOrTargets() {
@@ -271,8 +268,8 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
         pathTextField = new javax.swing.JTextField();
         separatorLabel = new javax.swing.JLabel();
         separatorComboBox = new javax.swing.JComboBox();
-        tableLabel = new javax.swing.JLabel();
-        tableComboBox = new javax.swing.JComboBox();
+        modeLabel = new javax.swing.JLabel();
+        modeComboBox = new javax.swing.JComboBox();
         previewLabel = new javax.swing.JLabel();
         scroll = new javax.swing.JScrollPane();
         previewTable = new javax.swing.JTable();
@@ -294,12 +291,12 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
             }
         });
 
-        tableLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        tableLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.tableLabel.text")); // NOI18N
+        modeLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        modeLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.modeLabel.text")); // NOI18N
 
-        tableComboBox.addItemListener(new java.awt.event.ItemListener() {
+        modeComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                tableComboBoxItemStateChanged(evt);
+                modeComboBoxItemStateChanged(evt);
             }
         });
 
@@ -331,8 +328,8 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
                             .addComponent(separatorComboBox, 0, 90, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(tableLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(tableComboBox, 0, 123, Short.MAX_VALUE))
+                            .addComponent(modeLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(modeComboBox, 0, 123, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(charsetLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 308, Short.MAX_VALUE)
@@ -358,11 +355,11 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
                         .addComponent(separatorComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(tableLabel)
+                            .addComponent(modeLabel)
                             .addComponent(charsetLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(tableComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(modeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(charsetComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
                 .addComponent(previewLabel)
@@ -394,20 +391,23 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
         refreshPreviewTable();
     }//GEN-LAST:event_charsetComboBoxItemStateChanged
 
-    private void tableComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tableComboBoxItemStateChanged
+    private void modeComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_modeComboBoxItemStateChanged
+        if (initialized) {
+            importer.setMode(getSelectedMode());
+        }
         refreshPreviewTable();
-    }//GEN-LAST:event_tableComboBoxItemStateChanged
+    }//GEN-LAST:event_modeComboBoxItemStateChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox charsetComboBox;
     private javax.swing.JLabel charsetLabel;
     private javax.swing.JLabel filePathLabel;
+    private javax.swing.JComboBox modeComboBox;
+    private javax.swing.JLabel modeLabel;
     private javax.swing.JTextField pathTextField;
     private javax.swing.JLabel previewLabel;
     private javax.swing.JTable previewTable;
     private javax.swing.JScrollPane scroll;
     private javax.swing.JComboBox separatorComboBox;
     private javax.swing.JLabel separatorLabel;
-    private javax.swing.JComboBox tableComboBox;
-    private javax.swing.JLabel tableLabel;
     // End of variables declaration//GEN-END:variables
 }

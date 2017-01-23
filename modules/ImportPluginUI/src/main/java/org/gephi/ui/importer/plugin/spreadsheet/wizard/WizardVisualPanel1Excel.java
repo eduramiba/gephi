@@ -43,7 +43,7 @@ package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
 import javax.swing.JTable;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetExcel;
-import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
 import org.netbeans.validation.api.Problems;
 import org.netbeans.validation.api.Severity;
 import org.netbeans.validation.api.Validator;
@@ -73,8 +73,9 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
         this.wizard1 = wizard1;
         this.importer = importer;
 
-        tableComboBox.addItem(getMessage("WizardVisualPanel1.nodes-table"));
-        tableComboBox.addItem(getMessage("WizardVisualPanel1.edges-table"));
+        for (Mode mode : Mode.values()) {
+            modeComboBox.addItem(new ImportModeWrapper(mode));
+        }
 
         //Setup with initial values:
         //Sheet:
@@ -82,8 +83,8 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
             sheetComboBox.addItem(sheetName);
         }
 
-        //Table:
-        tableComboBox.setSelectedIndex(importer.getTable() == Table.NODES ? 0 : 1);
+        //Mode:
+        modeComboBox.setSelectedItem(new ImportModeWrapper(importer.getMode()));
 
         //File path:
         final String filePath = importer.getFile().getAbsolutePath();
@@ -104,11 +105,7 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
 
             @Override
             public boolean validate(Problems prblms, String string, String t) {
-                if (!hasColumns()) {
-                    prblms.add(getMessage("WizardVisualPanel1CSV.validation.no-columns"));
-                    return false;
-                }
-                if (!areValidColumnsForTable()) {
+                if (!areValidColumnsForMode()) {
                     prblms.add(getMessage("WizardVisualPanel1CSV.validation.edges.no-source-target-columns"));
                     return false;
                 }
@@ -138,13 +135,11 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
     }
 
     @Override
-    public Table getSelectedTable() {
-        switch (tableComboBox.getSelectedIndex()) {
-            case 1:
-                return Table.EDGES;
-            default:
-                return Table.NODES;
+    public Mode getSelectedMode() {
+        if (modeComboBox.getItemCount() == 0) {
+            return Mode.ADJACENCY_LIST;
         }
+        return ((ImportModeWrapper) modeComboBox.getSelectedItem()).getMode();
     }
 
     public int getSelectedSheetIndex() {
@@ -156,20 +151,22 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
     }
 
     public boolean hasColumns() {
-        return columnCount > 0;
+        return getColumnCount() > 0;
     }
 
-    public boolean areValidColumnsForTable() {
-        switch (getSelectedTable()) {
-            case EDGES:
+    public boolean areValidColumnsForMode() {
+        switch (getSelectedMode()) {
+            case EDGES_TABLE:
                 return hasSourceNodeColumn && hasTargetNodeColumn;
+            case NODES_TABLE:
+                return getColumnCount() > 0;
             default:
                 return true;
         }
     }
 
-    public boolean isCSVValid() {
-        return hasColumns() && areValidColumnsForTable();
+    public boolean isValidData() {
+        return areValidColumnsForMode();
     }
 
     public boolean hasRowsMissingSourcesOrTargets() {
@@ -179,7 +176,7 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
     private String getMessage(String resName) {
         return NbBundle.getMessage(WizardVisualPanel1Excel.class, resName);
     }
-    
+
     @Override
     protected JTable getPreviewTable() {
         return previewTable;
@@ -196,8 +193,8 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
         pathTextField = new javax.swing.JTextField();
         separatorLabel = new javax.swing.JLabel();
         sheetComboBox = new javax.swing.JComboBox();
-        tableLabel = new javax.swing.JLabel();
-        tableComboBox = new javax.swing.JComboBox();
+        modeLabel = new javax.swing.JLabel();
+        modeComboBox = new javax.swing.JComboBox();
         previewLabel = new javax.swing.JLabel();
         scroll = new javax.swing.JScrollPane();
         previewTable = new javax.swing.JTable();
@@ -216,12 +213,12 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
             }
         });
 
-        tableLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        tableLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1Excel.class, "WizardVisualPanel1Excel.tableLabel.text")); // NOI18N
+        modeLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        modeLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1Excel.class, "WizardVisualPanel1Excel.modeLabel.text")); // NOI18N
 
-        tableComboBox.addItemListener(new java.awt.event.ItemListener() {
+        modeComboBox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                tableComboBoxItemStateChanged(evt);
+                modeComboBoxItemStateChanged(evt);
             }
         });
 
@@ -248,8 +245,8 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
                             .addComponent(sheetComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(tableLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(tableComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(modeLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(modeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -266,9 +263,9 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(sheetComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(tableLabel)
+                        .addComponent(modeLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(tableComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(modeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
                 .addComponent(previewLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -284,18 +281,21 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
         refreshPreviewTable();
     }//GEN-LAST:event_sheetComboBoxItemStateChanged
 
-    private void tableComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_tableComboBoxItemStateChanged
+    private void modeComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_modeComboBoxItemStateChanged
+        if (initialized) {
+            importer.setMode(getSelectedMode());
+        }
         refreshPreviewTable();
-    }//GEN-LAST:event_tableComboBoxItemStateChanged
+    }//GEN-LAST:event_modeComboBoxItemStateChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel filePathLabel;
+    private javax.swing.JComboBox modeComboBox;
+    private javax.swing.JLabel modeLabel;
     private javax.swing.JTextField pathTextField;
     private javax.swing.JLabel previewLabel;
     private javax.swing.JTable previewTable;
     private javax.swing.JScrollPane scroll;
     private javax.swing.JLabel separatorLabel;
     private javax.swing.JComboBox sheetComboBox;
-    private javax.swing.JComboBox tableComboBox;
-    private javax.swing.JLabel tableLabel;
     // End of variables declaration//GEN-END:variables
 }

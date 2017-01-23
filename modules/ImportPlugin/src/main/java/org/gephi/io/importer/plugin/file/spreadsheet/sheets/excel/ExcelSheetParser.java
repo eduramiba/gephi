@@ -59,33 +59,56 @@ import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 public class ExcelSheetParser implements SheetParser {
 
     private final Sheet sheet;
+    private final boolean withFirstRecordAsHeader;
     private final Map<String, Integer> headerMap = new LinkedHashMap<>();
     private ExcelIterator iterator;
 
-    private int rowsFirstIndex = 0;
-    private int rowsLastIndex = 0;
+    private int rowsFirstIndex = Integer.MAX_VALUE;
+    private int rowsLastIndex = Integer.MIN_VALUE;
 
-    public ExcelSheetParser(Sheet sheet) {
+    public ExcelSheetParser(Sheet sheet, boolean withFirstRecordAsHeader) {
         this.sheet = sheet;
-        initHeaderInfo();
+        this.withFirstRecordAsHeader = withFirstRecordAsHeader;
+
+        calculateRowStartAndEndIndexes();
+        if (withFirstRecordAsHeader) {
+            initHeaderInfo();
+        }
+    }
+
+    private void calculateRowStartAndEndIndexes() {
+        int rowsToScan;
+
+        if (withFirstRecordAsHeader) {
+            rowsToScan = 1;
+        } else {
+            rowsToScan = 25;
+        }
+
+        for (int i = sheet.getFirstRowNum(), j = 0; i < sheet.getLastRowNum() && j < rowsToScan; i++, j++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                rowsFirstIndex = Math.min(rowsFirstIndex, row.getFirstCellNum());
+                rowsLastIndex = Math.max(rowsLastIndex, row.getLastCellNum() - 1);
+            }
+        }
+
+        if (rowsFirstIndex == Integer.MAX_VALUE) {
+            rowsFirstIndex = 0;
+            rowsLastIndex = 0;
+        }
     }
 
     private void initHeaderInfo() {
         Row firstRow = sheet.getRow(sheet.getFirstRowNum());
-
-        if (firstRow != null) {
-            rowsFirstIndex = firstRow.getFirstCellNum();
-            rowsLastIndex = firstRow.getLastCellNum();
-
-            int zeroBasedIndex = 0;
-            for (int i = rowsFirstIndex; i < rowsLastIndex; i++) {
-                Cell cell = firstRow.getCell(i);
-                String header = ExcelSheetRow.getRowCellAsString(cell, i);
-                if (header != null && !header.trim().isEmpty()) {
-                    headerMap.put(header.trim(), zeroBasedIndex);
-                }
-                zeroBasedIndex++;
+        int zeroBasedIndex = 0;
+        for (int i = rowsFirstIndex; i < rowsLastIndex; i++) {
+            Cell cell = firstRow.getCell(i);
+            String header = ExcelSheetRow.getRowCellAsString(cell, i);
+            if (header != null && !header.trim().isEmpty()) {
+                headerMap.put(header.trim(), zeroBasedIndex);
             }
+            zeroBasedIndex++;
         }
     }
 
@@ -117,7 +140,7 @@ public class ExcelSheetParser implements SheetParser {
 
         public ExcelIterator() {
             iterator = sheet.iterator();
-            if (iterator.hasNext()) {
+            if (withFirstRecordAsHeader && iterator.hasNext()) {
                 iterator.next();//Skip headers row
             }
         }

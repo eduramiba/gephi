@@ -42,9 +42,12 @@ Portions Copyrighted 2016 Gephi Consortium.
 package org.gephi.io.importer.plugin.file.spreadsheet;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.EmptySheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
@@ -59,13 +62,23 @@ public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
     private int sheetIndex = 0;
 
     @Override
+    public SheetParser createParserWithoutHeaders() throws IOException {
+        return createParser(false);
+    }
+
+    @Override
     public SheetParser createParser() throws IOException {
+        boolean withFirstRecordAsHeader = generalConfig.getMode() == SpreadsheetGeneralConfiguration.Mode.NODES_TABLE || generalConfig.getMode() == SpreadsheetGeneralConfiguration.Mode.EDGES_TABLE;
+        return createParser(withFirstRecordAsHeader);
+    }
+
+    private SheetParser createParser(boolean withFirstRecordAsHeader) throws IOException {
         try {
             boolean readOnly = true;
             Workbook workbook = WorkbookFactory.create(file, null, readOnly);
             Sheet sheet = workbook.getSheetAt(sheetIndex);
 
-            return new ExcelSheetParser(sheet);
+            return new ExcelSheetParser(sheet, withFirstRecordAsHeader);
         } catch (Exception ex) {
             //Control and report old excel files are unsupported:
             //Control and report excel file blocked by another process (normally excel itself):
@@ -90,6 +103,7 @@ public class ImporterSpreadsheetExcel extends AbstractImporterSpreadsheet {
 
             return names;
         } catch (Exception ex) {
+            Logger.getLogger("").log(Level.SEVERE, ex.getMessage());
             return new String[]{"Error"};
         }
     }

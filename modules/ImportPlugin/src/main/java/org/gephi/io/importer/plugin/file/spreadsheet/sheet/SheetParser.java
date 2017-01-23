@@ -53,7 +53,7 @@ public interface SheetParser extends Closeable, Iterable<SheetRow> {
     /**
      * Returns a map containing header names as keys and their column index as value.
      * The index can be used in {@link SheetRow#get(int)}
-     * @return 
+     * @return Header map. Empty for sheets without a header row.
      */
     Map<String, Integer> getHeaderMap();
 

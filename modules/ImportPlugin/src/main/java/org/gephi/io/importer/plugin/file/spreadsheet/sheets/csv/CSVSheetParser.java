@@ -42,6 +42,7 @@ Portions Copyrighted 2016 Gephi Consortium.
 package org.gephi.io.importer.plugin.file.spreadsheet.sheets.csv;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -65,10 +66,14 @@ public class CSVSheetParser implements SheetParser {
     @Override
     public Map<String, Integer> getHeaderMap() {
         Map<String, Integer> map = parser.getHeaderMap();
-        if (map.containsKey(null)) {//Ignore columns without header
-            map.remove(null);
+        if (map == null) {
+            return Collections.emptyMap();
+        } else {
+            if (map.containsKey(null)) {//Ignore columns without header
+                map.remove(null);
+            }
+            return map;
         }
-        return map;
     }
 
     @Override

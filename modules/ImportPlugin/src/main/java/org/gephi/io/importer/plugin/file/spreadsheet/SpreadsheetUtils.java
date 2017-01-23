@@ -52,7 +52,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.Report;
-import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.openide.util.NbBundle;
 
@@ -106,21 +105,27 @@ public class SpreadsheetUtils {
         }
     }
 
-    public static CSVParser configureCSVParser(File file, Character fieldSeparator, Charset charset) throws IOException {
+    public static CSVParser configureCSVParser(File file, Character fieldSeparator, Charset charset, boolean withFirstRecordAsHeader) throws IOException {
         if (fieldSeparator == null) {
             fieldSeparator = ',';
         }
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(fieldSeparator)
-                .withFirstRecordAsHeader()
                 .withIgnoreEmptyLines(true)
                 .withCommentMarker('#')
                 .withNullString("")
                 .withIgnoreSurroundingSpaces(true)
-                .withTrim(true)
-                .withIgnoreHeaderCase(false)
-                .withAllowMissingColumnNames(false);
+                .withTrim(true);
+
+        if (withFirstRecordAsHeader) {
+            csvFormat = csvFormat
+                    .withFirstRecordAsHeader()
+                    .withAllowMissingColumnNames(false)
+                    .withIgnoreHeaderCase(false);
+        } else {
+            csvFormat = csvFormat.withHeader((String[]) null).withSkipHeaderRecord(false);
+        }
 
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader is = new InputStreamReader(fileInputStream, charset);

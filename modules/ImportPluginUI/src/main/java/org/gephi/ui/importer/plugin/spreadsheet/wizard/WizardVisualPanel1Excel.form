@@ -33,8 +33,8 @@
                       </Group>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="tableLabel" max="32767" attributes="1"/>
-                          <Component id="tableComboBox" alignment="0" min="-2" pref="123" max="-2" attributes="1"/>
+                          <Component id="modeLabel" max="32767" attributes="1"/>
+                          <Component id="modeComboBox" alignment="0" min="-2" pref="123" max="-2" attributes="1"/>
                       </Group>
                   </Group>
               </Group>
@@ -57,9 +57,9 @@
                       <Component id="sheetComboBox" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
-                      <Component id="tableLabel" min="-2" max="-2" attributes="0"/>
+                      <Component id="modeLabel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="tableComboBox" min="-2" max="-2" attributes="0"/>
+                      <Component id="modeComboBox" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
@@ -105,22 +105,22 @@
         <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="sheetComboBoxItemStateChanged"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JLabel" name="tableLabel">
+    <Component class="javax.swing.JLabel" name="modeLabel">
       <Properties>
         <Property name="horizontalAlignment" type="int" value="0"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/wizard/Bundle.properties" key="WizardVisualPanel1Excel.tableLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+          <ResourceString bundle="org/gephi/ui/importer/plugin/spreadsheet/wizard/Bundle.properties" key="WizardVisualPanel1Excel.modeLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JComboBox" name="tableComboBox">
+    <Component class="javax.swing.JComboBox" name="modeComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
           <StringArray count="0"/>
         </Property>
       </Properties>
       <Events>
-        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="tableComboBoxItemStateChanged"/>
+        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="modeComboBoxItemStateChanged"/>
       </Events>
     </Component>
     <Component class="javax.swing.JLabel" name="previewLabel">

@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.apache.commons.csv.CSVParser;
 import org.gephi.io.importer.api.ImportUtils;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.EmptySheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.ErrorSheet;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
@@ -66,9 +67,22 @@ public class ImporterSpreadsheetCSV extends AbstractImporterSpreadsheet {
     protected Charset charset = Charset.forName("UTF-8");
 
     @Override
+    public SheetParser createParserWithoutHeaders() throws IOException {
+        return createParser(false);
+    }
+
+    @Override
     public SheetParser createParser() throws IOException {
+        boolean withFirstRecordAsHeader
+                = generalConfig.getMode() == SpreadsheetGeneralConfiguration.Mode.NODES_TABLE
+                || generalConfig.getMode() == SpreadsheetGeneralConfiguration.Mode.EDGES_TABLE;
+
+        return createParser(withFirstRecordAsHeader);
+    }
+
+    private SheetParser createParser(boolean withFirstRecordAsHeader) throws IOException {
         try {
-            CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter, charset);
+            CSVParser csvParser = SpreadsheetUtils.configureCSVParser(file, fieldDelimiter, charset, withFirstRecordAsHeader);
             return new CSVSheetParser(csvParser);
         } catch (Exception ex) {
             if (report != null) {

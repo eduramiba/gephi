@@ -76,7 +76,7 @@ import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.ImportEdgesProcess;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetEdgesConfiguration;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration;
-import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Table;
+import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.io.importer.spi.FileImporter;
@@ -118,10 +118,21 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         this.container.setTimeZone(generalConfig.getTimeZone());
 
         try (SheetParser parser = createParser()) {
-            if (getTable() == Table.EDGES) {
-                importEdges(parser);
-            } else {
-                importNodes(parser);
+            switch (getMode()) {
+                case NODES_TABLE:
+                    importNodes(parser);
+                    break;
+                case EDGES_TABLE:
+                    importEdges(parser);
+                    break;
+                case ADJACENCY_LIST:
+                    importAdjacencyList(parser);
+                    break;
+                case MATRIX:
+                    importMatrix(parser);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown mode " + getMode());
             }
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -131,6 +142,8 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     }
 
     public abstract SheetParser createParser() throws IOException;
+
+    public abstract SheetParser createParserWithoutHeaders() throws IOException;
 
     public Map<String, Integer> getHeadersMap() throws IOException {
         try (SheetParser parser = createParser()) {
@@ -173,21 +186,54 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         report.append(edgesImporter.getReport());
     }
 
-    protected void autoDetectTargetTable() {
+    public void importAdjacencyList(SheetParser parser) throws IOException {
+        //TODO
+    }
+
+    public void importMatrix(SheetParser parser) throws IOException {
+        //TODO
+    }
+
+    protected void autoDetectImportMode() {
         try {
-            Set<String> headersLowerCase = new HashSet<>();
+            SheetParser parser = createParserWithoutHeaders();
 
-            for (String header : getHeadersMap().keySet()) {
-                headersLowerCase.add(header.trim().toLowerCase());
+            Mode mode = null;
+
+            Iterator<SheetRow> iterator = parser.iterator();
+            if (iterator.hasNext()) {
+                SheetRow firstRow = iterator.next();
+
+                if (firstRow.get(0) == null || firstRow.get(0).trim().isEmpty()) {
+                    mode = Mode.MATRIX;
+                } else {
+                    //Detect very probable edges table:
+                    for (int i = 0; i < firstRow.size(); i++) {
+                        String value = firstRow.get(i);
+                        if ("source".equalsIgnoreCase(value) || "target".equalsIgnoreCase(value)) {
+                            mode = Mode.EDGES_TABLE;
+                            break;
+                        }
+                    }
+
+                    //Detect probable nodes table:
+                    if (mode == null) {
+                        for (int i = 0; i < firstRow.size(); i++) {
+                            String value = firstRow.get(i);
+                            if ("id".equalsIgnoreCase(value) || "label".equalsIgnoreCase(value) || "timeset".equalsIgnoreCase(value)) {
+                                mode = Mode.NODES_TABLE;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (mode == null) {
+                //Default adjacency list:
+                mode = Mode.ADJACENCY_LIST;
             }
 
-            Table table;
-            if (headersLowerCase.contains("source") || headersLowerCase.contains("target")) {
-                table = Table.EDGES;
-            } else {
-                table = Table.NODES;
-            }
-            setTable(table);
+            setMode(mode);
         } catch (IOException ex) {
             //NOOP
         }
@@ -203,6 +249,10 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
             }
 
             Map<String, Integer> headerMap = parser.getHeaderMap();
+            if (headerMap.isEmpty()) {
+                return;
+            }
+
             Map<String, LinkedHashSet<Class>> classMatchByHeader = new HashMap<>();
 
             List<Class> classesToTry = Arrays.asList(new Class[]{
@@ -302,7 +352,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                     detectedClass = String.class;
                 }
 
-                if (getTable() == Table.EDGES) {
+                if (getMode() == Mode.EDGES_TABLE) {
                     if (column.equalsIgnoreCase("source") || column.equalsIgnoreCase("target") || column.equalsIgnoreCase("type") || column.equalsIgnoreCase("kind")) {
                         detectedClass = String.class;
                     }
@@ -326,7 +376,7 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
     }
 
     public void refreshAutoDetections() {
-        autoDetectTargetTable();
+        autoDetectImportMode();
         autoDetectColumnTypes();
     }
 
@@ -369,11 +419,11 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
         this.progressTicket = progressTicket;
     }
 
-    public Table getTable() {
-        return generalConfig.getTable();
+    public Mode getMode() {
+        return generalConfig.getMode();
     }
 
-    public void setTable(Table table) {
+    public void setMode(Mode table) {
         generalConfig.setTable(table);
     }
 

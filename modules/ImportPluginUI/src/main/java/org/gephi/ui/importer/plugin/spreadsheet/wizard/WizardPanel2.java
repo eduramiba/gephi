@@ -59,8 +59,7 @@ import org.openide.util.HelpCtx;
 public class WizardPanel2 implements WizardDescriptor.Panel {
 
     /**
-     * The visual component that displays this panel. If you need to access the
-     * component from this class, just use getComponent().
+     * The visual component that displays this panel. If you need to access the component from this class, just use getComponent().
      */
     private final WizardVisualPanel2 component;
     private final AbstractImporterSpreadsheet importer;
@@ -91,7 +90,7 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
     public boolean isValid() {
         return true;
     }
-    
+
     private final Set<ChangeListener> listeners = new HashSet<>(1); // or can use ChangeSupport in NB 6.0
 
     @Override
@@ -132,20 +131,20 @@ public class WizardPanel2 implements WizardDescriptor.Panel {
     public void storeSettings(Object settings) {
         String[] columnsToImport = component.getColumnsToImport();
         Class[] columnTypes = component.getColumnsToImportTypes();
-        
+
         Map<String, Class> columnsClasses = new HashMap<>();
         for (int i = 0; i < columnsToImport.length; i++) {
             columnsClasses.put(columnsToImport[i], columnTypes[i]);
         }
-        
-        if(importer.getTable() == SpreadsheetGeneralConfiguration.Table.NODES){
+
+        if (importer.getMode() == SpreadsheetGeneralConfiguration.Mode.NODES_TABLE) {
             importer.setNodesConfiguration(new SpreadsheetNodesConfiguration(component.getAssignNewNodeIds()));
-        } else {
+        } else if (importer.getMode() == SpreadsheetGeneralConfiguration.Mode.EDGES_TABLE) {
             importer.setEdgesConfiguration(new SpreadsheetEdgesConfiguration(component.getCreateMissingNodes()));
         }
         importer.setColumnsClasses(columnsClasses);
         importer.setTimeRepresentation(component.getSelectedTimeRepresentation());
-        
+
         component.unSetup();
     }
 }
