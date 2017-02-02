@@ -67,7 +67,7 @@ public class ImportMatrixProcess extends AbstractImportProcess {
         List<String> labels = new ArrayList<>();
         boolean firstRow = true;
         int rowCount = 0;
-        
+
         for (SheetRow row : parser) {
             if (firstRow) {
                 //Start at 1, ignoring first value:
@@ -86,12 +86,15 @@ public class ImportMatrixProcess extends AbstractImportProcess {
                                 String value = row.get(i);
                                 if (value != null && !value.trim().equals("0")) {
                                     float weight = Float.parseFloat(value.replace(',', '.'));
-                                    String target = labels.get(labelIndex);
 
-                                    if (source != null && target != null) {
-                                        addEdge(source.trim(), target.trim(), weight);
-                                    } else {
-                                        //Report error
+                                    if (weight != 0) {
+                                        String target = labels.get(labelIndex);
+
+                                        if (source != null && target != null) {
+                                            addEdge(source.trim(), target.trim(), weight);
+                                        } else {
+                                            //Report error
+                                        }
                                     }
                                 }
                             } catch (NumberFormatException ex) {
@@ -102,12 +105,12 @@ public class ImportMatrixProcess extends AbstractImportProcess {
                         }
                     }
                 }
-                
+
                 rowCount++;
             }
         }
-        
-        if(rowCount != labels.size()){
+
+        if (rowCount != labels.size()) {
             //Report warning
         }
 

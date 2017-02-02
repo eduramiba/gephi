@@ -56,7 +56,7 @@ import org.openide.util.lookup.ServiceProvider;
 public final class ImporterSpreadsheetCSVBuilder implements FileImporterBuilder {
 
     public static final String IDENTIFER = "spreadsheet_csv";
-    public static final String[] EXTENSIONS = new String[]{".csv", ".tsv"};
+    public static final String[] EXTENSIONS = new String[]{".csv", ".tsv", ".edges"};
 
     @Override
     public FileImporter buildImporter() {

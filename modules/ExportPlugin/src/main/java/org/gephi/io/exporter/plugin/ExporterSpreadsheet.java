@@ -42,9 +42,12 @@ Portions Copyrighted 2017 Gephi Consortium.
 package org.gephi.io.exporter.plugin;
 
 import java.io.Writer;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.gephi.graph.api.AttributeUtils;
@@ -65,11 +68,21 @@ import org.gephi.utils.progress.ProgressTicket;
 import org.joda.time.DateTimeZone;
 
 /**
- * 
+ *
  * @author Eduardo Ramos
  */
 public class ExporterSpreadsheet implements GraphExporter, CharacterExporter, LongTask {
 
+    /**
+     * Formatter for limiting precision to 6 decimals, avoiding precision errors (epsilon).
+     */
+    private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("0.######");
+    static {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        symbols.setInfinity("Infinity");
+        NUMBER_FORMAT.setDecimalFormatSymbols(symbols);
+    }
+    
     public enum ExportTable {
         NODES,
         EDGES;
@@ -183,7 +196,11 @@ public class ExporterSpreadsheet implements GraphExporter, CharacterExporter, Lo
                     String text;
 
                     if (value != null) {
-                        text = AttributeUtils.print(value, timeFormat, timeZone);
+                        if (value instanceof Number) {
+                            text = NUMBER_FORMAT.format(value);
+                        } else {
+                            text = AttributeUtils.print(value, timeFormat, timeZone);
+                        }
                     } else {
                         text = "";
                     }

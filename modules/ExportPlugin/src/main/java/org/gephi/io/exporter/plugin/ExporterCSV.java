@@ -79,7 +79,7 @@ public class ExporterCSV implements GraphExporter, CharacterExporter, LongTask {
     /**
      * Formatter for limiting precision to 6 decimals, avoiding precision errors (epsilon).
      */
-    public static final DecimalFormat FORMAT = new DecimalFormat("0.######");
+    private static final DecimalFormat FORMAT = new DecimalFormat("0.######");
     static {
         DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
         FORMAT.setDecimalFormatSymbols(symbols);
