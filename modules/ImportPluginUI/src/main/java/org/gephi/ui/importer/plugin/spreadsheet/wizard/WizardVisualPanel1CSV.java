@@ -302,6 +302,7 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
 
         previewLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1CSV.class, "WizardVisualPanel1CSV.previewLabel.text")); // NOI18N
 
+        previewTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         scroll.setViewportView(previewTable);
 
         charsetLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);

@@ -224,6 +224,7 @@ public class WizardVisualPanel1Excel extends AbstractWizardVisualPanel1 {
 
         previewLabel.setText(org.openide.util.NbBundle.getMessage(WizardVisualPanel1Excel.class, "WizardVisualPanel1Excel.previewLabel.text")); // NOI18N
 
+        previewTable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         scroll.setViewportView(previewTable);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
