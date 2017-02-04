@@ -45,7 +45,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import org.gephi.io.importer.plugin.file.spreadsheet.AbstractImporterSpreadsheet;
@@ -74,7 +76,7 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
     public void refreshPreviewTable() {
         try (SheetParser parser = importer.createParser()) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
-            String[] headers = headerMap.keySet().toArray(new String[0]);
+            final String[] headers = headerMap.keySet().toArray(new String[0]);
 
             columnCount = headers.length;
 
@@ -96,7 +98,7 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
 
             ArrayList<String[]> records = new ArrayList<>();
             hasRowsMissingSourcesOrTargets = false;
-            SpreadsheetGeneralConfiguration.Mode mode = getSelectedMode();
+            final SpreadsheetGeneralConfiguration.Mode mode = getSelectedMode();
             int maxRowSize = 0;
             String[] currentRecord;
 
@@ -129,8 +131,7 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
             final String[][] values = records.toArray(new String[0][]);
             final int rowSize = maxRowSize;
 
-            JTable table = getPreviewTable();
-
+            final JTable table = getPreviewTable();
             table.setModel(new TableModel() {
 
                 @Override
@@ -182,12 +183,22 @@ public abstract class AbstractWizardVisualPanel1 extends javax.swing.JPanel {
                 public void removeTableModelListener(TableModelListener l) {
                 }
             });
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    boolean needsHeader = headers.length > 0;
+                    getPreviewTableScrollPane().setColumnHeaderView(needsHeader ? table.getTableHeader() : null);
+                }
+            });
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     protected abstract JTable getPreviewTable();
+
+    protected abstract JScrollPane getPreviewTableScrollPane();
 
     protected abstract SpreadsheetGeneralConfiguration.Mode getSelectedMode();
 

@@ -44,8 +44,10 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDraft;
@@ -89,6 +91,7 @@ public abstract class AbstractImportProcess implements Closeable {
 
     protected void setupColumnsIndexesAndFindSpecialColumns(List<String> specialColumnNames, Map<String, Class> columnsClasses) {
         Map<String, Integer> headerMap = parser.getHeaderMap();
+        Set<String> lowerCaseHeaders = new HashSet<>();
         for (Map.Entry<String, Integer> entry : headerMap.entrySet()) {
             String headerName = entry.getKey().trim();
             int currentIndex = entry.getValue();
@@ -99,14 +102,18 @@ public abstract class AbstractImportProcess implements Closeable {
                 continue;
             }
 
-            //First check for special columns:
+            //First check for repeated columns:
+            if (lowerCaseHeaders.contains(headerName.toLowerCase())) {
+                logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.repeatedColumn", headerName));
+                continue;
+            } else {
+                lowerCaseHeaders.add(headerName.toLowerCase());
+            }
+
+            //Then check for special columns:
             for (String specialColumnName : specialColumnNames) {
                 if (headerName.equalsIgnoreCase(specialColumnName)) {
-                    if (specialColumnsIndexMap.containsKey(specialColumnName)) {
-                        logWarning(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.repeatedSpecialColumn", specialColumnName));
-                    } else {
-                        specialColumnsIndexMap.put(specialColumnName, currentIndex);
-                    }
+                    specialColumnsIndexMap.put(specialColumnName, currentIndex);
 
                     isSpecialColumn = true;
                     break;
@@ -141,7 +148,7 @@ public abstract class AbstractImportProcess implements Closeable {
 
         return consistent;
     }
-    
+
     protected void addEdge(String source, String target) {
         addEdge(source, target, 1);
     }

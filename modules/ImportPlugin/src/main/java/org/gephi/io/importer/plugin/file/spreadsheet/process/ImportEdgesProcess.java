@@ -44,6 +44,7 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
@@ -80,6 +81,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
     private void init() {
         //Make sure default container configuration is correct for importing edges:
+        container.setAllowAutoNode(true);
         container.setAllowParallelEdge(true);
         container.setAllowSelfLoop(true);
         container.setEdgeDefault(EdgeDirectionDefault.MIXED);

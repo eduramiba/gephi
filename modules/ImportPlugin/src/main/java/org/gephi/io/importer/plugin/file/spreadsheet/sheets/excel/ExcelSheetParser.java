@@ -102,7 +102,7 @@ public class ExcelSheetParser implements SheetParser {
     private void initHeaderInfo() {
         Row firstRow = sheet.getRow(sheet.getFirstRowNum());
         int zeroBasedIndex = 0;
-        for (int i = rowsFirstIndex; i < rowsLastIndex; i++) {
+        for (int i = rowsFirstIndex; i <= rowsLastIndex; i++) {
             Cell cell = firstRow.getCell(i);
             String header = ExcelSheetRow.getRowCellAsString(cell, i);
             if (header != null && !header.trim().isEmpty()) {

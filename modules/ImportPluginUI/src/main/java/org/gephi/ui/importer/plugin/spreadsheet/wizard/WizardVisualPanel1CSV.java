@@ -42,6 +42,7 @@ Portions Copyrighted 2016 Gephi Consortium.
 package org.gephi.ui.importer.plugin.spreadsheet.wizard;
 
 import java.nio.charset.Charset;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import org.gephi.io.importer.plugin.file.spreadsheet.ImporterSpreadsheetCSV;
 import org.gephi.io.importer.plugin.file.spreadsheet.process.SpreadsheetGeneralConfiguration.Mode;
@@ -128,6 +129,8 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
         pathTextField.setToolTipText(filePath);
 
         initialized = true;
+        
+        refreshPreviewTable();
     }
 
     public ValidationPanel getValidationPanel() {
@@ -159,7 +162,7 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
     }
 
     @Override
-    public void refreshPreviewTable() {
+    public final void refreshPreviewTable() {
         super.refreshPreviewTable();
 
         wizard1.fireChangeEvent();
@@ -227,6 +230,11 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
     @Override
     protected JTable getPreviewTable() {
         return previewTable;
+    }
+
+    @Override
+    protected JScrollPane getPreviewTableScrollPane() {
+        return scroll;
     }
 
     class SeparatorWrapper {
@@ -381,22 +389,22 @@ public class WizardVisualPanel1CSV extends AbstractWizardVisualPanel1 {
             }
 
             importer.setFieldDelimiter(getSelectedSeparator());
+            refreshPreviewTable();
         }
-        refreshPreviewTable();
     }//GEN-LAST:event_separatorComboBoxItemStateChanged
 
     private void charsetComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_charsetComboBoxItemStateChanged
         if (initialized) {
             importer.setCharset(getSelectedCharset());
+            refreshPreviewTable();
         }
-        refreshPreviewTable();
     }//GEN-LAST:event_charsetComboBoxItemStateChanged
 
     private void modeComboBoxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_modeComboBoxItemStateChanged
         if (initialized) {
             importer.setMode(getSelectedMode());
+            refreshPreviewTable();
         }
-        refreshPreviewTable();
     }//GEN-LAST:event_modeComboBoxItemStateChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox charsetComboBox;
