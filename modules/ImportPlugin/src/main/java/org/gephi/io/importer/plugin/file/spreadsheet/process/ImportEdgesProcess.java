@@ -44,7 +44,6 @@ package org.gephi.io.importer.plugin.file.spreadsheet.process;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
@@ -53,7 +52,6 @@ import org.gephi.io.importer.api.EdgeWeightMergeStrategy;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
-import org.openide.util.NbBundle;
 
 /**
  *
@@ -149,13 +147,13 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                     try {
                         weight = Double.parseDouble(weightStr);
                     } catch (Exception ex) {
-                        logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.invalidEdgeWeight", weightStr));
+                        logError(getMessage("ImportEdgesProcess.error.invalidEdgeWeight", weightStr));
                     }
                 }
             }
 
             if (id != null && container.edgeExists(id)) {
-                logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.repeatedId", id));
+                logError(getMessage("ImportEdgesProcess.error.repeatedId", id));
                 continue;
             }
 
@@ -166,17 +164,17 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             }
 
             if (source == null || target == null) {
-                logError(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.error.noSourceOrTargetData"));
+                logError(getMessage("ImportEdgesProcess.error.noSourceOrTargetData"));
                 continue;
             }
 
             if (!container.nodeExists(source) && !createMissingNodes) {
-                logWarning(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.warning.missingSourceNode", source));
+                logWarning(getMessage("ImportEdgesProcess.warning.missingSourceNode", source));
                 continue;
             }
 
             if (!container.nodeExists(target) && !createMissingNodes) {
-                logWarning(NbBundle.getMessage(ImportEdgesProcess.class, "ImportEdgesProcess.warning.missingTargetNode", target));
+                logWarning(getMessage("ImportEdgesProcess.warning.missingTargetNode", target));
                 continue;
             }
 

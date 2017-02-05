@@ -49,7 +49,6 @@ import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
-import org.openide.util.NbBundle;
 
 /**
  *
@@ -96,7 +95,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
             }
 
             if (id != null && container.nodeExists(id)) {
-                logError(NbBundle.getMessage(ImportNodesProcess.class, "ImportNodesProcess.error.repeatedId", id));
+                logError(getMessage("ImportNodesProcess.error.repeatedId", id));
                 continue;
             }
 

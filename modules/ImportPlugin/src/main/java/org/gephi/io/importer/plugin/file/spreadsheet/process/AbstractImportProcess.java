@@ -104,7 +104,7 @@ public abstract class AbstractImportProcess implements Closeable {
 
             //First check for repeated columns:
             if (lowerCaseHeaders.contains(headerName.toLowerCase())) {
-                logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.repeatedColumn", headerName));
+                logError(getMessage("AbstractImportProcess.error.repeatedColumn", headerName));
                 continue;
             } else {
                 lowerCaseHeaders.add(headerName.toLowerCase());
@@ -135,7 +135,7 @@ public abstract class AbstractImportProcess implements Closeable {
         try {
             return AttributeUtils.parse(value, type);
         } catch (Exception e) {
-            logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.parseError", value, type.getSimpleName(), column));
+            logError(getMessage("AbstractImportProcess.error.parseError", value, type.getSimpleName(), column));
             return null;
         }
     }
@@ -143,7 +143,7 @@ public abstract class AbstractImportProcess implements Closeable {
     protected boolean checkRow(SheetRow row) {
         boolean consistent = row.isConsistent();
         if (!consistent) {
-            logError(NbBundle.getMessage(AbstractImportProcess.class, "AbstractImportProcess.error.inconsistentRow"));
+            logError(getMessage("AbstractImportProcess.error.inconsistentRow"));
         }
 
         return consistent;
@@ -202,6 +202,14 @@ public abstract class AbstractImportProcess implements Closeable {
 
     public Report getReport() {
         return report;
+    }
+
+    protected String getMessage(String key) {
+        return NbBundle.getMessage(getClass(), key);
+    }
+
+    protected String getMessage(String key, Object... params) {
+        return NbBundle.getMessage(getClass(), key, params);
     }
 
     protected abstract void addColumn(String name, Class type);

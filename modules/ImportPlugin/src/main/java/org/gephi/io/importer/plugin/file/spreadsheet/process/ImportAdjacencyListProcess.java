@@ -78,8 +78,12 @@ public class ImportAdjacencyListProcess extends AbstractImportProcess {
 
                         if (target != null) {
                             addEdge(source.trim(), target.trim());
+                        } else {
+                            logError(getMessage("ImportAdjacencyListProcess.error.missingTarget", i));
                         }
                     }
+                } else {
+                    logError(getMessage("ImportAdjacencyListProcess.error.missingSource"));
                 }
             }
         }

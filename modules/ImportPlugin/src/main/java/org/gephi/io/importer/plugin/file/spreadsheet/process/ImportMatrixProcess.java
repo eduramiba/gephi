@@ -64,7 +64,9 @@ public class ImportMatrixProcess extends AbstractImportProcess {
         container.setFillLabelWithId(true);
         Progress.start(progressTicket);
 
-        List<String> labels = new ArrayList<>();
+        List<String> targetLabels = new ArrayList<>();
+        List<String> sourceLabels = new ArrayList<>();
+
         boolean firstRow = true;
         int rowCount = 0;
 
@@ -72,37 +74,47 @@ public class ImportMatrixProcess extends AbstractImportProcess {
             if (firstRow) {
                 //Start at 1, ignoring first value:
                 for (int i = 1; i < row.size(); i++) {
-                    labels.add(row.get(i));
+                    String label = row.get(i);
+                    targetLabels.add(label);
+
+                    if (label == null) {
+                        logError(getMessage("ImportMatrixProcess.error.missingTarget", i));
+                    }
                 }
 
                 firstRow = false;
             } else {
                 if (row.size() > 0) {
                     String source = row.get(0);
-                    for (int i = 1; i < row.size(); i++) {
-                        int labelIndex = i - 1;
-                        if (labelIndex < labels.size()) {
-                            try {
+                    sourceLabels.add(source);
+
+                    if (source != null) {
+                        for (int i = 1; i < row.size(); i++) {
+                            int labelIndex = i - 1;
+                            if (labelIndex < targetLabels.size()) {
                                 String value = row.get(i);
-                                if (value != null && !value.trim().equals("0")) {
-                                    float weight = Float.parseFloat(value.replace(',', '.'));
+                                String target = targetLabels.get(labelIndex);
 
-                                    if (weight != 0) {
-                                        String target = labels.get(labelIndex);
+                                if (target != null) {
+                                    try {
+                                        if (value != null && !value.trim().equals("0")) {
+                                            float weight = Float.parseFloat(value.replace(',', '.'));
 
-                                        if (source != null && target != null) {
-                                            addEdge(source.trim(), target.trim(), weight);
-                                        } else {
-                                            //Report error
+                                            if (weight != 0) {
+                                                addEdge(source.trim(), target.trim(), weight);
+                                            }
                                         }
+                                    } catch (NumberFormatException ex) {
+                                        logError(getMessage("ImportMatrixProcess.error.parseWeightError", value));
                                     }
                                 }
-                            } catch (NumberFormatException ex) {
-                                //Ignore cell & Report error
+                            } else {
+                                logError(getMessage("ImportMatrixProcess.error.invalidRowLength", row.size() - 1, targetLabels.size()));
+                                break;
                             }
-                        } else {
-                            //Report error
                         }
+                    } else {
+                        logError(getMessage("ImportMatrixProcess.error.missingSource"));
                     }
                 }
 
@@ -110,8 +122,10 @@ public class ImportMatrixProcess extends AbstractImportProcess {
             }
         }
 
-        if (rowCount != labels.size()) {
-            //Report warning
+        if (rowCount != targetLabels.size()) {
+            logWarning(getMessage("ImportMatrixProcess.warning.inconsistentNumberOfLines", rowCount, targetLabels.size()));
+        } else if (!sourceLabels.equals(targetLabels)) {
+            logWarning(getMessage("ImportMatrixProcess.warning.inconsistentLabels"));
         }
 
         Progress.finish(progressTicket);
