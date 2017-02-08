@@ -44,7 +44,7 @@ package org.gephi.io.importer.api;
 /**
  * Defines the way edge weights are merged.
  */
-public enum EdgeWeightMergeStrategy {
+public enum EdgeMergeStrategy {
 
-    SUM, AVG, MAX, MIN
+    SUM, AVG, MAX, MIN, FIRST, LAST, NO_MERGE
 }

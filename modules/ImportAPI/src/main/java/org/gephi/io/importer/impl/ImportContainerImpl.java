@@ -50,18 +50,15 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.Interval;
 import org.gephi.graph.api.TimeFormat;
 import org.gephi.graph.api.TimeRepresentation;
-import org.gephi.graph.api.types.TimeMap;
 import org.gephi.graph.api.types.TimeSet;
 import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.Container;
@@ -70,7 +67,7 @@ import org.gephi.io.importer.api.ContainerUnloader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.EdgeDraft;
-import org.gephi.io.importer.api.EdgeWeightMergeStrategy;
+import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementDraft;
 import org.gephi.io.importer.api.ElementIdType;
 import org.gephi.io.importer.api.Issue;
@@ -727,32 +724,6 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
             }
         }
 
-        //Merge parallel edges
-        if (parameters.isParallelEdges()) {
-            for (Long2ObjectMap<int[]> edgesTypeMap : edgeTypeSets) {
-                if (edgeTypeMap != null) {
-                    for (Long2ObjectMap.Entry<int[]> entry : edgesTypeMap.long2ObjectEntrySet()) {
-                        if (entry.getValue().length > 1) {
-                            int[] edges = entry.getValue();
-                            //Sort and get min
-                            Arrays.sort(edges);
-                            int minIndex = edges[0];
-                            EdgeDraftImpl min = edgeList.get(minIndex);
-                            EdgeDraftImpl[] sources = new EdgeDraftImpl[edges.length - 1];
-                            for (int i = 1; i < edges.length; i++) {
-                                int sourceIndex = edges[i];
-                                sources[i - 1] = edgeList.get(sourceIndex);
-                                edgeList.set(sourceIndex, null);
-                                edgeMap.remove(sources[i - 1].getId());
-                            }
-                            mergeParallelEdges(sources, min);
-                            entry.setValue(new int[]{minIndex});
-                        }
-                    }
-                }
-            }
-        }
-
         if (directedEdgesCount > 0 && edgeDefault.equals(EdgeDirectionDefault.UNDIRECTED)) {
             //Force undirected
             for (EdgeDraftImpl edge : edgeList.toArray(new EdgeDraftImpl[0])) {
@@ -835,82 +806,8 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
         //MANAGEMENT
     }
 
-    protected void mergeParallelEdges(EdgeDraftImpl[] sources, EdgeDraftImpl dest) {
-        Object val = dest.getValue("weight");
-        if (val == null || !(val instanceof TimeMap)) {
-            EdgeWeightMergeStrategy mergeStrategy = parameters.getEdgesMergeStrategy();
-            int count = 1 + sources.length;
-            double sum = dest.getWeight();
-            double min = dest.getWeight();
-            double max = dest.getWeight();
-            for (EdgeDraftImpl edge : sources) {
-                sum += edge.getWeight();
-                min = Math.min(min, edge.getWeight());
-                max = Math.max(max, edge.getWeight());
-            }
-            double result = dest.getWeight();
-            switch (mergeStrategy) {
-                case AVG:
-                    result = sum / count;
-                    break;
-                case MAX:
-                    result = max;
-                    break;
-                case MIN:
-                    result = min;
-                    break;
-                case SUM:
-                    result = sum;
-                    break;
-                default:
-                    break;
-            }
-            dest.setWeight(result);
-        }
-
-        //Add dest to sources for convenience
-        sources = Arrays.copyOf(sources, sources.length + 1);
-        sources[sources.length - 1] = dest;
-
-        //Merge dynamic attributes
-        for (ColumnDraft columnDraft : getEdgeColumns()) {
-            if (columnDraft.isDynamic()) {
-                TimeMap timeMap = null;
-                for (EdgeDraftImpl edge : sources) {
-                    TimeMap t = (TimeMap) edge.getValue(columnDraft.getId());
-                    if (t != null && timeMap == null) {
-                        timeMap = t;
-                    } else if (t != null && timeMap != null) {
-                        for (Object key : t.toKeysArray()) {
-                            timeMap.put(key, t.get(key, null));
-                        }
-                    }
-                }
-                if (timeMap != null) {
-                    dest.setValue(columnDraft.getId(), timeMap);
-                }
-            }
-        }
-
-        //Merge timeset
-        TimeSet timeSet = null;
-        for (EdgeDraftImpl edge : sources) {
-            TimeSet t = edge.getTimeSet();
-            if (t != null && timeSet == null) {
-                timeSet = t;
-            } else if (t != null && timeSet != null) {
-                for (Object key : t.toArray()) {
-                    timeSet.add(key);
-                }
-            }
-        }
-        if (timeSet != null) {
-            dest.timeSet = timeSet;
-        }
-    }
-
     protected void mergeDirectedEdges(EdgeDraftImpl source, EdgeDraftImpl dest) {
-        EdgeWeightMergeStrategy mergeStrategy = parameters.getEdgesMergeStrategy();
+        EdgeMergeStrategy mergeStrategy = parameters.getEdgesMergeStrategy();
         double result = dest.getWeight();
         switch (mergeStrategy) {
             case AVG:
@@ -924,6 +821,12 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
                 break;
             case SUM:
                 result = source.getWeight() + dest.getWeight();
+                break;
+            case FIRST:
+                result = dest.getWeight();
+                break;
+            case LAST:
+                result = source.getWeight();
                 break;
             default:
                 break;
@@ -974,7 +877,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     }
 
     @Override
-    public EdgeWeightMergeStrategy getEdgesMergeStrategy() {
+    public EdgeMergeStrategy getEdgesMergeStrategy() {
         return parameters.getEdgesMergeStrategy();
     }
 
@@ -1033,7 +936,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     }
 
     @Override
-    public void setEdgesMergeStrategy(EdgeWeightMergeStrategy edgesMergeStrategy) {
+    public void setEdgesMergeStrategy(EdgeMergeStrategy edgesMergeStrategy) {
         parameters.setEdgesMergeStrategy(edgesMergeStrategy);
     }
 

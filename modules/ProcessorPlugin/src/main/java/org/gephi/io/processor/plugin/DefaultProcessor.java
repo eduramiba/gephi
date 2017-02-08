@@ -56,6 +56,7 @@ import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerUnloader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDraft;
+import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementIdType;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.processor.spi.Processor;
@@ -174,6 +175,8 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
             Progress.progress(progressTicket);
         }
 
+        final EdgeMergeStrategy edgesMergeStrategy = containers[0].getEdgesMergeStrategy();
+
         //Create all edges and push to data structure
         for (EdgeDraft draftEdge : container.getEdges()) {
             String idString = draftEdge.getId();
@@ -202,6 +205,7 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
             Edge edge = graph.getEdge(source, target, edgeType);
 
             //Undirected and directed edges are incompatible, check for them or we could get an exception:
+            boolean canCreateEdge = true;
             if (edge == null) {
                 if (createDirected) {
                     //The edge may exist with opposite source-target but undirected. In that case we can't create a directed one:
@@ -213,14 +217,21 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                 } else {
                     edge = graph.getEdge(target, source, edgeType);
                 }
+
+                if (edge != null) {
+                    canCreateEdge = false;
+                }
             }
 
-            boolean newEdge = false;
-            if (edge == null) {
+            if (canCreateEdge && edgesMergeStrategy == EdgeMergeStrategy.NO_MERGE) {
+                edge = null;//Force create, no merge
+            }
+
+            boolean newEdge = edge == null;
+            if (newEdge) {
                 edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), createDirected);
 
                 addedEdges++;
-                newEdge = true;
             }
 
             flushToEdge(draftEdge, edge, newEdge);

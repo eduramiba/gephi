@@ -122,5 +122,5 @@ public interface ContainerUnloader {
     
     public boolean isFillLabelWithId();
 
-    public EdgeWeightMergeStrategy getEdgesMergeStrategy();
+    public EdgeMergeStrategy getEdgesMergeStrategy();
 }

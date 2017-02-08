@@ -294,5 +294,5 @@ public interface ContainerLoader {
     
     public void setFillLabelWithId(boolean value);
 
-    public void setEdgesMergeStrategy(EdgeWeightMergeStrategy edgesMergeStrategy);
+    public void setEdgesMergeStrategy(EdgeMergeStrategy edgesMergeStrategy);
 }

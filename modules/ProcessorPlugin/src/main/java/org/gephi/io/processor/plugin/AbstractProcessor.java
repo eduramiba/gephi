@@ -61,6 +61,7 @@ import org.gephi.graph.api.types.TimestampSet;
 import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerUnloader;
 import org.gephi.io.importer.api.EdgeDraft;
+import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementDraft;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.project.api.Workspace;
@@ -186,6 +187,12 @@ public abstract class AbstractProcessor {
                 case SUM:
                     result = edgeDraft.getWeight() + edge.getWeight();
                     break;
+                case FIRST:
+                    result = edge.getWeight();
+                    break;
+                case LAST:
+                    result = edgeDraft.getWeight();
+                    break;
                 default:
                     break;
             }
@@ -247,32 +254,42 @@ public abstract class AbstractProcessor {
     }
 
     protected void flushToEdge(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
-        if (edgeDraft.getColor() != null) {
-            edge.setColor(edgeDraft.getColor());
-        } else {
-            edge.setR(0f);
-            edge.setG(0f);
-            edge.setB(0f);
-            edge.setAlpha(0f);
-        }
+        //Edge weight
+        flushEdgeWeight(edgeDraft, edge, newEdge);
+        
+        //Replace data when a new edge is created or the merge strategy is not to keep the first edge data:
+        EdgeMergeStrategy edgesMergeStrategy = containers[0].getEdgesMergeStrategy();
+        if (newEdge || edgesMergeStrategy != EdgeMergeStrategy.FIRST) {
+            if (edgeDraft.getColor() != null) {
+                edge.setColor(edgeDraft.getColor());
+            } else {
+                edge.setR(0f);
+                edge.setG(0f);
+                edge.setB(0f);
+                edge.setAlpha(0f);
+            }
 
-        if (edgeDraft.getLabel() != null) {
-            edge.setLabel(edgeDraft.getLabel());
-        }
+            if (edgeDraft.getLabel() != null) {
+                edge.setLabel(edgeDraft.getLabel());
+            }
 
-        if (edge.getTextProperties() != null) {
-            edge.getTextProperties().setVisible(edgeDraft.isLabelVisible());
-        }
+            if (edge.getTextProperties() != null) {
+                edge.getTextProperties().setVisible(edgeDraft.isLabelVisible());
+            }
 
-        if (edgeDraft.getLabelSize() != -1f && edge.getTextProperties() != null) {
-            edge.getTextProperties().setSize(edgeDraft.getLabelSize());
-        }
+            if (edgeDraft.getLabelSize() != -1f && edge.getTextProperties() != null) {
+                edge.getTextProperties().setSize(edgeDraft.getLabelSize());
+            }
 
-        if (edgeDraft.getLabelColor() != null && edge.getTextProperties() != null) {
-            Color labelColor = edgeDraft.getLabelColor();
-            edge.getTextProperties().setColor(labelColor);
-        } else {
-            edge.getTextProperties().setColor(new Color(0, 0, 0, 0));
+            if (edgeDraft.getLabelColor() != null && edge.getTextProperties() != null) {
+                Color labelColor = edgeDraft.getLabelColor();
+                edge.getTextProperties().setColor(labelColor);
+            } else {
+                edge.getTextProperties().setColor(new Color(0, 0, 0, 0));
+            }
+            
+            //Attributes
+            flushToElementAttributes(edgeDraft, edge);
         }
 
         //Timeset
@@ -286,12 +303,6 @@ public abstract class AbstractProcessor {
         } else if (edgeDraft.getGraphInterval() != null) {
             edge.addInterval(edgeDraft.getGraphInterval());
         }
-
-        //Dynamic edge weight (if any)
-        flushEdgeWeight(edgeDraft, edge, newEdge);
-
-        //Attributes
-        flushToElementAttributes(edgeDraft, edge);
     }
 
     protected void flushTimeSet(TimeSet timeSet, Element element) {
