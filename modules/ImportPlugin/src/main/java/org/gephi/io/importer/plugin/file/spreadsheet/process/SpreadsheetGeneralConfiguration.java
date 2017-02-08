@@ -68,8 +68,7 @@ public class SpreadsheetGeneralConfiguration {
                 ImportEdgesProcess.EDGE_LABEL,
                 ImportEdgesProcess.EDGE_SOURCE,
                 ImportEdgesProcess.EDGE_TARGET,
-                ImportEdgesProcess.EDGE_TYPE,
-                ImportEdgesProcess.EDGE_WEIGHT
+                ImportEdgesProcess.EDGE_TYPE
         )),
         ADJACENCY_LIST,
         MATRIX;

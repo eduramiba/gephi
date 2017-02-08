@@ -48,7 +48,6 @@ import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.EdgeDraft;
-import org.gephi.io.importer.api.EdgeWeightMergeStrategy;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
 import org.gephi.utils.progress.ProgressTicket;
@@ -66,7 +65,6 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
     public static final String EDGE_ID = "id";
     public static final String EDGE_LABEL = "label";
-    public static final String EDGE_WEIGHT = "weight";
 
     private final SpreadsheetEdgesConfiguration config;
 
@@ -83,14 +81,13 @@ public class ImportEdgesProcess extends AbstractImportProcess {
         container.setAllowParallelEdge(true);
         container.setAllowSelfLoop(true);
         container.setEdgeDefault(EdgeDirectionDefault.MIXED);
-        container.setEdgesMergeStrategy(EdgeWeightMergeStrategy.SUM);
     }
 
     @Override
     public boolean execute() {
         final boolean createMissingNodes = config.isCreateMissingNodes();
 
-        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(EDGE_SOURCE, EDGE_TARGET, EDGE_TYPE, EDGE_KIND, EDGE_ID, EDGE_LABEL, EDGE_WEIGHT), generalConfig.getColumnsClasses());
+        setupColumnsIndexesAndFindSpecialColumns(Arrays.asList(EDGE_SOURCE, EDGE_TARGET, EDGE_TYPE, EDGE_KIND, EDGE_ID, EDGE_LABEL), generalConfig.getColumnsClasses());
 
         Integer sourceColumnIndex = specialColumnsIndexMap.get(EDGE_SOURCE);
         Integer targetColumnIndex = specialColumnsIndexMap.get(EDGE_TARGET);
@@ -99,7 +96,6 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
         Integer idColumnIndex = specialColumnsIndexMap.get(EDGE_ID);
         Integer labelColumnIndex = specialColumnsIndexMap.get(EDGE_LABEL);
-        Integer weightColumnIndex = specialColumnsIndexMap.get(EDGE_WEIGHT);
 
         progressTicket.start();
         for (SheetRow row : parser) {
@@ -115,7 +111,6 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             String target = null;
             String id = null;
             String label = null;
-            double weight = 1;
             EdgeDirection direction = EdgeDirection.DIRECTED;
             String kind = null;
 
@@ -141,17 +136,8 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             if (labelColumnIndex != null) {
                 label = row.get(labelColumnIndex);
             }
-            if (weightColumnIndex != null) {
-                String weightStr = row.get(weightColumnIndex);
-                if (weightStr != null) {
-                    try {
-                        weight = Double.parseDouble(weightStr);
-                    } catch (Exception ex) {
-                        logError(getMessage("ImportEdgesProcess.error.invalidEdgeWeight", weightStr));
-                    }
-                }
-            }
 
+            //Note: we allow any type on weight column, to support dynamic weights
             if (id != null && container.edgeExists(id)) {
                 logError(getMessage("ImportEdgesProcess.error.repeatedId", id));
                 continue;
@@ -181,7 +167,6 @@ public class ImportEdgesProcess extends AbstractImportProcess {
             edge.setSource(container.getNode(source));
             edge.setTarget(container.getNode(target));
             edge.setDirection(direction);
-            edge.setWeight(weight);
 
             if (kind != null) {
                 edge.setType(kind);
@@ -201,7 +186,11 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                     value = parseValue((String) value, type, column);
 
                     if (value != null) {
-                        edge.setValue(column, value);
+                        if (column.equalsIgnoreCase("weight") && value instanceof Number) {
+                            edge.setWeight(((Number) value).doubleValue());
+                        } else {
+                            edge.setValue(column, value);
+                        }
                     }
                 }
             }
