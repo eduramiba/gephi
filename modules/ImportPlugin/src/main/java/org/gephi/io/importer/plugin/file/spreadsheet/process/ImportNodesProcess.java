@@ -94,11 +94,6 @@ public class ImportNodesProcess extends AbstractImportProcess {
                 label = row.get(labelColumnIndex);
             }
 
-            if (id != null && container.nodeExists(id)) {
-                logError(getMessage("ImportNodesProcess.error.repeatedId", id));
-                continue;
-            }
-
             NodeDraft node = id != null ? container.factory().newNodeDraft(id) : container.factory().newNodeDraft();
 
             if (label != null) {

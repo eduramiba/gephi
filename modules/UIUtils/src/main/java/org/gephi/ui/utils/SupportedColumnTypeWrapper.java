@@ -56,6 +56,7 @@ import org.gephi.graph.api.types.IntervalMap;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.graph.api.types.TimestampMap;
 import org.gephi.graph.api.types.TimestampSet;
+import org.gephi.utils.Attributes;
 
 /**
  * Simple wrapper class for column type selection in UI.
@@ -185,7 +186,7 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
                 //Not yet supported in Gephi
             }
 
-            if (AttributeUtils.isStandardizedType(type) && isTypeAvailable(type, timeRepresentation)) {
+            if (AttributeUtils.isStandardizedType(type) && Attributes.isTypeAvailable(type, timeRepresentation)) {
                 supportedTypesWrappers.add(new SupportedColumnTypeWrapper(type));
             }
         }
@@ -193,30 +194,5 @@ public class SupportedColumnTypeWrapper implements Comparable<SupportedColumnTyp
         Collections.sort(supportedTypesWrappers);
 
         return supportedTypesWrappers;
-    }
-
-    private static boolean isTypeAvailable(Class<?> type, TimeRepresentation timeRepresentation) {
-        if (AttributeUtils.isDynamicType(type)) {
-            switch (timeRepresentation) {
-                case INTERVAL:
-                    return isIntervalType(type);
-                case TIMESTAMP:
-                    return isTimestampType(type);
-                default:
-                    throw new IllegalArgumentException("Unknown timeRepresentation");
-            }
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean isTimestampType(Class<?> type) {
-        return TimestampSet.class.isAssignableFrom(type)
-                || TimestampMap.class.isAssignableFrom(type);
-    }
-
-    private static boolean isIntervalType(Class<?> type) {
-        return IntervalSet.class.isAssignableFrom(type)
-                || IntervalMap.class.isAssignableFrom(type);
     }
 }

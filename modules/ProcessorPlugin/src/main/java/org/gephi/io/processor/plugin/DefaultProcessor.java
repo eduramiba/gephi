@@ -41,6 +41,7 @@
  */
 package org.gephi.io.processor.plugin;
 
+import com.google.common.base.MoreObjects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.gephi.graph.api.Configuration;
@@ -58,6 +59,7 @@ import org.gephi.io.importer.api.EdgeDirection;
 import org.gephi.io.importer.api.EdgeDraft;
 import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementIdType;
+import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.processor.spi.Processor;
 import org.gephi.project.api.ProjectController;
@@ -128,7 +130,16 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
             }
         }
 
-        graphController.getGraphModel(workspace).setConfiguration(configuration);
+        try {
+            graphController.getGraphModel(workspace).setConfiguration(configuration);
+        } catch (Exception e) {
+            String message = NbBundle.getMessage(
+                    DefaultProcessor.class, "DefaultProcessor.error.configurationChangeForbidden",
+                    new GraphConfigurationPrinter(graphController.getGraphModel(workspace).getConfiguration()).toString(),
+                    new GraphConfigurationPrinter(configuration).toString()
+            );
+            report.logIssue(new Issue(message, Issue.Level.SEVERE));
+        }
     }
 
     protected void process(ContainerUnloader container, Workspace workspace) {
@@ -229,7 +240,12 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
 
             boolean newEdge = edge == null;
             if (newEdge) {
-                edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), createDirected);
+                if (!graph.hasEdge(id)) {
+                    edge = factory.newEdge(id, source, target, edgeType, draftEdge.getWeight(), createDirected);
+                } else {
+                    //The id is already in use by a different edge, generate a new id:
+                    edge = factory.newEdge(source, target, edgeType, draftEdge.getWeight(), createDirected);
+                }
 
                 addedEdges++;
             }
@@ -271,5 +287,26 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                 break;
         }
         return id;
+    }
+    
+    private class GraphConfigurationPrinter {
+        private final Configuration configuration;
+
+        public GraphConfigurationPrinter(Configuration configuration) {
+            this.configuration = configuration;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(configuration)
+                    .add("nodeIdType", configuration.getNodeIdType())
+                    .add("edgeIdType", configuration.getEdgeIdType())
+                    .add("edgeWeightType", configuration.getEdgeWeightType())
+                    .add("timeRepresentation", configuration.getEdgeWeightColumn())
+                    .add("edgeWeightColumn", configuration.getTimeRepresentation())
+                    .toString();
+        }
+        
+        
     }
 }

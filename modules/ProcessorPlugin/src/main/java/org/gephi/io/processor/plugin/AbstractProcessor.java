@@ -42,8 +42,8 @@
 package org.gephi.io.processor.plugin;
 
 import java.awt.Color;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashSet;
+import java.util.Set;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.Column;
 import org.gephi.graph.api.Edge;
@@ -63,9 +63,13 @@ import org.gephi.io.importer.api.ContainerUnloader;
 import org.gephi.io.importer.api.EdgeDraft;
 import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementDraft;
+import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.NodeDraft;
+import org.gephi.io.importer.api.Report;
 import org.gephi.project.api.Workspace;
+import org.gephi.utils.Attributes;
 import org.gephi.utils.progress.ProgressTicket;
+import org.openide.util.NbBundle;
 
 public abstract class AbstractProcessor {
 
@@ -73,6 +77,10 @@ public abstract class AbstractProcessor {
     protected Workspace workspace;
     protected ContainerUnloader[] containers;
     protected GraphModel graphModel;
+
+    private final Set<ColumnDraft> columnsTypeMismatchAlreadyWarned = new HashSet<>();
+
+    protected Report report = new Report();
 
     protected void flushColumns(ContainerUnloader container) {
         addColumnsToTable(container, graphModel.getNodeTable(), container.getNodeColumns());
@@ -92,7 +100,18 @@ public abstract class AbstractProcessor {
                         typeClass = AttributeUtils.getIntervalMapType(typeClass);
                     }
                 }
-                table.addColumn(col.getId(), col.getTitle(), typeClass, Origin.DATA, col.getDefaultValue(), !col.isDynamic());
+
+                if (Attributes.isTypeAvailable(typeClass, timeRepresentation)) {
+                    table.addColumn(col.getId(), col.getTitle(), typeClass, Origin.DATA, col.getDefaultValue(), !col.isDynamic());
+                } else {
+                    String error = NbBundle.getMessage(
+                            AbstractProcessor.class, "AbstractProcessor.error.unavailableColumnType",
+                            typeClass.getSimpleName(),
+                            timeRepresentation.name(),
+                            col.getId()
+                    );
+                    report.logIssue(new Issue(error, Issue.Level.SEVERE));
+                }
             }
         }
     }
@@ -207,18 +226,24 @@ public abstract class AbstractProcessor {
             Object val = elementDraft.getValue(columnDraft.getId());
 
             Column column = element.getTable().getColumn(columnDraft.getId());
+            if (column == null) {
+                continue;//The column might be not present, for cases when it cannot be added due to time representation mismatch, etc
+            }
+
             if (!column.getTypeClass().equals(columnDraft.getTypeClass())) {
-                Logger.getLogger("").log(
-                        Level.SEVERE,
-                        String.format(
-                                "Existing column '%s' in graph with type '%s' is not compatible with imported column type '%s'",
-                                column.getId(),
-                                column.getTypeClass(),
-                                columnDraft.getTypeClass()
-                        )
-                );
-                //TODO: Add a Report after processor??
-                //TODO: avoid repetition
+                if (!columnsTypeMismatchAlreadyWarned.contains(columnDraft)) {
+                    columnsTypeMismatchAlreadyWarned.add(columnDraft);
+
+                    String error = NbBundle.getMessage(
+                            AbstractProcessor.class, "AbstractProcessor.error.columnTypeMismatch",
+                            column.getId(),
+                            column.getTypeClass().getSimpleName(),
+                            columnDraft.getTypeClass().getSimpleName()
+                    );
+
+                    report.logIssue(new Issue(error, Issue.Level.SEVERE));
+                }
+
                 continue;//Incompatible types!
             }
 
@@ -256,7 +281,7 @@ public abstract class AbstractProcessor {
     protected void flushToEdge(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
         //Edge weight
         flushEdgeWeight(edgeDraft, edge, newEdge);
-        
+
         //Replace data when a new edge is created or the merge strategy is not to keep the first edge data:
         EdgeMergeStrategy edgesMergeStrategy = containers[0].getEdgesMergeStrategy();
         if (newEdge || edgesMergeStrategy != EdgeMergeStrategy.FIRST) {
@@ -287,7 +312,7 @@ public abstract class AbstractProcessor {
             } else {
                 edge.getTextProperties().setColor(new Color(0, 0, 0, 0));
             }
-            
+
             //Attributes
             flushToElementAttributes(edgeDraft, edge);
         }
@@ -325,13 +350,25 @@ public abstract class AbstractProcessor {
         for (Interval i : set1.toArray()) {
             merged.add(i);
         }
+
+        boolean overlappingIntervals = false;
         for (Interval i : set2.toArray()) {
             try {
                 merged.add(i);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 //Catch overlapping intervals not allowed
-                //TODO: Report??
+                overlappingIntervals = true;
             }
+        }
+
+        if (overlappingIntervals) {
+            String warning = NbBundle.getMessage(
+                    AbstractProcessor.class, "AbstractProcessor.warning.overlappingIntervals",
+                    set1.toString(graphModel.getTimeFormat(), graphModel.getTimeZone()),
+                    set2.toString(graphModel.getTimeFormat(), graphModel.getTimeZone()),
+                    merged.toString(graphModel.getTimeFormat(), graphModel.getTimeZone())
+            );
+            report.logIssue(new Issue(warning, Issue.Level.WARNING));
         }
 
         return merged;

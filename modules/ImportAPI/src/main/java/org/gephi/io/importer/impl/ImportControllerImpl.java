@@ -70,7 +70,6 @@ import org.gephi.project.api.Workspace;
 import org.gephi.utils.TempDirUtils;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.io.ReaderInputStream;
 import org.openide.util.lookup.ServiceProvider;

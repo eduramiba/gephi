@@ -468,7 +468,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public ColumnDraft addNodeColumn(String key, Class typeClass, boolean dynamic) {
-        key = key.toLowerCase();
+        key = key.toLowerCase().trim();
         ColumnDraft column = nodeColumns.get(key);
         typeClass = AttributeUtils.getStandardizedType(typeClass);
         if (column == null) {
@@ -501,7 +501,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
 
     @Override
     public ColumnDraft addEdgeColumn(String key, Class typeClass, boolean dynamic) {
-        key = key.toLowerCase();
+        key = key.toLowerCase().trim();
         ColumnDraft column = edgeColumns.get(key);
         typeClass = AttributeUtils.getStandardizedType(typeClass);
         if (column == null) {
@@ -565,12 +565,12 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
     public void setInterval(String startDateTime, String endDateTime) {
         try {
             double start, end;
-            if (startDateTime == null || startDateTime.isEmpty() || "-inf".equalsIgnoreCase(startDateTime) || "-infinity".equalsIgnoreCase(startDateTime)) {
+            if (startDateTime == null || startDateTime.trim().isEmpty() || "-inf".equalsIgnoreCase(startDateTime) || "-infinity".equalsIgnoreCase(startDateTime)) {
                 start = Double.NEGATIVE_INFINITY;
             } else {
                 start = timeFormat.equals(TimeFormat.DOUBLE) ? Double.parseDouble(startDateTime) : AttributeUtils.parseDateTime(startDateTime);
             }
-            if (endDateTime == null || endDateTime.isEmpty() || "inf".equalsIgnoreCase(endDateTime) || "infinity".equalsIgnoreCase(endDateTime)) {
+            if (endDateTime == null || endDateTime.trim().isEmpty() || "inf".equalsIgnoreCase(endDateTime) || "infinity".equalsIgnoreCase(endDateTime)) {
                 end = Double.POSITIVE_INFINITY;
             } else {
                 end = timeFormat.equals(TimeFormat.DOUBLE) ? Double.parseDouble(endDateTime) : AttributeUtils.parseDateTime(endDateTime);
@@ -1031,7 +1031,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
         if (id == null) {
             throw new NullPointerException();
         }
-        if (id.isEmpty()) {
+        if (id.trim().isEmpty()) {
             throw new IllegalArgumentException("The id can't be empty");
         }
     }

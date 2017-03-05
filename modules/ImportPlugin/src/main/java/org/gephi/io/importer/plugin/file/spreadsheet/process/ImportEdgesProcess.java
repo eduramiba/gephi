@@ -137,12 +137,6 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                 label = row.get(labelColumnIndex);
             }
 
-            //Note: we allow any type on weight column, to support dynamic weights
-            if (id != null && container.edgeExists(id)) {
-                logError(getMessage("ImportEdgesProcess.error.repeatedId", id));
-                continue;
-            }
-
             EdgeDraft edge = id != null ? container.factory().newEdgeDraft(id) : container.factory().newEdgeDraft();
 
             if (label != null) {
@@ -186,6 +180,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
                     value = parseValue((String) value, type, column);
 
                     if (value != null) {
+                        //Note: we allow any type on weight column, to support dynamic weights
                         if (column.equalsIgnoreCase("weight") && value instanceof Number) {
                             edge.setWeight(((Number) value).doubleValue());
                         } else {
