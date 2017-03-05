@@ -61,6 +61,7 @@ import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementIdType;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.NodeDraft;
+import org.gephi.io.importer.api.Report;
 import org.gephi.io.processor.spi.Processor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
@@ -288,7 +289,12 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
         }
         return id;
     }
-    
+
+    @Override
+    public Report getReport() {
+        return report;
+    }
+
     private class GraphConfigurationPrinter {
         private final Configuration configuration;
 
@@ -306,7 +312,5 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                     .add("edgeWeightColumn", configuration.getTimeRepresentation())
                     .toString();
         }
-        
-        
     }
 }
