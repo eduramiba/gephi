@@ -61,7 +61,6 @@ import org.gephi.io.importer.api.EdgeMergeStrategy;
 import org.gephi.io.importer.api.ElementIdType;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.NodeDraft;
-import org.gephi.io.importer.api.Report;
 import org.gephi.io.processor.spi.Processor;
 import org.gephi.project.api.ProjectController;
 import org.gephi.project.api.Workspace;
@@ -76,7 +75,7 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Mathieu Bastian
  */
 @ServiceProvider(service = Processor.class, position = 10)
-public class DefaultProcessor extends AbstractProcessor implements Processor {
+public class DefaultProcessor extends AbstractProcessor {
 
     @Override
     public String getDisplayName() {
@@ -178,7 +177,7 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                 addedNodes++;
                 newNode = true;
             }
-            flushToNode(draftNode, node);
+            flushToNode(container, draftNode, node);
 
             if (newNode) {
                 graph.addNode(node);
@@ -251,7 +250,7 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                 addedEdges++;
             }
 
-            flushToEdge(draftEdge, edge, newEdge);
+            flushToEdge(container, draftEdge, edge, newEdge);
 
             if (newEdge) {
                 graph.addEdge(edge);
@@ -288,11 +287,6 @@ public class DefaultProcessor extends AbstractProcessor implements Processor {
                 break;
         }
         return id;
-    }
-
-    @Override
-    public Report getReport() {
-        return report;
     }
 
     private class GraphConfigurationPrinter {

@@ -59,12 +59,14 @@ import java.util.Map;
 import org.gephi.graph.api.AttributeUtils;
 import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.graph.api.types.IntervalDoubleMap;
+import org.gephi.graph.api.types.IntervalIntegerMap;
 import org.gephi.graph.api.types.IntervalLongMap;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.graph.api.types.IntervalStringMap;
 import org.gephi.graph.api.types.TimeMap;
 import org.gephi.graph.api.types.TimeSet;
 import org.gephi.graph.api.types.TimestampDoubleMap;
+import org.gephi.graph.api.types.TimestampIntegerMap;
 import org.gephi.graph.api.types.TimestampLongMap;
 import org.gephi.graph.api.types.TimestampMap;
 import org.gephi.graph.api.types.TimestampSet;
@@ -246,9 +248,11 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                 BigDecimal.class,
                 IntervalSet.class,
                 TimestampSet.class,
+                IntervalIntegerMap.class,
                 IntervalLongMap.class,
                 IntervalDoubleMap.class,
                 IntervalStringMap.class,
+                TimestampIntegerMap.class,
                 TimestampLongMap.class,
                 TimestampDoubleMap.class,
                 TimestampStringMap.class
@@ -338,8 +342,15 @@ public abstract class AbstractImporterSpreadsheet implements FileImporter, FileI
                         detectedClass = String.class;
                     }
 
-                    if (column.equalsIgnoreCase("weight") && columnMatches.contains(Double.class)) {
-                        detectedClass = Double.class;
+                    //Favor double types for weight column:
+                    if (column.equalsIgnoreCase("weight")) {
+                        if(columnMatches.contains(Double.class)){
+                            detectedClass = Double.class;
+                        } else if(columnMatches.contains(IntervalDoubleMap.class)){
+                            detectedClass = IntervalDoubleMap.class;
+                        } else if(columnMatches.contains(TimestampDoubleMap.class)){
+                            detectedClass = TimestampDoubleMap.class;
+                        }
                     }
                 }
 

@@ -54,9 +54,12 @@ import org.gephi.graph.api.Node;
 import org.gephi.graph.api.Origin;
 import org.gephi.graph.api.Table;
 import org.gephi.graph.api.TimeRepresentation;
+import org.gephi.graph.api.types.IntervalDoubleMap;
+import org.gephi.graph.api.types.IntervalMap;
 import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.graph.api.types.TimeMap;
 import org.gephi.graph.api.types.TimeSet;
+import org.gephi.graph.api.types.TimestampDoubleMap;
 import org.gephi.graph.api.types.TimestampSet;
 import org.gephi.io.importer.api.ColumnDraft;
 import org.gephi.io.importer.api.ContainerUnloader;
@@ -66,12 +69,13 @@ import org.gephi.io.importer.api.ElementDraft;
 import org.gephi.io.importer.api.Issue;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.api.Report;
+import org.gephi.io.processor.spi.Processor;
 import org.gephi.project.api.Workspace;
 import org.gephi.utils.Attributes;
 import org.gephi.utils.progress.ProgressTicket;
 import org.openide.util.NbBundle;
 
-public abstract class AbstractProcessor {
+public abstract class AbstractProcessor implements Processor {
 
     protected ProgressTicket progressTicket;
     protected Workspace workspace;
@@ -79,8 +83,12 @@ public abstract class AbstractProcessor {
     protected GraphModel graphModel;
 
     private final Set<ColumnDraft> columnsTypeMismatchAlreadyWarned = new HashSet<>();
-
     protected Report report = new Report();
+
+    private void resetReport() {
+        columnsTypeMismatchAlreadyWarned.clear();
+        report = new Report();
+    }
 
     protected void flushColumns(ContainerUnloader container) {
         addColumnsToTable(container, graphModel.getNodeTable(), container.getNodeColumns());
@@ -116,7 +124,7 @@ public abstract class AbstractProcessor {
         }
     }
 
-    protected void flushToNode(NodeDraft nodeDraft, Node node) {
+    protected void flushToNode(ContainerUnloader container, NodeDraft nodeDraft, Node node) {
         if (nodeDraft.getColor() != null) {
             node.setColor(nodeDraft.getColor());
         }
@@ -168,26 +176,42 @@ public abstract class AbstractProcessor {
         }
 
         //Attributes
-        flushToElementAttributes(nodeDraft, node);
+        flushToElementAttributes(container, nodeDraft, node);
     }
 
     protected void flushEdgeWeight(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
+        //TODO: warn about weight type mismatch
         if (graphModel.getEdgeTable().getColumn("weight").isDynamic()) {
             Object val = edgeDraft.getValue("weight");
             if (val != null && val instanceof TimeMap) {
                 TimeMap valMap = (TimeMap) val;
-
-                TimeMap existingMap = (TimeMap) edge.getAttribute("weight");
-                if (existingMap != null) {
-                    Object[] keys = ((TimeMap) val).toKeysArray();
-                    Object[] vals = ((TimeMap) val).toValuesArray();
-
-                    for (int i = 0; i < keys.length; i++) {
-                        valMap.put(keys[i], ((Number) vals[i]).doubleValue());
+                if (Number.class.isAssignableFrom(valMap.getTypeClass())) {
+                    final TimeMap newMap;
+                    if (val instanceof IntervalMap) {
+                        newMap = new IntervalDoubleMap();
+                    } else {
+                        newMap = new TimestampDoubleMap();
                     }
-                }
 
-                edge.setAttribute("weight", val);
+                    Object[] keys1 = valMap.toKeysArray();
+                    Object[] vals1 = valMap.toValuesArray();
+
+                    for (int i = 0; i < keys1.length; i++) {
+                        newMap.put(keys1[i], ((Number) vals1[i]).doubleValue());
+                    }
+
+                    TimeMap existingMap = (TimeMap) edge.getAttribute("weight");
+                    if (existingMap != null) {
+                        Object[] keys2 = existingMap.toKeysArray();
+                        Object[] vals2 = existingMap.toValuesArray();
+
+                        for (int i = 0; i < keys2.length; i++) {
+                            newMap.put(keys2[i], ((Number) vals2[i]).doubleValue());
+                        }
+                    }
+
+                    edge.setAttribute("weight", newMap);
+                }
             }
         } else if (!newEdge) {
             //Merge the existing edge and the draft edge weights:
@@ -221,8 +245,12 @@ public abstract class AbstractProcessor {
 
     }
 
-    protected void flushToElementAttributes(ElementDraft elementDraft, Element element) {
+    protected void flushToElementAttributes(ContainerUnloader container, ElementDraft elementDraft, Element element) {
         for (ColumnDraft columnDraft : elementDraft.getColumns()) {
+            if (elementDraft instanceof EdgeDraft && columnDraft.getId().equals("weight")) {
+                continue;//Special weight column
+            }
+            
             Object val = elementDraft.getValue(columnDraft.getId());
 
             Column column = element.getTable().getColumn(columnDraft.getId());
@@ -230,7 +258,16 @@ public abstract class AbstractProcessor {
                 continue;//The column might be not present, for cases when it cannot be added due to time representation mismatch, etc
             }
 
-            if (!column.getTypeClass().equals(columnDraft.getTypeClass())) {
+            Class columnDraftTypeClass = columnDraft.getTypeClass();
+            if (columnDraft.isDynamic() && !AttributeUtils.isDynamicType(columnDraftTypeClass)) {
+                if (container.getTimeRepresentation() == TimeRepresentation.INTERVAL) {
+                    columnDraftTypeClass = AttributeUtils.getIntervalMapType(columnDraftTypeClass);
+                } else {
+                    columnDraftTypeClass = AttributeUtils.getTimestampMapType(columnDraftTypeClass);
+                }
+            }
+
+            if (!column.getTypeClass().equals(columnDraftTypeClass)) {
                 if (!columnsTypeMismatchAlreadyWarned.contains(columnDraft)) {
                     columnsTypeMismatchAlreadyWarned.add(columnDraft);
 
@@ -238,7 +275,7 @@ public abstract class AbstractProcessor {
                             AbstractProcessor.class, "AbstractProcessor.error.columnTypeMismatch",
                             column.getId(),
                             column.getTypeClass().getSimpleName(),
-                            columnDraft.getTypeClass().getSimpleName()
+                            columnDraftTypeClass.getSimpleName()
                     );
 
                     report.logIssue(new Issue(error, Issue.Level.SEVERE));
@@ -278,7 +315,7 @@ public abstract class AbstractProcessor {
         }
     }
 
-    protected void flushToEdge(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
+    protected void flushToEdge(ContainerUnloader container, EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
         //Edge weight
         flushEdgeWeight(edgeDraft, edge, newEdge);
 
@@ -314,7 +351,7 @@ public abstract class AbstractProcessor {
             }
 
             //Attributes
-            flushToElementAttributes(edgeDraft, edge);
+            flushToElementAttributes(container, edgeDraft, edge);
         }
 
         //Timeset
@@ -386,15 +423,24 @@ public abstract class AbstractProcessor {
         return merged;
     }
 
+    @Override
     public void setWorkspace(Workspace workspace) {
         this.workspace = workspace;
     }
 
+    @Override
     public void setContainers(ContainerUnloader[] containers) {
         this.containers = containers;
+        resetReport();
     }
 
+    @Override
     public void setProgressTicket(ProgressTicket progressTicket) {
         this.progressTicket = progressTicket;
+    }
+
+    @Override
+    public Report getReport() {
+        return report;
     }
 }

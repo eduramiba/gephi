@@ -192,7 +192,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
             container.addEdge(edge);
         }
-
+        
         progressTicket.finish();
 
         return !cancel;

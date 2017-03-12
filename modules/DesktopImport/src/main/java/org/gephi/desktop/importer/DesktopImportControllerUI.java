@@ -565,17 +565,29 @@ public class DesktopImportControllerUI implements ImportControllerUI {
                 Exceptions.printStackTrace(ex);
             }
         }
+
         if (validResult.isResult()) {
             controller.process(containers, processor, workspace);
 
             Report report = processor.getReport();
             if (report != null && !report.isEmpty()) {
-                //TODO show something in UI
+                showProcessorIssues(report);
             }
 
             //StatusLine notify
             StatusDisplayer.getDefault().setStatusText(NbBundle.getMessage(DesktopImportControllerUI.class, "DesktopImportControllerUI.status.multiImportSuccess", containers.length));
         }
+    }
+
+    private void showProcessorIssues(Report report) {
+        ProcessorIssuesReportPanel issuesReport = new ProcessorIssuesReportPanel();
+        issuesReport.setData(report);
+
+        DialogDescriptor dd = new DialogDescriptor(issuesReport, NbBundle.getMessage(DesktopImportControllerUI.class, "ProcessorIssuesReportPanel.title"));
+        dd.setOptions(new Object[]{NbBundle.getMessage(DesktopImportControllerUI.class, "ProcessorIssuesReportPanel.close")});
+
+        DialogDisplayer.getDefault().notify(dd);
+        issuesReport.destroy();
     }
 
     private static class ValidResult {
