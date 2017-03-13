@@ -82,7 +82,7 @@ public abstract class AbstractProcessor implements Processor {
     protected ContainerUnloader[] containers;
     protected GraphModel graphModel;
 
-    private final Set<ColumnDraft> columnsTypeMismatchAlreadyWarned = new HashSet<>();
+    private final Set<Column> columnsTypeMismatchAlreadyWarned = new HashSet<>();
     protected Report report = new Report();
 
     private void resetReport() {
@@ -179,9 +179,161 @@ public abstract class AbstractProcessor implements Processor {
         flushToElementAttributes(container, nodeDraft, node);
     }
 
-    protected void flushEdgeWeight(EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
-        //TODO: warn about weight type mismatch
-        if (graphModel.getEdgeTable().getColumn("weight").isDynamic()) {
+    protected void flushToElementAttributes(ContainerUnloader container, ElementDraft elementDraft, Element element) {
+        for (ColumnDraft columnDraft : elementDraft.getColumns()) {
+            if (elementDraft instanceof EdgeDraft && columnDraft.getId().equals("weight")) {
+                continue;//Special weight column
+            }
+
+            Object val = elementDraft.getValue(columnDraft.getId());
+
+            Column column = element.getTable().getColumn(columnDraft.getId());
+            if (column == null) {
+                continue;//The column might be not present, for cases when it cannot be added due to time representation mismatch, etc
+            }
+
+            Class columnDraftTypeClass = columnDraft.getTypeClass();
+            if (columnDraft.isDynamic() && !AttributeUtils.isDynamicType(columnDraftTypeClass)) {
+                if (container.getTimeRepresentation() == TimeRepresentation.INTERVAL) {
+                    columnDraftTypeClass = AttributeUtils.getIntervalMapType(columnDraftTypeClass);
+                } else {
+                    columnDraftTypeClass = AttributeUtils.getTimestampMapType(columnDraftTypeClass);
+                }
+            }
+
+            if (!column.getTypeClass().equals(columnDraftTypeClass)) {
+                if (!columnsTypeMismatchAlreadyWarned.contains(column)) {
+                    columnsTypeMismatchAlreadyWarned.add(column);
+
+                    String error = NbBundle.getMessage(
+                            AbstractProcessor.class, "AbstractProcessor.error.columnTypeMismatch",
+                            column.getId(),
+                            column.getTypeClass().getSimpleName(),
+                            columnDraftTypeClass.getSimpleName()
+                    );
+
+                    report.logIssue(new Issue(error, Issue.Level.SEVERE));
+                }
+
+                continue;//Incompatible types!
+            }
+
+            if (val != null) {
+                Object processedNewValue = val;
+
+                Object existingValue = element.getAttribute(columnDraft.getId());
+
+                if (columnDraft.isDynamic() && existingValue != null) {
+                    if (TimeMap.class.isAssignableFrom(columnDraft.getTypeClass())) {
+                        TimeMap existingMap = (TimeMap) existingValue;
+                        if (!existingMap.isEmpty()) {
+                            TimeMap valMap = (TimeMap) val;
+
+                            Object[] keys = existingMap.toKeysArray();
+                            Object[] vals = existingMap.toValuesArray();
+                            for (int i = 0; i < keys.length; i++) {
+                                valMap.put(keys[i], vals[i]);
+                            }
+
+                            processedNewValue = valMap;
+                        }
+                    } else if (TimeSet.class.isAssignableFrom(columnDraft.getTypeClass())) {
+                        TimeSet existingTimeSet = (TimeSet) existingValue;
+
+                        processedNewValue = mergeTimeSets(existingTimeSet, (TimeSet) val);
+                    }
+                }
+
+                element.setAttribute(columnDraft.getId(), processedNewValue);
+            }
+        }
+    }
+
+    protected void flushToEdge(ContainerUnloader container, EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
+        //Edge weight
+        flushEdgeWeight(container, edgeDraft, edge, newEdge);
+
+        //Replace data when a new edge is created or the merge strategy is not to keep the first edge data:
+        EdgeMergeStrategy edgesMergeStrategy = containers[0].getEdgesMergeStrategy();
+        if (newEdge || edgesMergeStrategy != EdgeMergeStrategy.FIRST) {
+            if (edgeDraft.getColor() != null) {
+                edge.setColor(edgeDraft.getColor());
+            } else {
+                edge.setR(0f);
+                edge.setG(0f);
+                edge.setB(0f);
+                edge.setAlpha(0f);
+            }
+
+            if (edgeDraft.getLabel() != null) {
+                edge.setLabel(edgeDraft.getLabel());
+            }
+
+            if (edge.getTextProperties() != null) {
+                edge.getTextProperties().setVisible(edgeDraft.isLabelVisible());
+            }
+
+            if (edgeDraft.getLabelSize() != -1f && edge.getTextProperties() != null) {
+                edge.getTextProperties().setSize(edgeDraft.getLabelSize());
+            }
+
+            if (edgeDraft.getLabelColor() != null && edge.getTextProperties() != null) {
+                Color labelColor = edgeDraft.getLabelColor();
+                edge.getTextProperties().setColor(labelColor);
+            } else {
+                edge.getTextProperties().setColor(new Color(0, 0, 0, 0));
+            }
+
+            //Attributes
+            flushToElementAttributes(container, edgeDraft, edge);
+        }
+
+        //Timeset
+        if (edgeDraft.getTimeSet() != null) {
+            flushTimeSet(edgeDraft.getTimeSet(), edge);
+        }
+
+        //Graph timeset
+        if (edgeDraft.getGraphTimestamp() != null) {
+            edge.addTimestamp(edgeDraft.getGraphTimestamp());
+        } else if (edgeDraft.getGraphInterval() != null) {
+            edge.addInterval(edgeDraft.getGraphInterval());
+        }
+    }
+
+    protected void flushEdgeWeight(ContainerUnloader container, EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
+        Column weightColumn = graphModel.getEdgeTable().getColumn("weight");
+        ColumnDraft weightColumnDraft = container.getEdgeColumn("weight");
+
+        boolean weightColumnDraftIsDynamic = weightColumnDraft != null && weightColumnDraft.isDynamic();
+        Class columnDraftTypeClass = weightColumnDraft != null ? weightColumnDraft.getTypeClass() : Double.class;
+
+        if (weightColumn.isDynamic() != weightColumnDraftIsDynamic) {
+            if (weightColumnDraftIsDynamic && !AttributeUtils.isDynamicType(columnDraftTypeClass)) {
+                if (container.getTimeRepresentation() == TimeRepresentation.INTERVAL) {
+                    columnDraftTypeClass = AttributeUtils.getIntervalMapType(columnDraftTypeClass);
+                } else {
+                    columnDraftTypeClass = AttributeUtils.getTimestampMapType(columnDraftTypeClass);
+                }
+            }
+
+            if (!columnsTypeMismatchAlreadyWarned.contains(weightColumn)) {
+                columnsTypeMismatchAlreadyWarned.add(weightColumn);
+
+                String error = NbBundle.getMessage(
+                        AbstractProcessor.class, "AbstractProcessor.error.columnTypeMismatch",
+                        weightColumn.getId(),
+                        weightColumn.getTypeClass().getSimpleName(),
+                        columnDraftTypeClass.getSimpleName()
+                );
+
+                report.logIssue(new Issue(error, Issue.Level.SEVERE));
+            }
+
+            return;
+        }
+
+        if (weightColumn.isDynamic()) {
             Object val = edgeDraft.getValue("weight");
             if (val != null && val instanceof TimeMap) {
                 TimeMap valMap = (TimeMap) val;
@@ -241,129 +393,6 @@ public abstract class AbstractProcessor implements Processor {
             }
 
             edge.setWeight(result);
-        }
-
-    }
-
-    protected void flushToElementAttributes(ContainerUnloader container, ElementDraft elementDraft, Element element) {
-        for (ColumnDraft columnDraft : elementDraft.getColumns()) {
-            if (elementDraft instanceof EdgeDraft && columnDraft.getId().equals("weight")) {
-                continue;//Special weight column
-            }
-            
-            Object val = elementDraft.getValue(columnDraft.getId());
-
-            Column column = element.getTable().getColumn(columnDraft.getId());
-            if (column == null) {
-                continue;//The column might be not present, for cases when it cannot be added due to time representation mismatch, etc
-            }
-
-            Class columnDraftTypeClass = columnDraft.getTypeClass();
-            if (columnDraft.isDynamic() && !AttributeUtils.isDynamicType(columnDraftTypeClass)) {
-                if (container.getTimeRepresentation() == TimeRepresentation.INTERVAL) {
-                    columnDraftTypeClass = AttributeUtils.getIntervalMapType(columnDraftTypeClass);
-                } else {
-                    columnDraftTypeClass = AttributeUtils.getTimestampMapType(columnDraftTypeClass);
-                }
-            }
-
-            if (!column.getTypeClass().equals(columnDraftTypeClass)) {
-                if (!columnsTypeMismatchAlreadyWarned.contains(columnDraft)) {
-                    columnsTypeMismatchAlreadyWarned.add(columnDraft);
-
-                    String error = NbBundle.getMessage(
-                            AbstractProcessor.class, "AbstractProcessor.error.columnTypeMismatch",
-                            column.getId(),
-                            column.getTypeClass().getSimpleName(),
-                            columnDraftTypeClass.getSimpleName()
-                    );
-
-                    report.logIssue(new Issue(error, Issue.Level.SEVERE));
-                }
-
-                continue;//Incompatible types!
-            }
-
-            if (val != null) {
-                Object processedNewValue = val;
-
-                Object existingValue = element.getAttribute(columnDraft.getId());
-
-                if (columnDraft.isDynamic() && existingValue != null) {
-                    if (TimeMap.class.isAssignableFrom(columnDraft.getTypeClass())) {
-                        TimeMap existingMap = (TimeMap) existingValue;
-                        if (!existingMap.isEmpty()) {
-                            TimeMap valMap = (TimeMap) val;
-
-                            Object[] keys = existingMap.toKeysArray();
-                            Object[] vals = existingMap.toValuesArray();
-                            for (int i = 0; i < keys.length; i++) {
-                                valMap.put(keys[i], vals[i]);
-                            }
-
-                            processedNewValue = valMap;
-                        }
-                    } else if (TimeSet.class.isAssignableFrom(columnDraft.getTypeClass())) {
-                        TimeSet existingTimeSet = (TimeSet) existingValue;
-
-                        processedNewValue = mergeTimeSets(existingTimeSet, (TimeSet) val);
-                    }
-                }
-
-                element.setAttribute(columnDraft.getId(), processedNewValue);
-            }
-        }
-    }
-
-    protected void flushToEdge(ContainerUnloader container, EdgeDraft edgeDraft, Edge edge, boolean newEdge) {
-        //Edge weight
-        flushEdgeWeight(edgeDraft, edge, newEdge);
-
-        //Replace data when a new edge is created or the merge strategy is not to keep the first edge data:
-        EdgeMergeStrategy edgesMergeStrategy = containers[0].getEdgesMergeStrategy();
-        if (newEdge || edgesMergeStrategy != EdgeMergeStrategy.FIRST) {
-            if (edgeDraft.getColor() != null) {
-                edge.setColor(edgeDraft.getColor());
-            } else {
-                edge.setR(0f);
-                edge.setG(0f);
-                edge.setB(0f);
-                edge.setAlpha(0f);
-            }
-
-            if (edgeDraft.getLabel() != null) {
-                edge.setLabel(edgeDraft.getLabel());
-            }
-
-            if (edge.getTextProperties() != null) {
-                edge.getTextProperties().setVisible(edgeDraft.isLabelVisible());
-            }
-
-            if (edgeDraft.getLabelSize() != -1f && edge.getTextProperties() != null) {
-                edge.getTextProperties().setSize(edgeDraft.getLabelSize());
-            }
-
-            if (edgeDraft.getLabelColor() != null && edge.getTextProperties() != null) {
-                Color labelColor = edgeDraft.getLabelColor();
-                edge.getTextProperties().setColor(labelColor);
-            } else {
-                edge.getTextProperties().setColor(new Color(0, 0, 0, 0));
-            }
-
-            //Attributes
-            flushToElementAttributes(container, edgeDraft, edge);
-        }
-
-        //Timeset
-        if (edgeDraft.getTimeSet() != null) {
-            flushTimeSet(edgeDraft.getTimeSet(), edge);
-        }
-
-        //Graph timeset
-        if (edgeDraft.getGraphTimestamp() != null) {
-            edge.addTimestamp(edgeDraft.getGraphTimestamp());
-        } else if (edgeDraft.getGraphInterval() != null) {
-            edge.addInterval(edgeDraft.getGraphInterval());
         }
     }
 
