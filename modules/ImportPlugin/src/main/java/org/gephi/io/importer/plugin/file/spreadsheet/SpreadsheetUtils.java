@@ -113,7 +113,6 @@ public class SpreadsheetUtils {
         CSVFormat csvFormat = CSVFormat.DEFAULT
                 .withDelimiter(fieldSeparator)
                 .withIgnoreEmptyLines(true)
-                .withCommentMarker('#')
                 .withNullString("")
                 .withIgnoreSurroundingSpaces(true)
                 .withTrim(true);
