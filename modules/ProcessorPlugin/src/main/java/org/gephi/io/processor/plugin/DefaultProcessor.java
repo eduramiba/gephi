@@ -42,6 +42,7 @@
 package org.gephi.io.processor.plugin;
 
 import com.google.common.base.MoreObjects;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.gephi.graph.api.Configuration;
@@ -130,15 +131,20 @@ public class DefaultProcessor extends AbstractProcessor {
             }
         }
 
-        try {
-            graphController.getGraphModel(workspace).setConfiguration(configuration);
-        } catch (Exception e) {
-            String message = NbBundle.getMessage(
-                    DefaultProcessor.class, "DefaultProcessor.error.configurationChangeForbidden",
-                    new GraphConfigurationPrinter(graphController.getGraphModel(workspace).getConfiguration()).toString(),
-                    new GraphConfigurationPrinter(configuration).toString()
-            );
-            report.logIssue(new Issue(message, Issue.Level.SEVERE));
+        GraphConfigurationWrapper originalConfig = new GraphConfigurationWrapper(graphController.getGraphModel(workspace).getConfiguration());
+        GraphConfigurationWrapper newConfig = new GraphConfigurationWrapper(configuration);
+
+        if (!originalConfig.equals(newConfig)) {
+            try {
+                graphController.getGraphModel(workspace).setConfiguration(configuration);
+            } catch (Exception e) {
+                String message = NbBundle.getMessage(
+                        DefaultProcessor.class, "DefaultProcessor.error.configurationChangeForbidden",
+                        new GraphConfigurationWrapper(graphController.getGraphModel(workspace).getConfiguration()).toString(),
+                        new GraphConfigurationWrapper(configuration).toString()
+                );
+                report.logIssue(new Issue(message, Issue.Level.SEVERE));
+            }
         }
     }
 
@@ -289,22 +295,72 @@ public class DefaultProcessor extends AbstractProcessor {
         return id;
     }
 
-    private class GraphConfigurationPrinter {
-        private final Configuration configuration;
+    private class GraphConfigurationWrapper {
 
-        public GraphConfigurationPrinter(Configuration configuration) {
-            this.configuration = configuration;
+        private final Class nodeIdType;
+        private final Class edgeIdType;
+        private final Class edgeLabelType;
+        private final Class edgeWeightType;
+        private final Boolean edgeWeightColumn;
+        private final TimeRepresentation timeRepresentation;
+
+        public GraphConfigurationWrapper(Configuration configuration) {
+            nodeIdType = configuration.getNodeIdType();
+            edgeIdType = configuration.getEdgeIdType();
+            edgeLabelType = configuration.getEdgeLabelType();
+            edgeWeightType = configuration.getEdgeWeightType();
+            edgeWeightColumn = configuration.getEdgeWeightColumn();
+            timeRepresentation = configuration.getTimeRepresentation();
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 19 * hash + Objects.hashCode(this.nodeIdType);
+            hash = 19 * hash + Objects.hashCode(this.edgeIdType);
+            hash = 19 * hash + Objects.hashCode(this.edgeLabelType);
+            hash = 19 * hash + Objects.hashCode(this.edgeWeightType);
+            hash = 19 * hash + Objects.hashCode(this.edgeWeightColumn);
+            hash = 19 * hash + Objects.hashCode(this.timeRepresentation);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final GraphConfigurationWrapper other = (GraphConfigurationWrapper) obj;
+            if (!Objects.equals(this.nodeIdType, other.nodeIdType)) {
+                return false;
+            }
+            if (!Objects.equals(this.edgeIdType, other.edgeIdType)) {
+                return false;
+            }
+            if (!Objects.equals(this.edgeLabelType, other.edgeLabelType)) {
+                return false;
+            }
+            if (!Objects.equals(this.edgeWeightType, other.edgeWeightType)) {
+                return false;
+            }
+            if (!Objects.equals(this.edgeWeightColumn, other.edgeWeightColumn)) {
+                return false;
+            }
+            if (this.timeRepresentation != other.timeRepresentation) {
+                return false;
+            }
+            return true;
         }
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(configuration)
-                    .add("nodeIdType", configuration.getNodeIdType())
-                    .add("edgeIdType", configuration.getEdgeIdType())
-                    .add("edgeWeightType", configuration.getEdgeWeightType())
-                    .add("timeRepresentation", configuration.getEdgeWeightColumn())
-                    .add("edgeWeightColumn", configuration.getTimeRepresentation())
-                    .toString();
+            return "GraphConfigurationWrapper{" + "nodeIdType=" + nodeIdType + ", edgeIdType=" + edgeIdType + ", edgeLabelType=" + edgeLabelType + ", edgeWeightType=" + edgeWeightType + ", edgeWeightColumn=" + edgeWeightColumn + ", timeRepresentation=" + timeRepresentation + '}';
         }
     }
 }

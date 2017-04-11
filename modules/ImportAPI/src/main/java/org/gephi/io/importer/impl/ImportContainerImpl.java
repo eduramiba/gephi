@@ -260,7 +260,7 @@ public class ImportContainerImpl implements Container, ContainerLoader, Containe
             return;
         }
 
-        //Check direction and defaut type
+        //Check direction and default type
         if (edgeDraftImpl.getDirection() != null) {
             //Test if the given type match with parameters
             switch (edgeDefault) {

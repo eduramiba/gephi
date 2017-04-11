@@ -41,6 +41,7 @@
  */
 package org.gephi.io.processor.plugin;
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
@@ -84,10 +85,12 @@ public abstract class AbstractProcessor implements Processor {
 
     private final Set<Column> columnsTypeMismatchAlreadyWarned = new HashSet<>();
     protected Report report = new Report();
+    private final Object2IntOpenHashMap<Edge> edgeCountForAverage = new Object2IntOpenHashMap<>();
 
-    private void resetReport() {
+    private void resetStatus() {
         columnsTypeMismatchAlreadyWarned.clear();
         report = new Report();
+        edgeCountForAverage.clear();
     }
 
     protected void flushColumns(ContainerUnloader container) {
@@ -369,9 +372,12 @@ public abstract class AbstractProcessor implements Processor {
             //Merge the existing edge and the draft edge weights:
             double result = edge.getWeight();
 
+            edgeCountForAverage.addTo(edge, 1);
+            int edgeCount = edgeCountForAverage.getInt(edge);
+
             switch (containers[0].getEdgesMergeStrategy()) {
                 case AVG:
-                    result = (edgeDraft.getWeight() + edge.getWeight()) / 2.0;
+                    result = (edge.getWeight() * edgeCount + edgeDraft.getWeight()) / (edgeCount + 1);
                     break;
                 case MAX:
                     result = Math.max(edgeDraft.getWeight(), edge.getWeight());
@@ -460,7 +466,7 @@ public abstract class AbstractProcessor implements Processor {
     @Override
     public void setContainers(ContainerUnloader[] containers) {
         this.containers = containers;
-        resetReport();
+        resetStatus();
     }
 
     @Override
