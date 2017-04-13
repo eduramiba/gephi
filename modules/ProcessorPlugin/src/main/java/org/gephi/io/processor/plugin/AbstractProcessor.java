@@ -87,12 +87,16 @@ public abstract class AbstractProcessor implements Processor {
     protected Report report = new Report();
     private final Object2IntOpenHashMap<Edge> edgeCountForAverage = new Object2IntOpenHashMap<>();
 
-    private void resetStatus() {
+    protected void clean() {
+        workspace = null;
+        graphModel = null;
+        containers = null;
+        progressTicket = null;
         columnsTypeMismatchAlreadyWarned.clear();
         report = new Report();
         edgeCountForAverage.clear();
     }
-
+    
     protected void flushColumns(ContainerUnloader container) {
         addColumnsToTable(container, graphModel.getNodeTable(), container.getNodeColumns());
         addColumnsToTable(container, graphModel.getEdgeTable(), container.getEdgeColumns());
@@ -466,7 +470,6 @@ public abstract class AbstractProcessor implements Processor {
     @Override
     public void setContainers(ContainerUnloader[] containers) {
         this.containers = containers;
-        resetStatus();
     }
 
     @Override

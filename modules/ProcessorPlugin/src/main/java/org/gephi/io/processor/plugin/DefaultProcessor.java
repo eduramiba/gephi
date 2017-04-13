@@ -41,7 +41,6 @@
  */
 package org.gephi.io.processor.plugin;
 
-import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -104,11 +103,7 @@ public class DefaultProcessor extends AbstractProcessor {
 
         process(container, workspace);
 
-        //Clean
-        workspace = null;
-        graphModel = null;
-        containers = null;
-        progressTicket = null;
+        clean();
     }
 
     protected void processConfiguration(ContainerUnloader container, Workspace workspace) {

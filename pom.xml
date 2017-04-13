@@ -910,7 +910,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skipTests>false</skipTests>
+                    <skipTests>true</skipTests>
                     <trimStackTrace>false</trimStackTrace>                                                              
                 </configuration>
             </plugin>
@@ -995,6 +995,22 @@
     
     <!-- Profiles -->
     <profiles>
+        
+        <profile>
+            <id>enableTests</id>
+            
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>false</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         
         <!-- Profile for nighly builds and releases -->
         <profile>
