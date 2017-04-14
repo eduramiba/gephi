@@ -47,13 +47,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import org.gephi.graph.api.Column;
 import org.gephi.graph.api.GraphController;
 import org.gephi.graph.api.Table;
 import org.gephi.graph.api.TimeFormat;
 import org.gephi.graph.api.TimeRepresentation;
+import org.gephi.graph.api.types.IntervalLongMap;
+import org.gephi.graph.api.types.IntervalSet;
 import org.gephi.io.exporter.plugin.ExporterSpreadsheet;
 import org.gephi.io.importer.api.Container;
 import org.gephi.io.importer.api.EdgeMergeStrategy;
@@ -168,7 +172,7 @@ public class SpreadsheetNGTest {
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableRepeatedWithIds() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_repeated_with_ids.csv"));
@@ -192,7 +196,7 @@ public class SpreadsheetNGTest {
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableRepeatedWithoutIds_Merged() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_repeated_without_ids.csv"));
@@ -215,7 +219,7 @@ public class SpreadsheetNGTest {
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableRepeatedWithoutIds_Merge_Disabled() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_repeated_without_ids.csv"));
@@ -239,7 +243,7 @@ public class SpreadsheetNGTest {
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableWithTimeset_Timestamp() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_with_timeset_timestamps.csv"));
@@ -253,19 +257,19 @@ public class SpreadsheetNGTest {
         Assert.assertEquals(importer.getFieldDelimiter(), ' ');
         Assert.assertEquals(importer.getMode(), Mode.EDGES_TABLE);
         Assert.assertEquals(importer.getTimeRepresentation(), TimeRepresentation.TIMESTAMP);
-        
+
         Container container = importController.importFile(
                 file, importer
         );
         Assert.assertNotNull(container);
 
         importController.process(container, new DefaultProcessor(), workspace);
-        
+
         graphController.getGraphModel(workspace).setTimeFormat(TimeFormat.DATE);
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableWithTimeset_Interval() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_with_timeset_intervals.csv"));
@@ -279,19 +283,19 @@ public class SpreadsheetNGTest {
         Assert.assertEquals(importer.getFieldDelimiter(), ' ');
         Assert.assertEquals(importer.getMode(), Mode.EDGES_TABLE);
         Assert.assertEquals(importer.getTimeRepresentation(), TimeRepresentation.INTERVAL);
-        
+
         Container container = importController.importFile(
                 file, importer
         );
         Assert.assertNotNull(container);
 
         importController.process(container, new DefaultProcessor(), workspace);
-        
+
         graphController.getGraphModel(workspace).setTimeFormat(TimeFormat.DATE);
 
         checkEdgesSpreadsheet();
     }
-    
+
     @Test
     public void testEdgesTableDynamicWeightsMerged() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edgest_table_dynamic_weights.csv"));
@@ -305,18 +309,93 @@ public class SpreadsheetNGTest {
         Assert.assertEquals(importer.getFieldDelimiter(), ',');
         Assert.assertEquals(importer.getMode(), Mode.EDGES_TABLE);
         Assert.assertEquals(importer.getTimeRepresentation(), TimeRepresentation.INTERVAL);
-        
+
         Container container = importController.importFile(
                 file, importer
         );
         Assert.assertNotNull(container);
 
         importController.process(container, new DefaultProcessor(), workspace);
-        
+
         checkEdgesSpreadsheet();
     }
 
+    @Test
+    public void testEdgesTableTypesTest() throws FileNotFoundException, IOException {
+        File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/edges_table_types_test.csv"));
+
+        ImporterSpreadsheetCSV importer = new ImporterSpreadsheetCSV();
+
+        importer.setFile(file);
+        importer.refreshAutoDetections();
+
+        Assert.assertEquals(importer.getCharset(), Charset.forName("UTF-8"));
+        Assert.assertEquals(importer.getFieldDelimiter(), ',');
+        Assert.assertEquals(importer.getMode(), Mode.EDGES_TABLE);
+        Assert.assertEquals(importer.getTimeRepresentation(), TimeRepresentation.INTERVAL);
+
+        Map<String, Class> columnsClasses = importer.getColumnsClasses();
+
+        Assert.assertEquals(columnsClasses.get("id"), String.class);
+        Assert.assertEquals(columnsClasses.get("label"), String.class);
+        Assert.assertEquals(columnsClasses.get("source"), String.class);
+        Assert.assertEquals(columnsClasses.get("target"), String.class);
+        Assert.assertEquals(columnsClasses.get("kind"), String.class);
+        Assert.assertEquals(columnsClasses.get("type"), String.class);
+        Assert.assertEquals(columnsClasses.get("weight"), Double.class);
+
+        Container container = importController.importFile(
+                file, importer
+        );
+        Assert.assertNotNull(container);
+
+        importController.process(container, new DefaultProcessor(), workspace);
+
+        checkEdgesSpreadsheet(false);
+    }
+
+    @Test
+    public void testNodesTableTypesTest() throws FileNotFoundException, IOException {
+        File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/nodes_table_types_test.csv"));
+
+        ImporterSpreadsheetCSV importer = new ImporterSpreadsheetCSV();
+
+        importer.setFile(file);
+        importer.refreshAutoDetections();
+
+        Assert.assertEquals(importer.getCharset(), Charset.forName("UTF-8"));
+        Assert.assertEquals(importer.getFieldDelimiter(), ',');
+        Assert.assertEquals(importer.getMode(), Mode.NODES_TABLE);
+        Assert.assertEquals(importer.getTimeRepresentation(), TimeRepresentation.INTERVAL);
+
+        Map<String, Class> columnsClasses = importer.getColumnsClasses();
+
+        Assert.assertEquals(columnsClasses.get("id"), String.class);
+        Assert.assertEquals(columnsClasses.get("label"), String.class);
+        Assert.assertEquals(columnsClasses.get("int"), Integer.class);
+        Assert.assertEquals(columnsClasses.get("long"), Long.class);
+        Assert.assertEquals(columnsClasses.get("double"), Double.class);
+        Assert.assertEquals(columnsClasses.get("boolean"), Boolean.class);
+        Assert.assertEquals(columnsClasses.get("timeset"), IntervalSet.class);
+        Assert.assertEquals(columnsClasses.get("string"), String.class);
+        Assert.assertEquals(columnsClasses.get("intervallongmap"), IntervalLongMap.class);
+        Assert.assertEquals(columnsClasses.get("bigint"), BigInteger.class);
+
+        Container container = importController.importFile(
+                file, importer
+        );
+        Assert.assertNotNull(container);
+
+        importController.process(container, new DefaultProcessor(), workspace);
+
+        checkNodesSpreadsheet();
+    }
+
     private void checkEdgesSpreadsheet() throws IOException {
+        checkEdgesSpreadsheet(true);
+    }
+
+    private void checkEdgesSpreadsheet(boolean ignoreId) throws IOException {
         StringWriter writer = new StringWriter();
 
         ExporterSpreadsheet exporter = new ExporterSpreadsheet();
@@ -324,22 +403,45 @@ public class SpreadsheetNGTest {
         exporter.setTableToExport(ExporterSpreadsheet.ExportTable.EDGES);
         exporter.setWriter(writer);
 
-        Table edgeTable = graphController.getGraphModel(workspace).getEdgeTable();
-        LinkedHashSet<String> columnIdsToExport = new LinkedHashSet<>();
-        for (Column column : edgeTable) {
-            if (!column.getId().equals("id")) {
-                columnIdsToExport.add(column.getId());
+        if (ignoreId) {
+            Table edgeTable = graphController.getGraphModel(workspace).getEdgeTable();
+            LinkedHashSet<String> columnIdsToExport = new LinkedHashSet<>();
+            for (Column column : edgeTable) {
+                if (!column.getId().equals("id")) {
+                    columnIdsToExport.add(column.getId());
+                }
             }
+            exporter.setColumnIdsToExport(columnIdsToExport);
         }
-        exporter.setColumnIdsToExport(columnIdsToExport);
 
         exporter.execute();
 
         String output = writer.toString().trim().replace("\r", "");
-        
+
         System.out.println(output);
-        
+
         InputStream is = SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_edges.csv");
+
+        String expected = Files.readFile(is).trim();
+
+        Assert.assertEquals(output, expected);
+    }
+
+    private void checkNodesSpreadsheet() throws IOException {
+        StringWriter writer = new StringWriter();
+
+        ExporterSpreadsheet exporter = new ExporterSpreadsheet();
+        exporter.setWorkspace(workspace);
+        exporter.setTableToExport(ExporterSpreadsheet.ExportTable.NODES);
+        exporter.setWriter(writer);
+
+        exporter.execute();
+
+        String output = writer.toString().trim().replace("\r", "");
+
+        System.out.println(output);
+
+        InputStream is = SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_nodes.csv");
 
         String expected = Files.readFile(is).trim();
 
