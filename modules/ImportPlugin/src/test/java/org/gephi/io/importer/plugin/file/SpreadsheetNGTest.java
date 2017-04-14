@@ -43,9 +43,10 @@ package org.gephi.io.importer.plugin.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -167,6 +168,31 @@ public class SpreadsheetNGTest {
         );
         Assert.assertNotNull(container);
         Assert.assertTrue(container.getReport().isEmpty());
+
+        importController.process(container, new DefaultProcessor(), workspace);
+
+        checkEdgesSpreadsheet();
+    }
+
+    @Test
+    public void testComplexMatrix() throws FileNotFoundException, IOException {
+        //File from https://github.com/gephi/gephi/issues/1661
+        File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/complex_matrix.csv"));
+
+        ImporterSpreadsheetCSV importer = new ImporterSpreadsheetCSV();
+
+        importer.setFile(file);
+        importer.refreshAutoDetections();
+
+        Assert.assertEquals(importer.getCharset(), Charset.forName("UTF-8"));
+        Assert.assertEquals(importer.getFieldDelimiter(), ';');
+        Assert.assertEquals(importer.getMode(), Mode.MATRIX);
+
+        Container container = importController.importFile(
+                file, importer
+        );
+        Assert.assertNotNull(container);
+        Assert.assertFalse(container.getReport().isEmpty());//Missing labels at the start
 
         importController.process(container, new DefaultProcessor(), workspace);
 
@@ -390,7 +416,7 @@ public class SpreadsheetNGTest {
 
         checkNodesSpreadsheet();
     }
-    
+
     @Test
     public void testRepeatedHeaders() throws FileNotFoundException, IOException {
         File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/repeated_headers.xls"));
@@ -403,11 +429,32 @@ public class SpreadsheetNGTest {
         Assert.assertEquals(importer.getMode(), Mode.NODES_TABLE);
 
         Map<String, Class> columnsClasses = importer.getColumnsClasses();
-        
+
         Assert.assertEquals(columnsClasses.size(), 3);
         Assert.assertEquals(columnsClasses.get("id"), String.class);
         Assert.assertEquals(columnsClasses.get("string"), String.class);
         Assert.assertEquals(columnsClasses.get("String"), String.class);
+
+        Container container = importController.importFile(
+                file, importer
+        );
+        Assert.assertNotNull(container);
+
+        importController.process(container, new DefaultProcessor(), workspace);
+
+        checkNodesSpreadsheet();
+    }
+
+    @Test
+    public void testUTF8Chars() throws FileNotFoundException, IOException {
+        File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/test_utf8_chars.csv"));
+
+        ImporterSpreadsheetCSV importer = new ImporterSpreadsheetCSV();
+
+        importer.setFile(file);
+        importer.refreshAutoDetections();
+
+        Assert.assertEquals(importer.getMode(), Mode.NODES_TABLE);
 
         Container container = importController.importFile(
                 file, importer
@@ -424,7 +471,8 @@ public class SpreadsheetNGTest {
     }
 
     private void checkEdgesSpreadsheet(boolean ignoreId) throws IOException {
-        StringWriter writer = new StringWriter();
+        File tmpFile = File.createTempFile(testName, ".csv");
+        Writer writer = new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8");
 
         ExporterSpreadsheet exporter = new ExporterSpreadsheet();
         exporter.setWorkspace(workspace);
@@ -444,19 +492,15 @@ public class SpreadsheetNGTest {
 
         exporter.execute();
 
-        String output = writer.toString().trim().replace("\r", "");
+        String result = Files.readFile(tmpFile).trim().replace("\r", "");
+        String expected = Files.readFile(SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_edges.csv")).trim();
 
-        System.out.println(output);
-
-        InputStream is = SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_edges.csv");
-
-        String expected = Files.readFile(is).trim();
-
-        Assert.assertEquals(output, expected);
+        Assert.assertEquals(result, expected);
     }
 
     private void checkNodesSpreadsheet() throws IOException {
-        StringWriter writer = new StringWriter();
+        File tmpFile = File.createTempFile(testName, ".csv");
+        Writer writer = new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8");
 
         ExporterSpreadsheet exporter = new ExporterSpreadsheet();
         exporter.setWorkspace(workspace);
@@ -465,14 +509,10 @@ public class SpreadsheetNGTest {
 
         exporter.execute();
 
-        String output = writer.toString().trim().replace("\r", "");
+        String result = Files.readFile(tmpFile).trim().replace("\r", "");
 
-        System.out.println(output);
+        String expected = Files.readFile(SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_nodes.csv")).trim();
 
-        InputStream is = SpreadsheetNGTest.class.getResourceAsStream("/org/gephi/io/importer/plugin/file/spreadsheet/expected/" + testName + "_nodes.csv");
-
-        String expected = Files.readFile(is).trim();
-
-        Assert.assertEquals(output, expected);
+        Assert.assertEquals(result, expected);
     }
 }
