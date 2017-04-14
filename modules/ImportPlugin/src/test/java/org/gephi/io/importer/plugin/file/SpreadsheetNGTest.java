@@ -390,6 +390,34 @@ public class SpreadsheetNGTest {
 
         checkNodesSpreadsheet();
     }
+    
+    @Test
+    public void testRepeatedHeaders() throws FileNotFoundException, IOException {
+        File file = FileUtil.archiveOrDirForURL(SpreadsheetNGTest.class.getResource("/org/gephi/io/importer/plugin/file/spreadsheet/repeated_headers.xls"));
+
+        ImporterSpreadsheetExcel importer = new ImporterSpreadsheetExcel();
+
+        importer.setFile(file);
+        importer.refreshAutoDetections();
+
+        Assert.assertEquals(importer.getMode(), Mode.NODES_TABLE);
+
+        Map<String, Class> columnsClasses = importer.getColumnsClasses();
+        
+        Assert.assertEquals(columnsClasses.size(), 3);
+        Assert.assertEquals(columnsClasses.get("id"), String.class);
+        Assert.assertEquals(columnsClasses.get("string"), String.class);
+        Assert.assertEquals(columnsClasses.get("String"), String.class);
+
+        Container container = importController.importFile(
+                file, importer
+        );
+        Assert.assertNotNull(container);
+
+        importController.process(container, new DefaultProcessor(), workspace);
+
+        checkNodesSpreadsheet();
+    }
 
     private void checkEdgesSpreadsheet() throws IOException {
         checkEdgesSpreadsheet(true);
