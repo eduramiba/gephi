@@ -50,6 +50,7 @@ import org.gephi.io.importer.api.EdgeDirectionDefault;
 import org.gephi.io.importer.api.EdgeDraft;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
+import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
 
 /**
@@ -97,7 +98,7 @@ public class ImportEdgesProcess extends AbstractImportProcess {
         Integer idColumnIndex = specialColumnsIndexMap.get(EDGE_ID);
         Integer labelColumnIndex = specialColumnsIndexMap.get(EDGE_LABEL);
 
-        progressTicket.start();
+        Progress.start(progressTicket);
         for (SheetRow row : parser) {
             if (cancel) {
                 break;
@@ -192,8 +193,8 @@ public class ImportEdgesProcess extends AbstractImportProcess {
 
             container.addEdge(edge);
         }
-        
-        progressTicket.finish();
+
+        Progress.finish(progressTicket);
 
         return !cancel;
     }

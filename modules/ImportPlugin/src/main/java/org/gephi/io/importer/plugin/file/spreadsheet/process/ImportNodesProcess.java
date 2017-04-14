@@ -48,6 +48,7 @@ import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetParser;
 import org.gephi.io.importer.plugin.file.spreadsheet.sheet.SheetRow;
+import org.gephi.utils.progress.Progress;
 import org.gephi.utils.progress.ProgressTicket;
 
 /**
@@ -75,7 +76,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
         Integer idColumnIndex = specialColumnsIndexMap.get(NODE_ID);
         Integer labelColumnIndex = specialColumnsIndexMap.get(NODE_LABEL);
 
-        progressTicket.start();
+        Progress.start(progressTicket);
         for (SheetRow row : parser) {
             if (cancel) {
                 break;
@@ -122,7 +123,7 @@ public class ImportNodesProcess extends AbstractImportProcess {
             container.addNode(node);
         }
 
-        progressTicket.finish();
+        Progress.finish(progressTicket);
 
         return !cancel;
     }

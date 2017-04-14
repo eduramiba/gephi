@@ -96,7 +96,7 @@ public abstract class AbstractProcessor implements Processor {
         report = new Report();
         edgeCountForAverage.clear();
     }
-    
+
     protected void flushColumns(ContainerUnloader container) {
         addColumnsToTable(container, graphModel.getNodeTable(), container.getNodeColumns());
         addColumnsToTable(container, graphModel.getEdgeTable(), container.getEdgeColumns());
@@ -235,14 +235,19 @@ public abstract class AbstractProcessor implements Processor {
                         TimeMap existingMap = (TimeMap) existingValue;
                         if (!existingMap.isEmpty()) {
                             TimeMap valMap = (TimeMap) val;
+                            TimeMap newMap = (TimeMap) existingMap;
 
-                            Object[] keys = existingMap.toKeysArray();
-                            Object[] vals = existingMap.toValuesArray();
+                            Object[] keys = valMap.toKeysArray();
+                            Object[] vals = valMap.toValuesArray();
                             for (int i = 0; i < keys.length; i++) {
-                                valMap.put(keys[i], vals[i]);
+                                try {
+                                    newMap.put(keys[i], vals[i]);
+                                } catch (IllegalArgumentException e) {
+                                    //Overlapping intervals, ignore
+                                }
                             }
 
-                            processedNewValue = valMap;
+                            processedNewValue = newMap;
                         }
                     } else if (TimeSet.class.isAssignableFrom(columnDraft.getTypeClass())) {
                         TimeSet existingTimeSet = (TimeSet) existingValue;
@@ -352,13 +357,6 @@ public abstract class AbstractProcessor implements Processor {
                         newMap = new TimestampDoubleMap();
                     }
 
-                    Object[] keys1 = valMap.toKeysArray();
-                    Object[] vals1 = valMap.toValuesArray();
-
-                    for (int i = 0; i < keys1.length; i++) {
-                        newMap.put(keys1[i], ((Number) vals1[i]).doubleValue());
-                    }
-
                     TimeMap existingMap = (TimeMap) edge.getAttribute("weight");
                     if (existingMap != null) {
                         Object[] keys2 = existingMap.toKeysArray();
@@ -369,10 +367,26 @@ public abstract class AbstractProcessor implements Processor {
                         }
                     }
 
+                    Object[] keys1 = valMap.toKeysArray();
+                    Object[] vals1 = valMap.toValuesArray();
+
+                    for (int i = 0; i < keys1.length; i++) {
+                        try {
+                            newMap.put(keys1[i], ((Number) vals1[i]).doubleValue());
+                        } catch (IllegalArgumentException e) {
+                            //Overlapping intervals, ignore
+                        }
+                    }
+
                     edge.setAttribute("weight", newMap);
                 }
             }
         } else if (!newEdge) {
+            if (edgeDraft.getTimeSet() != null || edgeDraft.getValue("timeset") != null || edge.getAttribute("timeset") != null) {
+                //Don't merge double (non dynamic) weights when the edges have dynamic time intervals/timestamps, they are the same edge in different periods of time
+                return;
+            }
+
             //Merge the existing edge and the draft edge weights:
             double result = edge.getWeight();
 
